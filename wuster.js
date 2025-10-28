@@ -20,7 +20,7 @@ if (wusterForm) {
     const nextButton = document.getElementById('next-page-btn');
     const pageInfo = document.getElementById('page-info');
 
-    // (Variabel List Dinamis tidak berubah)
+    // Variabel List Dinamis
     const holderListContainer = document.getElementById('packing-holder-list');
     const addHolderItemBtn = document.getElementById('add-holder-item-btn');
     const defaultHolderItems = ["HOLDER KYEA", "HOLDER BLS", "HOLDER BCM", "HOLDER 21D", "CAP 2DP", "CAP BC11", "CAP K64A RR", "CAP K64 FR"];
@@ -43,24 +43,72 @@ if (wusterForm) {
     const prodInputs = document.querySelectorAll('.prod-calc');
     const prodTotalSpan = document.getElementById('total_prod_total');
 
-    // (Fungsi addDynamicRow, resetDynamicList, Event Listeners Add/Remove, serializeDynamicList, calculateTotal tidak berubah)
-    function addDynamicRow(container, nameClass, valueClass, itemName = "", itemValue = "") { /* ... kode sama ... */ }
-    function resetDynamicList(container, defaultItems, nameClass, valueClass) { /* ... kode sama ... */ }
+    /**
+     * FUNGSI: Menambahkan baris item ke list dinamis
+     */
+    function addDynamicRow(container, nameClass, valueClass, itemName = "", itemValue = "") {
+        const row = document.createElement('div');
+        row.className = 'dynamic-list-row';
+        row.innerHTML = `
+            <input type="text" class="${nameClass}" placeholder="Nama Item" value="${itemName}">
+            <input type="text" class="${valueClass}" placeholder="Jumlah/Catatan" value="${itemValue}">
+            <button type="button" class="button-remove">
+                <span class="material-icons">remove_circle</span>
+            </button>
+        `;
+        container.appendChild(row);
+    }
+
+    /**
+     * FUNGSI: Mereset list dinamis ke item default
+     */
+    function resetDynamicList(container, defaultItems, nameClass, valueClass) {
+        container.innerHTML = '';
+        defaultItems.forEach(item => addDynamicRow(container, nameClass, valueClass, item));
+    }
+
+    // Event listener untuk tombol "Tambah Item"
     addHolderItemBtn.addEventListener('click', () => addDynamicRow(holderListContainer, 'packing-item-name', 'packing-item-value'));
     addPasangItemBtn.addEventListener('click', () => addDynamicRow(pasangListContainer, 'pasang-item-name', 'pasang-item-value'));
     addAssyCupItemBtn.addEventListener('click', () => addDynamicRow(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value'));
     addTouchUpItemBtn.addEventListener('click', () => addDynamicRow(touchUpListContainer, 'touch-up-item-name', 'touch-up-item-value'));
     addBukaCapItemBtn.addEventListener('click', () => addDynamicRow(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value'));
-    wusterForm.addEventListener('click', (e) => { if (e.target.closest('.button-remove')) { e.target.closest('.dynamic-list-row').remove(); } });
-    function serializeDynamicList(container, nameClass, valueClass) { /* ... kode sama ... */ }
-    function calculateTotal(inputs, totalSpan) { /* ... kode sama ... */ }
+
+    // Event listener untuk tombol "Hapus" (Delegasi)
+    wusterForm.addEventListener('click', (e) => {
+        if (e.target.closest('.button-remove')) {
+            e.target.closest('.dynamic-list-row').remove();
+        }
+    });
+
+    /**
+     * FUNGSI: Serialisasi data list dinamis
+     */
+    function serializeDynamicList(container, nameClass, valueClass) {
+        let resultString = "";
+        const rows = container.querySelectorAll('.dynamic-list-row');
+        rows.forEach(row => {
+            const name = row.querySelector(`.${nameClass}`).value;
+            const value = row.querySelector(`.${valueClass}`).value;
+            if (name && value) { resultString += `${name}: ${value}\n`; }
+        });
+        return resultString.trim();
+    }
+
+    // FUNGSI KALKULASI TOTAL
+    function calculateTotal(inputs, totalSpan) {
+        let sum = 0;
+        inputs.forEach(input => { sum += parseInt(input.value) || 0; });
+        totalSpan.textContent = sum;
+    }
+
+    // Tambahkan event listener ke setiap input kalkulasi
     wusterInputs.forEach(input => input.addEventListener('input', () => calculateTotal(wusterInputs, wusterTotalSpan)));
     checkInputs.forEach(input => input.addEventListener('input', () => calculateTotal(checkInputs, checkTotalSpan)));
     prodInputs.forEach(input => input.addEventListener('input', () => calculateTotal(prodInputs, prodTotalSpan)));
 
-
     /**
-     * FUNGSI PDF (Layout Jarak Diperbaiki)
+     * FUNGSI PDF (Layout Sequential Columns)
      */
     async function generatePDF(reportId) {
         alert('Membuat PDF... Mohon tunggu.');
@@ -79,7 +127,6 @@ if (wusterForm) {
             const col1X = marginX;
             const col2X = marginX + colWidth + 5;
             const boldLabel = { 0: { cellWidth: 50, fontStyle: 'bold' } };
-            const marginYSmall = 3; // === JARAK ANTAR TABEL DIKECILKAN ===
 
             doc.setFontSize(16);
             doc.text("LAPORAN AKHIR SHIFT", doc.internal.pageSize.width / 2, 15, { align: 'center' });
@@ -107,7 +154,7 @@ if (wusterForm) {
                 margin: { left: marginX }, tableWidth: fullWidth,
                 columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 25 }, 2: { cellWidth: 105 } }
             });
-            let startY2Col = doc.autoTable.previous.finalY + marginYSmall; // Y Awal untuk layout 2 kolom
+            let startY2Col = doc.autoTable.previous.finalY + 5; // Y Awal untuk layout 2 kolom
 
             // Fungsi bantu gambar tabel
             function drawSingleTable(title, note, startY, startX, width = colWidth) {
@@ -127,22 +174,22 @@ if (wusterForm) {
             // --- Gambar Kolom Kiri Dulu ---
             let leftY = startY2Col;
             leftY = drawSingleTable('3. Packing Holder', report.packing_holder_notes, leftY, col1X);
-            leftY = drawSingleTable('4. Pasang Holder', report.pasang_holder_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('5. Problem / Quality', report.problem_quality_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('6. Suplay Material', report.suplay_material_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('7. Packing Box / Lory', report.packing_box_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('8. Trouble Mesin', report.trouble_mesin_notes, leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('4. Pasang Holder', report.pasang_holder_notes, leftY + 5, col1X);
+            leftY = drawSingleTable('5. Problem / Quality', report.problem_quality_notes, leftY + 5, col1X);
+            leftY = drawSingleTable('6. Suplay Material', report.suplay_material_notes, leftY + 5, col1X);
+            leftY = drawSingleTable('7. Packing Box / Lory', report.packing_box_notes, leftY + 5, col1X);
+            leftY = drawSingleTable('8. Trouble Mesin', report.trouble_mesin_notes, leftY + 5, col1X);
 
             // --- Gambar Kolom Kanan ---
             let rightY = startY2Col; // Mulai dari Y yang sama dengan kolom kiri
             rightY = drawSingleTable('9. Hasil Assy Cup', report.hasil_assy_cup_notes, rightY, col2X);
-            rightY = drawSingleTable('10. Hasil Touch Up', report.hasil_touch_up_notes, rightY + marginYSmall, col2X);
-            rightY = drawSingleTable('11. Hasil Buka Cap', report.hasil_buka_cap_notes, rightY + marginYSmall, col2X);
+            rightY = drawSingleTable('10. Hasil Touch Up', report.hasil_touch_up_notes, rightY + 5, col2X);
+            rightY = drawSingleTable('11. Hasil Buka Cap', report.hasil_buka_cap_notes, rightY + 5, col2X);
 
             // Tabel Kalkulasi (lanjut di kolom kanan)
             const wusterTotal = (report.perf_wuster_isi || 0) + (report.perf_wuster_kosong || 0);
             rightY = drawCalcTable({
-                startY: rightY + marginYSmall, head: [['13. PERFORMA WUSTER', 'Jumlah']],
+                startY: rightY + 5, head: [['13. PERFORMA WUSTER', 'Jumlah']],
                 body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]],
                 margin: { left: col2X }, tableWidth: colWidth,
                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
@@ -151,7 +198,7 @@ if (wusterForm) {
 
             const checkTotal = (report.total_check_ok || 0) + (report.total_check_ng || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
             rightY = drawCalcTable({
-                startY: rightY + marginYSmall, head: [['14. TOTAL CHECK', 'Jumlah']],
+                startY: rightY + 5, head: [['14. TOTAL CHECK', 'Jumlah']],
                 body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]],
                 margin: { left: col2X }, tableWidth: colWidth,
                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
@@ -160,7 +207,7 @@ if (wusterForm) {
 
             const prodTotal = (report.total_prod_fresh || 0) + (report.total_prod_repair || 0) + (report.total_prod_ng || 0);
             rightY = drawCalcTable({
-                startY: rightY + marginYSmall, head: [['14. TOTAL PRODUKSI', 'Jumlah']],
+                startY: rightY + 5, head: [['14. TOTAL PRODUKSI', 'Jumlah']],
                 body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]],
                 margin: { left: col2X }, tableWidth: colWidth,
                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
@@ -169,7 +216,7 @@ if (wusterForm) {
             // --- Akhir Kolom Kanan ---
 
             // Tentukan Y-posisi akhir (ambil yang paling bawah dari kedua kolom)
-            let currentY = Math.max(leftY, rightY) + marginYSmall;
+            let currentY = Math.max(leftY, rightY) + 5;
 
             // Tabel Lain-lain (Full Width)
             doc.autoTable({
@@ -180,15 +227,11 @@ if (wusterForm) {
             });
 
             // Footer
-            let finalY = doc.autoTable.previous.finalY + 10; // === JARAK FOOTER DIKECILKAN ===
-            const footerHeight = 35; // Perkiraan tinggi footer
-            const pageHeight = doc.internal.pageSize.height;
-            const bottomMargin = 15;
-
-            // Cek jika footer tidak muat di halaman ini
-            if (finalY + footerHeight > pageHeight - bottomMargin) {
+            let finalY = doc.autoTable.previous.finalY + 15;
+            // Cek jika footer melebihi batas halaman
+            if (finalY > (doc.internal.pageSize.height - 40)) { // Beri margin bawah 40
                  doc.addPage();
-                 finalY = 20; // Mulai footer di atas
+                 finalY = 20;
             }
             const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
             doc.setFontSize(10);
@@ -209,7 +252,6 @@ if (wusterForm) {
 
     /**
      * Fungsi: Memuat riwayat laporan
-     * (Tidak berubah)
      */
     async function loadWusterHistory() {
         if (!historyListEl) return;
@@ -252,7 +294,6 @@ if (wusterForm) {
 
     /**
      * Fungsi: Menangani submit form
-     * (Tidak berubah)
      */
     wusterForm.onsubmit = async (event) => {
         event.preventDefault();
@@ -334,13 +375,36 @@ if (wusterForm) {
         }
     };
 
-    // (Event listener pagination tidak berubah)
-    prevButton.addEventListener('click', () => { /* ... kode sama ... */ });
-    nextButton.addEventListener('click', () => { /* ... kode sama ... */ });
+    // Event listener untuk tombol pagination
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 1) { currentPage--; loadWusterHistory(); }
+    });
+    nextButton.addEventListener('click', () => {
+        const totalPages = Math.ceil(totalReports / itemsPerPage);
+        if (currentPage < totalPages) { currentPage++; loadWusterHistory(); }
+    });
 
     /**
      * Fungsi Inisialisasi Halaman
-     * (Tidak berubah)
      */
-    (async () => { /* ... kode sama ... */ })();
+    (async () => {
+        const session = await getActiveUserSession();
+        if (!session) {
+            alert('Anda harus login terlebih dahulu!');
+            window.location.href = 'login.html';
+            return;
+        }
+        currentUser = session.user;
+        currentKaryawan = await loadSharedDashboardData(currentUser);
+        currentPage = 1;
+        resetDynamicList(holderListContainer, defaultHolderItems, 'packing-item-name', 'packing-item-value');
+        resetDynamicList(pasangListContainer, defaultPasangItems, 'pasang-item-name', 'pasang-item-value');
+        resetDynamicList(assyCupListContainer, defaultAssyCupItems, 'assy-cup-item-name', 'assy-cup-item-value');
+        resetDynamicList(touchUpListContainer, defaultTouchUpItems, 'touch-up-item-name', 'touch-up-item-value');
+        resetDynamicList(bukaCapListContainer, defaultBukaCapItems, 'buka-cap-item-name', 'buka-cap-item-value');
+        calculateTotal(wusterInputs, wusterTotalSpan);
+        calculateTotal(checkInputs, checkTotalSpan);
+        calculateTotal(prodInputs, prodTotalSpan);
+        await loadWusterHistory();
+    })();
 }
