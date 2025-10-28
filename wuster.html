@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Wuster</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <h3>MyApp</h3>
+                <div id="user-info"><h4>Memuat...</h4></div>
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="dashboard.html"><span class="material-icons">home</span>Home</a></li>
+                        <li><a href="incoming.html"><span class="material-icons">inventory_2</span>Incoming</a></li>
+                        <li><a href="wuster.html" class="active"><span class="material-icons">cleaning_services</span>Wuster</a></li>
+                        <li><a href="repair.html"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
+                        <li><a href="chrom.html"><span class="material-icons">auto_awesome</span>Chrom</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="sidebar-bottom">
+                <button id="logout-button"><span class="material-icons">logout</span>Logout</button>
+            </div>
+        </aside>
+
+        <div class="overlay" id="overlay"></div>
+
+        <main class="main-content">
+            <header>
+                <button class="menu-toggle" id="menu-toggle"><span class="material-icons">menu</span></button>
+                <h2>Laporan Akhir Shift - Wuster</h2>
+            </header>
+            
+            <div class="content-wrapper">
+
+                <form id="wuster-form" class="card">
+                    
+                    <div class="form-grid-3">
+                        <div class="input-group"><label for="hari">Hari</label><select id="hari" required><option value="">Pilih Hari...</option><option value="Senin">Senin</option><option value="Selasa">Selasa</option><option value="Rabu">Rabu</option><option value="Kamis">Kamis</option><option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option><option value="Minggu">Minggu</option></select></div>
+                        <div class="input-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div>
+                        <div class="input-group"><label for="shift">Shift</label><select id="shift" required><option value="">Pilih Shift...</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+                        <div class="input-group"><label for="chief_name">Nama Chief</label><select id="chief_name"><option value="">( Kosong )</option><option value="YANTO H">YANTO H</option><option value="SUBAGYO">SUBAGYO</option><option value="SARNO">SARNO</option></select></div>
+                        <div class="input-group"><label for="total_masuk">Total Masuk (org)</label><input type="number" id="total_masuk" value="0"></div>
+                    </div>
+
+                    <h4 class="form-section-title">1. Absensi</h4>
+                    <fieldset class="absensi-fieldset">
+                        <div class="absensi-grid">
+                            <label></label>
+                            <span class="grid-header">Masuk (org)</span>
+                            <span class="grid-header">Tidak Masuk (Nama)</span>
+
+                            <label for="abs_staff_masuk">STAFF</label>
+                            <input type="number" id="abs_staff_masuk" value="0">
+                            <input type="text" id="abs_staff_tdk_masuk">
+
+                            <label for="abs_wuster_masuk">WUSTER</label>
+                            <input type="number" id="abs_wuster_masuk" value="0">
+                            <input type="text" id="abs_wuster_tdk_masuk">
+
+                            <label for="abs_repair_masuk">REPAIR & TOUCH UP</label>
+                            <input type="number" id="abs_repair_masuk" value="0">
+                            <input type="text" id="abs_repair_tdk_masuk">
+
+                            <label for="abs_incoming_masuk">INCOMING, STEP ASSY, BUKA CAP</label>
+                            <input type="number" id="abs_incoming_masuk" value="0">
+                            <input type="text" id="abs_incoming_tdk_masuk">
+
+                            <label for="abs_chrome_masuk">CHROM, VERIFIKASI, AEROX, REMOVER</label>
+                            <input type="number" id="abs_chrome_masuk" value="0"> <input type="text" id="abs_chrome_tdk_masuk"> <label for="abs_painting_4_masuk">PAINTING 4</label>
+                            <input type="number" id="abs_painting_4_masuk" value="0">
+                            <input type="text" id="abs_painting_4_tdk_masuk">
+
+                            <label for="abs_user_cpc_masuk">USER & CPC</label>
+                            <input type="number" id="abs_user_cpc_masuk" value="0">
+                            <input type="text" id="abs_user_cpc_tdk_masuk">
+
+                            <label for="abs_maintenance_masuk">MAINTENANCE</label>
+                            <input type="number" id="abs_maintenance_masuk" value="0">
+                            <input type="text" id="abs_maintenance_tdk_masuk">
+                        </div>
+                    </fieldset>
+
+                    <h4 class="form-section-title">Detail Laporan Lainnya</h4>
+                    <fieldset class="absensi-fieldset"><legend>3. Packing Holder</legend><div class="dynamic-list-container" id="packing-holder-list"></div><button type="button" class="button-add" id="add-holder-item-btn"><span class="material-icons">add_circle</span> Tambah Item Lain</button></fieldset>
+                    <fieldset class="absensi-fieldset" style="margin-top: 1rem;"><legend>4. Pasang Holder</legend><div class="dynamic-list-container" id="pasang-holder-list"></div><button type="button" class="button-add" id="add-pasang-item-btn"><span class="material-icons">add_circle</span> Tambah Item Lain</button></fieldset>
+                    <div class="form-grid-2" style="margin-top: 1rem;">
+                        <div class="input-group"><label for="problem_quality_notes">5. Problem / Quality</label><textarea id="problem_quality_notes" rows="4"></textarea></div>
+                        <div class="input-group"><label for="suplay_material_notes">6. Suplay Material</label><textarea id="suplay_material_notes" rows="4"></textarea></div>
+                        <div class="input-group"><label for="packing_box_notes">7. Packing Box / Lory</label><textarea id="packing_box_notes" rows="4"></textarea></div>
+                        <div class="input-group"><label for="trouble_mesin_notes">8. Trouble Mesin</label><textarea id="trouble_mesin_notes" rows="4"></textarea></div>
+                    </div>
+                    
+                    <h4 class="form-section-title">Hasil Produksi</h4>
+                    <div class="form-grid-3">
+                        <fieldset class="absensi-fieldset"><legend>9. Hasil Assy Cup</legend><div class="dynamic-list-container" id="assy-cup-list"></div><button type="button" class="button-add" id="add-assy-cup-item-btn"><span class="material-icons">add_circle</span> Tambah Item Lain</button></fieldset>
+                        <fieldset class="absensi-fieldset"><legend>10. Hasil Touch Up</legend><div class="dynamic-list-container" id="touch-up-list"></div><button type="button" class="button-add" id="add-touch-up-item-btn"><span class="material-icons">add_circle</span> Tambah Item Lain</button></fieldset>
+                        <fieldset class="absensi-fieldset"><legend>11. Hasil Buka Cap</legend><div class="dynamic-list-container" id="buka-cap-list"></div><button type="button" class="button-add" id="add-buka-cap-item-btn"><span class="material-icons">add_circle</span> Tambah Item Lain</button></fieldset>
+                    </div>
+
+                    <h4 class="form-section-title">Performa & Total</h4>
+                    <div class="form-grid-3">
+                        <fieldset class="total-fieldset"><legend>13. Performa Wuster</legend><div class="total-row"><label for="perf_wuster_isi">HANGER ISI</label><input type="number" id="perf_wuster_isi" class="wuster-calc" value="0"></div><div class="total-row"><label for="perf_wuster_kosong">HANGER KOSONG</label><input type="number" id="perf_wuster_kosong" class="wuster-calc" value="0"></div><div class="total-display">TOTAL <span id="perf_wuster_total">0</span></div></fieldset>
+                        <fieldset class="total-fieldset"><legend>14. Total Check</legend><div class="total-row"><label for="total_check_ok">OK</label><input type="number" id="total_check_ok" class="check-calc" value="0"></div><div class="total-row"><label for="total_check_ng">NG</label><input type="number" id="total_check_ng" class="check-calc" value="0"></div><div class="total-row"><label for="total_check_repair">REPAIR</label><input type="number" id="total_check_repair" class="check-calc" value="0"></div><div class="total-row"><label for="total_check_body">BODY</label><input type="number" id="total_check_body" class="check-calc" value="0"></div><div class="total-display">TOTAL <span id="total_check_total">0</span></div></fieldset>
+                         <fieldset class="total-fieldset"><legend>14. Total Produksi</legend><div class="total-row"><label for="total_prod_fresh">FRESH</label><input type="number" id="total_prod_fresh" class="prod-calc" value="0"></div><div class="total-row"><label for="total_prod_repair">REPAIR</label><input type="number" id="total_prod_repair" class="prod-calc" value="0"></div><div class="total-row"><label for="total_prod_ng">NG</label><input type="number" id="total_prod_ng" class="prod-calc" value="0"></div><div class="total-display">TOTAL <span id="total_prod_total">0</span></div></fieldset>
+                    </div>
+
+                    <h4 class="form-section-title">Lain-lain</h4>
+                    <div class="form-grid-2">
+                        <div class="input-group"><label for="lost_time_notes">Lost Time</label><input type="text" id="lost_time_notes" placeholder="cth: 18 Menit"></div>
+                        <div class="input-group"><label for="hanger_notes">Hanger</label><input type="text" id="hanger_notes" placeholder="cth: 79 Hanger"></div>
+                    </div>
+
+                    <button type="submit" class="button-primary">Simpan Laporan Wuster</button>
+                    <p id="form-message"></p>
+                </form>
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="history-header"><h3>Riwayat Laporan Wuster</h3></div>
+                    <div class="table-container">
+                        <table class="history-table" id="wuster-history-list">
+                            <thead><tr><th>Tanggal</th><th>Shift</th><th>Total Masuk</th><th>Dibuat</th><th>Aksi</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                        <div class="pagination-controls">
+                            <button id="prev-page-btn" class="button-secondary" disabled>Previous</button>
+                            <span id="page-info">Page 1 of 1</span>
+                            <button id="next-page-btn" class="button-secondary" disabled>Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="wuster.js"></script>
+</body>
+</html>

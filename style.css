@@ -1,0 +1,699 @@
+/* --- 1. Global Styles & Dark Theme Variables --- */
+:root {
+  --sidebar-width: 260px;
+  
+  /* Palet Tema Gelap */
+  --bg-color: #1a1a1a;        /* Latar belakang utama */
+  --surface-color: #2c2c2c;   /* Latar belakang kartu, sidebar */
+  --primary-color: #0d6efd;   /* Biru untuk aksen */
+  --text-primary: #f5f5f5;    /* Teks utama (putih) */
+  --text-secondary: #adb5bd;  /* Teks abu-abu */
+  --border-color: #444444;    /* Garis/border */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+  color: inherit;
+  background-color: transparent;
+  border: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+.card {
+  background: var(--surface-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+/* --- 2. Login Page Styles (Dark Mode) --- */
+.login-container {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.login-container form {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-container h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--primary-color);
+}
+
+.login-container .input-group {
+  margin-bottom: 1rem;
+}
+
+.login-container label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.login-container input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.login-container input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+
+.login-container button {
+  width: 100%;
+  padding: 0.85rem;
+  background-color: var(--primary-color);
+  color: var(--text-primary);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.login-container button:hover {
+  background-color: #0b5ed7;
+}
+
+#message {
+  text-align: center;
+  margin-top: 1rem;
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* --- 3. Dashboard Layout --- */
+.dashboard-container {
+  display: grid;
+  /* Default 1 kolom untuk mobile */
+  grid-template-columns: 1fr; 
+}
+
+/* --- Sidebar Styles --- */
+.sidebar {
+  background: var(--surface-color);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  position: fixed; 
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: var(--sidebar-width);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1000;
+  border-right: 1px solid var(--border-color);
+  
+  /* Sembunyi by default di mobile */
+  transform: translateX(-100%); 
+}
+
+/* Status aktif untuk mobile */
+.sidebar.active {
+  transform: translateX(0);
+}
+
+.sidebar-top h3 {
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+/* User Info */
+#user-info {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 6px;
+  word-wrap: break-word;
+  margin-bottom: 1.5rem;
+}
+#user-info h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+#user-info p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Nav Menu */
+.sidebar-nav {
+  flex-grow: 1;
+}
+.sidebar-nav ul {
+  list-style: none;
+}
+.sidebar-nav li {
+  margin-bottom: 0.25rem;
+}
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.sidebar-nav a:hover, .sidebar-nav a.active {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: var(--primary-color);
+}
+.sidebar-nav .material-icons {
+  font-size: 22px;
+}
+
+/* Logout Button */
+#logout-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+#logout-button:hover {
+  background: #dc3545;
+  color: var(--text-primary);
+}
+
+/* --- Main Content Styles --- */
+.main-content {
+  /* Full width di mobile */
+  width: 100%;
+  padding: 1.5rem;
+  transition: margin-left 0.3s ease-in-out;
+  overflow-y: auto;
+}
+
+.main-content header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.menu-toggle {
+  display: grid; /* Selalu tampil */
+  place-items: center;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  box-shadow: var(--shadow);
+  color: var(--text-primary);
+}
+.menu-toggle .material-icons {
+  transition: transform 0.3s ease;
+}
+
+.content-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* --- 4. Desktop Styles (Push Content) --- */
+@media (min-width: 769px) {
+  /* Tampilkan sidebar by default di desktop */
+  body:not(.sidebar-collapsed) .sidebar {
+    transform: translateX(0);
+  }
+  
+  /* Dorong konten utama ke kanan */
+  body:not(.sidebar-collapsed) .main-content {
+    margin-left: var(--sidebar-width);
+  }
+
+  /* Sembunyikan sidebar jika 'sidebar-collapsed' ada di body */
+  body.sidebar-collapsed .sidebar {
+    transform: translateX(-100%);
+  }
+
+  /* Konten jadi full width jika sidebar collaps */
+  body.sidebar-collapsed .main-content {
+    margin-left: 0;
+  }
+  
+  /* Putar ikon menu */
+  body.sidebar-collapsed .menu-toggle .material-icons {
+     transform: rotate(180deg);
+  }
+
+  /* Jangan pernah tampilkan overlay di desktop */
+  .overlay {
+    display: none !important;
+  }
+}
+
+/* --- 5. Mobile Overlay --- */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+.overlay.active {
+  display: block;
+}
+
+
+/* --- 6. Form Laporan Baru (Incoming) --- */
+
+.form-section-title {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+/* Grid untuk layout form */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .form-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Grup input standar */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.input-group label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.input-group input[type="text"],
+.input-group input[type="date"],
+.input-group input[type="number"],
+.input-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+.input-group input:focus,
+.input-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+
+/* Grup input dengan border (Fieldset) */
+fieldset.input-group-border {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+fieldset.input-group-border legend {
+  padding: 0 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+fieldset.input-group-border label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-align: right;
+}
+fieldset.input-group-border input {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  border-radius: 4px;
+}
+
+/* Tombol submit utama */
+.button-primary {
+  width: 100%;
+  padding: 0.85rem;
+  background-color: var(--primary-color);
+  color: var(--text-primary);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  margin-top: 1rem;
+}
+.button-primary:hover {
+  background-color: #0b5ed7;
+}
+
+/* --- 7. Tabel Riwayat --- */
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.button-secondary {
+  padding: 0.6rem 1.2rem;
+  background-color: var(--surface-color);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+.button-secondary:hover {
+  background-color: var(--primary-color);
+  color: var(--text-primary);
+}
+.button-secondary .material-icons {
+  font-size: 18px;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+table.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table.history-table th,
+table.history-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+table.history-table th {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+table.history-table tbody tr:hover {
+  background-color: var(--bg-color);
+}
+
+/* --- 8. Styling untuk Select (Dropdown) --- */
+.input-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  color: var(--text-primary);
+  /* Menghilangkan tampilan default browser */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* Menambahkan ikon panah kustom */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23adb5bd' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 16px;
+}
+
+.input-group select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+
+/* --- 9. Styling untuk Tombol Aksi di Tabel --- */
+.button-pdf {
+  padding: 0.4rem 0.8rem;
+  background-color: var(--surface-color);
+  color: #dc3545; /* Warna merah PDF */
+  border: 1px solid #dc3545;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+  cursor: pointer; /* Pastikan terlihat bisa diklik */
+}
+.button-pdf:hover {
+  background-color: #dc3545;
+  color: var(--text-primary);
+}
+.button-pdf .material-icons {
+  font-size: 16px;
+}
+
+/* --- 10. Pagination Controls --- */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.pagination-controls span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Gunakan style tombol sekunder yang sudah ada */
+.pagination-controls button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* Style untuk tombol yang tidak aktif */
+.pagination-controls button:disabled {
+  background-color: var(--surface-color);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+/* --- 11. Absensi Form (Wuster) --- */
+fieldset.absensi-fieldset {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1rem;
+}
+fieldset.absensi-fieldset legend {
+    padding: 0 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.absensi-grid {
+    display: grid;
+    /* Kolom: Label | Input Masuk | Input Tdk Masuk */
+    grid-template-columns: auto 1fr 1fr; 
+    gap: 0.75rem 1rem;
+    align-items: center;
+}
+.absensi-grid .grid-header {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+.absensi-grid label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: left;
+}
+/* Mengatur layout baris header */
+.absensi-grid > label:first-of-type {
+    grid-column: 1 / 2;
+}
+.absensi-grid .grid-header:nth-of-type(1) {
+    grid-column: 2 / 3;
+}
+.absensi-grid .grid-header:nth-of-type(2) {
+    grid-column: 3 / 4;
+}
+.absensi-grid input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* --- 12. Dynamic Item List (Packing Holder) --- */
+.dynamic-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dynamic-list-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto; /* Item | Value | Hapus */
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.dynamic-list-row input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Tombol Hapus Item (merah) */
+.button-remove {
+  padding: 0.5rem;
+  background-color: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+}
+.button-remove:hover {
+  background-color: #dc3545;
+  color: var(--text-primary);
+}
+.button-remove .material-icons {
+  font-size: 18px;
+}
+
+/* Tombol Tambah Item (biru) */
+.button-add {
+  margin-top: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  background-color: var(--surface-color);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+.button-add:hover {
+  background-color: var(--primary-color);
+  color: var(--text-primary);
+}
+.button-add .material-icons {
+  font-size: 18px;
+}
+/* --- 13. Structured Total Forms (Wuster) --- */
+fieldset.total-fieldset {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1rem;
+    display: flex; /* Mengatur item dalam satu baris */
+    flex-direction: column; /* Tumpuk secara vertikal */
+    gap: 0.75rem; /* Jarak antar baris */
+}
+fieldset.total-fieldset legend {
+    padding: 0 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.total-row {
+    display: grid;
+    /* Kolom: Label | Input */
+    grid-template-columns: auto 1fr;
+    gap: 0 1rem; /* Jarak horizontal saja */
+    align-items: center;
+}
+.total-row label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: right;
+    white-space: nowrap; /* Agar label tidak wrap */
+}
+.total-row input[type="number"] {
+    width: 100%; /* Lebarkan input */
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+.total-display {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    font-weight: bold;
+    color: var(--text-primary);
+    text-align: right; /* Total rata kanan */
+}
+.total-display span {
+    margin-left: 1rem; /* Jarak dari label 'TOTAL' */
+    color: var(--primary-color); /* Warna biru untuk angka total */
+}

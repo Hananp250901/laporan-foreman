@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body id="dashboard-home"> <div class="dashboard-container">
+        
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <h3>Laporan Foreman</h3>
+                <div id="user-info"><h4>Memuat...</h4></div>
+
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li>
+                            <a href="dashboard.html"> <span class="material-icons">home</span>
+                                Home
+                            </a>
+                        </li>
+                        <li>
+                            <a href="incoming.html"> <span class="material-icons">inventory_2</span>
+                                Incoming
+                            </a>
+                        </li>
+                        <li><a href="wuster.html"><span class="material-icons">cleaning_services</span>Wuster</a></li>
+                        <li><a href="repair.html"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
+                        <li><a href="chrom.html" class="active"><span class="material-icons">auto_awesome</span>Chrom</a></li>
+                    </ul>
+                </nav>
+            </div>
+            
+            <div class="sidebar-bottom">
+                <button id="logout-button"><span class="material-icons">logout</span>Logout</button>
+            </div>
+        </aside>
+
+        <div class="overlay" id="overlay"></div>
+
+        <main class="main-content">
+            <header>
+                <button class="menu-toggle" id="menu-toggle"><span class="material-icons">menu</span></button>
+                <h2>Dashboard</h2>
+            </header>
+            
+            <div class="content-wrapper">
+                <div class="card">
+                    <h2>Selamat Datang!</h2>
+                    <p>Web ini dalam masa pengembangan hubungi Hanan untuk info lebih lanjut ya.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
