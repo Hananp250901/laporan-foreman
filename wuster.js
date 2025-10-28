@@ -140,7 +140,7 @@ if (wusterForm) {
             // Tabel Absensi (Full Width)
             doc.autoTable({
                 startY: 45, // Mulai lebih awal
-                head: [['1. ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
+                head: [['ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
                 body: [
                     ['STAFF', report.abs_staff_masuk, report.abs_staff_tdk_masuk || ''],
                     ['WUSTER', report.abs_wuster_masuk, report.abs_wuster_tdk_masuk || ''],
@@ -176,23 +176,23 @@ if (wusterForm) {
 
             // --- Gambar Kolom Kiri Dulu ---
             let leftY = startY2Col;
-            leftY = drawSingleTable('3. Packing Holder', report.packing_holder_notes, leftY, col1X);
-            leftY = drawSingleTable('4. Pasang Holder', report.pasang_holder_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('5. Problem / Quality', report.problem_quality_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('6. Suplay Material', report.suplay_material_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('7. Packing Box / Lory', report.packing_box_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('8. Trouble Mesin', report.trouble_mesin_notes, leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('Packing Holder', report.packing_holder_notes, leftY, col1X);
+            leftY = drawSingleTable('Pasang Holder', report.pasang_holder_notes, leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('Problem / Quality', report.problem_quality_notes, leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('Suplay Material', report.suplay_material_notes, leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('Packing Box / Lory', report.packing_box_notes, leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('Trouble Mesin', report.trouble_mesin_notes, leftY + marginYSmall, col1X);
 
             // --- Gambar Kolom Kanan ---
             let rightY = startY2Col; // Mulai dari Y yang sama dengan kolom kiri
-            rightY = drawSingleTable('9. Hasil Assy Cup', report.hasil_assy_cup_notes, rightY, col2X);
-            rightY = drawSingleTable('10. Hasil Touch Up', report.hasil_touch_up_notes, rightY + marginYSmall, col2X);
-            rightY = drawSingleTable('11. Hasil Buka Cap', report.hasil_buka_cap_notes, rightY + marginYSmall, col2X);
+            rightY = drawSingleTable('Hasil Assy Cup', report.hasil_assy_cup_notes, rightY, col2X);
+            rightY = drawSingleTable('Hasil Touch Up', report.hasil_touch_up_notes, rightY + marginYSmall, col2X);
+            rightY = drawSingleTable('Hasil Buka Cap', report.hasil_buka_cap_notes, rightY + marginYSmall, col2X);
 
             // Tabel Kalkulasi (lanjut di kolom kanan)
             const wusterTotal = (report.perf_wuster_isi || 0) + (report.perf_wuster_kosong || 0);
             rightY = drawCalcTable({
-                startY: rightY + marginYSmall, head: [['13. PERFORMA WUSTER', 'Jumlah']],
+                startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']],
                 body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]],
                 margin: { left: col2X }, tableWidth: colWidth,
                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
@@ -201,7 +201,7 @@ if (wusterForm) {
 
             const checkTotal = (report.total_check_ok || 0) + (report.total_check_ng || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
             rightY = drawCalcTable({
-                startY: rightY + marginYSmall, head: [['14. TOTAL CHECK', 'Jumlah']],
+                startY: rightY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']],
                 body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]],
                 margin: { left: col2X }, tableWidth: colWidth,
                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
@@ -210,7 +210,7 @@ if (wusterForm) {
 
             const prodTotal = (report.total_prod_fresh || 0) + (report.total_prod_repair || 0) + (report.total_prod_ng || 0);
             rightY = drawCalcTable({
-                startY: rightY + marginYSmall, head: [['14. TOTAL PRODUKSI', 'Jumlah']],
+                startY: rightY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']],
                 body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]],
                 margin: { left: col2X }, tableWidth: colWidth,
                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
