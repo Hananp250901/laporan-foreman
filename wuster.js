@@ -231,7 +231,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     /**
-     * FUNGSI PDF (Tidak berubah)
+     * FUNGSI HELPER PDF BARU: Menghitung total dari string notes
+     */
+    function addTotalToNotes(notesString) {
+        if (!notesString || notesString.trim() === '') return '(Kosong)';
+        let sum = 0;
+        const lines = notesString.split('\n');
+        
+        lines.forEach(line => {
+            const parts = line.split(': ');
+            if (parts.length >= 2) {
+                // Ambil bagian terakhir (angkanya) dan ubah jadi integer
+                sum += parseInt(parts[parts.length - 1]) || 0;
+            }
+        });
+        
+        // Kembalikan string asli DITAMBAH baris TOTAL
+        return `${notesString}\n\nTOTAL: ${sum}`;
+    }
+
+
+    /**
+     * FUNGSI PDF (DIMODIFIKASI)
      */
     async function generatePDF(reportId) {
         alert('Membuat PDF... Mohon tunggu.');
@@ -245,8 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) throw new Error(`Gagal mengambil data laporan: ${error.message}`);
             
             const doc = new jsPDF({ format: 'legal' });
-            // ... (Seluruh kode jsPDF Anda dari file sebelumnya ada di sini) ...
-            // ... (Saya singkat agar tidak terlalu panjang, TAPI KODE PDF INI SAMA PERSIS) ...
             const tableStyles = {
                 theme: 'grid', styles: { cellWidth: 'wrap', fontSize: 8, cellPadding: 1 }, 
                 headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255], fontSize: 9 } 
@@ -264,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.text("TOTAL MASUK", col1X, 37); doc.text(`: ${report.total_masuk} Orang`, col1X + 30, 37);
 
             doc.autoTable({
-                startY: 45, head: [['ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
+                startY: 45, head: [['1. ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
                 body: [['STAFF', report.abs_staff_masuk, report.abs_staff_tdk_masuk || ''], ['WUSTER', report.abs_wuster_masuk, report.abs_wuster_tdk_masuk || ''], ['REPAIR & TOUCH UP', report.abs_repair_masuk, report.abs_repair_tdk_masuk || ''], ['INCOMING, STEP ASSY, BUKA CAP', report.abs_incoming_masuk, report.abs_incoming_tdk_masuk || ''], ['CHROM, VERIFIKASI, AEROX, REMOVER', report.abs_chrome_masuk, report.abs_chrome_tdk_masuk || ''], ['PAINTING 4', report.abs_painting_4_masuk, report.abs_painting_4_tdk_masuk || ''], ['USER & CPC', report.abs_user_cpc_masuk, report.abs_user_cpc_tdk_masuk || ''], ['MAINTENANCE', report.abs_maintenance_masuk, report.abs_maintenance_tdk_masuk || ''],],
                 ...tableStyles, margin: { left: marginX }, tableWidth: fullWidth, columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 25 }, 2: { cellWidth: 105 } }
             });
@@ -273,33 +292,39 @@ document.addEventListener('DOMContentLoaded', () => {
             function drawSingleTable(title, note, startY, startX, width = colWidth) { doc.autoTable({ startY: startY, head: [[title]], body: [[note || '']], ...tableStyles, margin: { left: startX }, tableWidth: width, columnStyles: { 0: { cellWidth: width - 2 } } }); return doc.autoTable.previous.finalY; }
             function drawCalcTable(options) { let localTableStyles = JSON.parse(JSON.stringify(tableStyles)); doc.autoTable({ ...options, ...localTableStyles }); return doc.autoTable.previous.finalY; }
 
+            // --- Gambar Kolom Kiri Dulu ---
             let leftY = startY2Col;
-            leftY = drawSingleTable('Packing Holder', report.packing_holder_notes, leftY, col1X);
-            leftY = drawSingleTable('Pasang Holder', report.pasang_holder_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('Problem / Quality', report.problem_quality_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('Suplay Material', report.suplay_material_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('Packing Box / Lory', report.packing_box_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('Trouble Mesin', report.trouble_mesin_notes, leftY + marginYSmall, col1X);
+            // === PERUBAHAN DI SINI ===
+            leftY = drawSingleTable('3. Packing Holder', addTotalToNotes(report.packing_holder_notes), leftY, col1X);
+            leftY = drawSingleTable('4. Pasang Holder', addTotalToNotes(report.pasang_holder_notes), leftY + marginYSmall, col1X);
+            // === AKHIR PERUBAHAN ===
+            leftY = drawSingleTable('5. Problem / Quality', report.problem_quality_notes, leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('6. Suplay Material', report.suplay_material_notes, leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('7. Packing Box / Lory', report.packing_box_notes, leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('8. Trouble Mesin', report.trouble_mesin_notes, leftY + marginYSmall, col1X);
 
             const prodTotal = (report.total_prod_fresh || 0) + (report.total_prod_repair || 0) + (report.total_prod_ng || 0);
-            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']], body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 3) { data.cell.styles.fontStyle = 'bold'; } } });
+            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['14. TOTAL PRODUKSI', 'Jumlah']], body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 3) { data.cell.styles.fontStyle = 'bold'; } } });
 
+            // --- Gambar Kolom Kanan ---
             let rightY = startY2Col; 
-            rightY = drawSingleTable('Hasil Assy Cup', report.hasil_assy_cup_notes, rightY, col2X);
-            rightY = drawSingleTable('Hasil Touch Up', report.hasil_touch_up_notes, rightY + marginYSmall, col2X);
-            rightY = drawSingleTable('Hasil Buka Cap', report.hasil_buka_cap_notes, rightY + marginYSmall, col2X);
+            // === PERUBAHAN DI SINI ===
+            rightY = drawSingleTable('9. Hasil Assy Cup', addTotalToNotes(report.hasil_assy_cup_notes), rightY, col2X);
+            rightY = drawSingleTable('10. Hasil Touch Up', addTotalToNotes(report.hasil_touch_up_notes), rightY + marginYSmall, col2X);
+            rightY = drawSingleTable('11. Hasil Buka Cap', addTotalToNotes(report.hasil_buka_cap_notes), rightY + marginYSmall, col2X);
+            // === AKHIR PERUBAHAN ===
 
             const wusterTotal = (report.perf_wuster_isi || 0) + (report.perf_wuster_kosong || 0);
-            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']], body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 2) { data.cell.styles.fontStyle = 'bold'; } } });
+            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['13. PERFORMA WUSTER', 'Jumlah']], body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 2) { data.cell.styles.fontStyle = 'bold'; } } });
 
             const checkTotal = (report.total_check_ok || 0) + (report.total_check_ng || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
-            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 4) { data.cell.styles.fontStyle = 'bold'; } } });
+            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['14. TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 4) { data.cell.styles.fontStyle = 'bold'; } } });
 
             let currentY = Math.max(leftY, rightY) + marginYSmall;
             doc.autoTable({ startY: currentY, head: [['LAIN-LAIN', 'Catatan']], body: [['Lost Time', report.lost_time_notes || ''], ['Hanger', report.hanger_notes || '']], ...tableStyles, margin: { left: marginX }, tableWidth: fullWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 140 } } });
 
+            // Footer
             let finalY = doc.autoTable.previous.finalY + 10;
-            // ... (Kode Footer PDF tidak berubah) ...
             const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
             doc.setFontSize(9);
             doc.text("Dibuat,", col1X, finalY); doc.text(preparerName, col1X, finalY + 15); doc.text("Foreman", col1X, finalY + 20);
@@ -353,7 +378,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadReportForEditing(e.currentTarget.getAttribute('data-id'));
                 });
 
-                // === PERBAIKAN DI SINI ===
                 // Event listener untuk tombol "Hapus"
                 row.querySelector('.button-delete-draft').addEventListener('click', async (e) => {
                     const idToDelete = e.currentTarget.getAttribute('data-id');
@@ -375,7 +399,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 });
-                // === AKHIR PERBAIKAN ===
             });
         }
     }
@@ -475,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('abs_incoming_tdk_masuk').value = report.abs_incoming_tdk_masuk;
         document.getElementById('abs_chrome_masuk').value = report.abs_chrome_masuk;
         document.getElementById('abs_chrome_tdk_masuk').value = report.abs_chrome_tdk_masuk;
-        document.getElementById('abs_painting_4_masuk').value = report.abs_painting_4_masuk; // <-- Ada typo di kode Anda sebelumnya, saya perbaiki
+        document.getElementById('abs_painting_4_masuk').value = report.abs_painting_4_masuk;
         document.getElementById('abs_painting_4_tdk_masuk').value = report.abs_painting_4_tdk_masuk;
         document.getElementById('abs_user_cpc_masuk').value = report.abs_user_cpc_masuk;
         document.getElementById('abs_user_cpc_tdk_masuk').value = report.abs_user_cpc_tdk_masuk;
