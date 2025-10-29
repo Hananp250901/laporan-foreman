@@ -23,8 +23,8 @@
                         <li><a href="dashboard.html"><span class="material-icons">home</span>Home</a></li>
                         <li><a href="incoming.html"><span class="material-icons">inventory_2</span>Incoming</a></li>
                         <li><a href="wuster.html" class="active"><span class="material-icons">cleaning_services</span>Wuster</a></li>
-                        <li><a href="repair.html"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
-                        <li><a href="chrom.html"><span class="material-icons">auto_awesome</span>Chrom</a></li>
+                        <li><a href="#"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
+                        <li><a href="#"><span class="material-icons">auto_awesome</span>Chrom</a></li>
                     </ul>
                 </nav>
             </div>
@@ -43,18 +43,30 @@
 
             <div class="content-wrapper">
 
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="history-header" style="background-color: #ffc107; color: #333;">
+                        <h3><span class="material-icons" style="vertical-align: bottom; margin-right: 8px;">edit_note</span> Draft Laporan (Belum Selesai)</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="history-table" id="wuster-draft-list">
+                            <thead><tr><th>Tanggal</th><th>Shift</th><th>Terakhir Disimpan</th><th>Aksi</th></tr></thead>
+                            <tbody><tr><td colspan="4">Memuat draft...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+
                 
 
                 <form id="wuster-form" class="card">
-
-                    <div class="form-grid-3">
+                    <h3 id="form-title">Buat Laporan Baru</h3> <div class="form-grid-3">
                         <div class="input-group"><label for="hari">Hari</label><select id="hari" required><option value="">Pilih Hari...</option><option value="Senin">Senin</option><option value="Selasa">Selasa</option><option value="Rabu">Rabu</option><option value="Kamis">Kamis</option><option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option><option value="Minggu">Minggu</option></select></div>
                         <div class="input-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div>
                         <div class="input-group"><label for="shift">Shift</label><select id="shift" required><option value="">Pilih Shift...</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
                         <div class="input-group"><label for="chief_name">Nama Chief</label><select id="chief_name"><option value="">( Kosong )</option><option value="YANTO H">YANTO H</option><option value="SUBAGYO">SUBAGYO</option><option value="SARNO">SARNO</option></select></div>
                         <div class="input-group"><label for="total_masuk">Total Masuk (org)</label><input type="number" id="total_masuk" value="0"></div>
                     </div>
-                    <h4 class="form-section-title">1. Absensi</h4>
+                    <h4 class="form-section-title">Absensi</h4>
                     <fieldset class="absensi-fieldset">
                         <div class="absensi-grid">
                             <label></label><span class="grid-header">Masuk (org)</span><span class="grid-header">Tidak Masuk (Nama)</span>
@@ -69,22 +81,8 @@
                         </div>
                     </fieldset>
                     <h4 class="form-section-title">Detail Laporan Lainnya</h4>
-                    <fieldset class="absensi-fieldset">
-                        <legend>Packing Holder</legend>
-                        <div class="dynamic-list-container" id="packing-holder-list"></div>
-                        <button type="button" class="button-add" id="add-holder-item-btn">
-                            <span class="material-icons">add_circle</span> Tambah Item Lain
-                        </button>
-                        <div class="list-total-display">TOTAL <span id="packing-holder-total">0</span></div>
-                    </fieldset>
-                    <fieldset class="absensi-fieldset" style="margin-top: 1rem;">
-                        <legend>4. Pasang Holder</legend>
-                        <div class="dynamic-list-container" id="pasang-holder-list"></div>
-                        <button type="button" class="button-add" id="add-pasang-item-btn">
-                            <span class="material-icons">add_circle</span> Tambah Item Lain
-                        </button>
-                        <div class="list-total-display">TOTAL <span id="pasang-holder-total">0</span></div>
-                    </fieldset>
+                    <fieldset class="absensi-fieldset"><legend>Packing Holder</legend><div class="dynamic-list-container" id="packing-holder-list"></div><button type="button" class="button-add" id="add-holder-item-btn"><span class="material-icons">add_circle</span> Tambah Item Lain</button><div class="list-total-display">TOTAL <span id="packing-holder-total">0</span></div></fieldset>
+                    <fieldset class="absensi-fieldset" style="margin-top: 1rem;"><legend>Pasang Holder</legend><div class="dynamic-list-container" id="pasang-holder-list"></div><button type="button" class="button-add" id="add-pasang-item-btn"><span class="material-icons">add_circle</span> Tambah Item Lain</button><div class="list-total-display">TOTAL <span id="pasang-holder-total">0</span></div></fieldset>
                     <div class="form-grid-2" style="margin-top: 1rem;">
                         <div class="input-group"><label for="problem_quality_notes">Problem / Quality</label><textarea id="problem_quality_notes" rows="4"></textarea></div>
                         <div class="input-group"><label for="suplay_material_notes">Suplay Material</label><textarea id="suplay_material_notes" rows="4"></textarea></div>
@@ -135,12 +133,16 @@
                         <div class="input-group"><label for="hanger_notes">Hanger</label><input type="text" id="hanger_notes" placeholder="cth: 79 Hanger" value="0 HANGER"></div>
                     </div>
 
-                    <button type="submit" class="button-primary">Simpan Laporan Wuster</button>
+                    <div class="form-actions">
+                        <button type="button" class="button-add" id="save-draft-btn">Simpan Draft</button>
+                        <button type="submit" class="button-primary" id="main-submit-btn">Simpan Laporan Final</button>
+                        <button type="button" class="button-danger" id="cancel-edit-btn" style="display: none;">Batal Edit</button>
+                    </div>
                     <p id="form-message"></p>
                 </form>
                 <br>
                 <div class="card" style="margin-bottom: 2rem;">
-                    <div class="history-header"><h3>Riwayat Laporan Wuster</h3></div>
+                    <div class="history-header"><h3>Riwayat Laporan (Selesai)</h3></div>
                     <div class="table-container">
                         <table class="history-table" id="wuster-history-list">
                             <thead><tr><th>Tanggal</th><th>Shift</th><th>Total Masuk</th><th>Dibuat</th><th>Aksi</th></tr></thead>
