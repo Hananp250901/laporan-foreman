@@ -23,8 +23,8 @@
                         <li><a href="dashboard.html"><span class="material-icons">home</span>Home</a></li>
                         <li><a href="incoming.html" class="active"><span class="material-icons">inventory_2</span>Incoming</a></li>
                         <li><a href="wuster.html"><span class="material-icons">cleaning_services</span>Wuster</a></li>
-                        <li><a href="#"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
-                        <li><a href="#"><span class="material-icons">auto_awesome</span>Chrom</a></li>
+                        <li><a href="repair.html"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
+                        <li><a href="chrom.html"><span class="material-icons">auto_awesome</span>Chrom</a></li>
                     </ul>
                 </nav>
             </div>
@@ -43,9 +43,20 @@
             
             <div class="content-wrapper">
 
-                
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="history-header" style="background-color: #ffc107; color: #333;">
+                        <h3><span class="material-icons" style="vertical-align: bottom; margin-right: 8px;">edit_note</span> Draft Laporan (Belum Selesai)</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="history-table" id="incoming-draft-list">
+                            <thead><tr><th>Tanggal</th><th>Shift</th><th>Terakhir Disimpan</th><th>Aksi</th></tr></thead>
+                            <tbody><tr><td colspan="4">Memuat draft...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
 
                 <form id="incoming-form" class="card">
+                    <h3 id="form-title">Buat Laporan Baru</h3>
                     
                     <div class="form-grid-2">
                         <div class="input-group"><label for="hari">Hari</label><select id="hari" required><option value="">Pilih Hari...</option><option value="Senin">Senin</option><option value="Selasa">Selasa</option><option value="Rabu">Rabu</option><option value="Kamis">Kamis</option><option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option><option value="Minggu">Minggu</option></select></div>
@@ -53,30 +64,64 @@
                         <div class="input-group"><label for="shift">Shift</label><select id="shift" required><option value="">Pilih Shift...</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
                         <div class="input-group"><label for="chief_name">Nama Chief</label><select id="chief_name"><option value="">( Kosong )</option><option value="YANTO H">YANTO H</option><option value="SUBAGYO">SUBAGYO</option><option value="SARNO">SARNO</option></select></div>
                     </div>
+                    
                     <h4 class="form-section-title">1. Absensi</h4>
                     <div class="form-grid-3">
                         <fieldset class="input-group-border"><legend>A. Line Incoming</legend><label>Masuk:</label><input type="number" id="absensi_incoming_masuk" value="0"><label>Tidak Masuk:</label><input type="text" id="absensi_incoming_tdk_masuk" placeholder="Nama orang"></fieldset>
                         <fieldset class="input-group-border"><legend>B. Line Step Assy</legend><label>Masuk:</label><input type="number" id="absensi_step_assy_masuk" value="0"><label>Tidak Masuk:</label><input type="text" id="absensi_step_assy_tdk_masuk" placeholder="Nama orang"></fieldset>
                         <fieldset class="input-group-border"><legend>C. Line Buka Cap</legend><label>Masuk:</label><input type="number" id="absensi_buka_cap_masuk" value="0"><label>Tidak Masuk:</label><input type="text" id="absensi_buka_cap_tdk_masuk" placeholder="Nama orang"></fieldset>
                     </div>
+                    
                     <h4 class="form-section-title">2. Produksi Line Incoming</h4>
                     <div class="form-grid-2">
                         <fieldset class="input-group-border"><legend>Produksi</legend><label>In Wuster:</label><input type="text" id="prod_wuster" placeholder="cth: 56"><label>In Chrom:</label><input type="text" id="prod_chrom" placeholder="cth: 12"></fieldset>
                         <fieldset class="input-group-border"><legend>Quality</legend><label>Item:</label><input type="text" id="quality_item" placeholder="cth: COVER ELEMENT 1DY"><label>Cek:</label><input type="text" id="quality_cek" placeholder="cth: 80"><label>NG (Ket.):</label><input type="text" id="quality_ng" placeholder="cth: 68 (Kerut, Kasar)"><label>Balik Material:</label><input type="text" id="quality_balik_material" placeholder="cth: 68"></fieldset>
                     </div>
+
                     <h4 class="form-section-title">3 & 4. Produksi (Step Assy & Buka Cap)</h4>
-                    <div class="form-grid-2">
-                        <div class="input-group"><label for="prod_step_assy_notes">Produksi Line Step Assy</label><textarea id="prod_step_assy_notes" rows="5" placeholder="cth: S/B K41K CW: 278 Pcs&#10;SB KPYX LH: 20 Pcs&#10;TOTAL: 298 Pcs"></textarea></div>
-                        <div class="input-group"><label for="prod_buka_cap_notes">Produksi Line Buka Cap</label><textarea id="prod_buka_cap_notes" rows="5" placeholder="cth: M/C 2DP RH: 1196 Pcs&#10;2DP LH: 1916 Pcs&#10;TOTAL: 3112 Pcs "></textarea></div>
-                        <div class="input-group"><label for="prod_assy_cup_notes">Produksi Assy Cup</label><textarea id="prod_assy_cup_notes" rows="5" placeholder="cth: M/C 200 LH: 310 Pcs&#10;K12V CBS: 384 Pcs&#10;TOTAL: 694 Pcs"></textarea></div>
+                    <div class="form-grid-3">
+                        <fieldset class="absensi-fieldset">
+                            <legend>Produksi Line Step Assy</legend>
+                            <div class="dynamic-list-container" id="prod-step-assy-list"></div>
+                            <button type="button" class="button-add" id="add-step-assy-item-btn">
+                                <span class="material-icons">add_circle</span> Tambah Item Lain
+                            </button>
+                            <div class="list-total-display">TOTAL <span id="prod-step-assy-total">0</span></div>
+                        </fieldset>
+
+                        <fieldset class="absensi-fieldset">
+                            <legend>Produksi Line Buka Cap</legend>
+                            <div class="dynamic-list-container" id="prod-buka-cap-list"></div>
+                            <button type="button" class="button-add" id="add-buka-cap-item-btn">
+                                <span class="material-icons">add_circle</span> Tambah Item Lain
+                            </button>
+                            <div class="list-total-display">TOTAL <span id="prod-buka-cap-total">0</span></div>
+                        </fieldset>
+
+                        <fieldset class="absensi-fieldset">
+                            <legend>Produksi Assy Cup</legend>
+                            <div class="dynamic-list-container" id="prod-assy-cup-list"></div>
+                            <button type="button" class="button-add" id="add-assy-cup-item-btn">
+                                <span class="material-icons">add_circle</span> Tambah Item Lain
+                            </button>
+                             <div class="list-total-display">TOTAL <span id="prod-assy-cup-total">0</span></div>
+                        </fieldset>
                     </div>
                     <h4 class="form-section-title">Check Thickness</h4>
                     <div class="input-group"><label for="check_thickness_notes">Catatan Check Thickness</label><textarea id="check_thickness_notes" rows="3" placeholder="cth: CH BKW TOTAL CEK: 82, OK: 80, NG: 2 "></textarea></div>
-                    <button type="submit" class="button-primary">Simpan Laporan</button>
+                    <br>
+                    <div class="form-actions">
+                        <button type="button" class="button-secondary" id="save-draft-btn">Simpan Draft</button>
+                        <button type="submit" class="button-primary" id="main-submit-btn">Simpan Laporan Final</button>
+                        
+                        <button type="button" class="button-danger" id="cancel-edit-btn" style="display: none;">Batal Edit</button>
+                    </div>
                     <p id="form-message"></p>
                 </form>
                 <br>
-                <div class="card" style="margin-bottom: 2rem;"> <div class="history-header"><h3>Riwayat Laporan Incoming</h3></div>
+                
+                <div class="card" style="margin-bottom: 2rem;"> 
+                    <div class="history-header"><h3>Riwayat Laporan Incoming (Selesai)</h3></div>
                     <div class="table-container">
                         <table class="history-table" id="incoming-history-list">
                             <thead>
@@ -86,13 +131,12 @@
                             </thead>
                             <tbody></tbody>
                         </table>
-
                         <div class="pagination-controls">
                             <button id="prev-page-btn" class="button-secondary" disabled>Previous</button>
                             <span id="page-info">Page 1 of 1</span>
                             <button id="next-page-btn" class="button-secondary" disabled>Next</button>
                         </div>
-                        </div>
+                    </div>
                 </div>
             </div>
         </main>

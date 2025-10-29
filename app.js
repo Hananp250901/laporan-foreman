@@ -7,7 +7,6 @@ const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // =================================================================
 // BAGIAN 2: FUNGSI GLOBAL & BERSAMA
-// (Fungsi-fungsi ini aman ditaruh di luar)
 // =================================================================
 
 async function getActiveUserSession() {
@@ -31,7 +30,6 @@ async function loadSharedDashboardData(currentUser) {
 
 // =================================================================
 // BAGIAN 3: LOGIKA YANG BERJALAN SETELAH HALAMAN SIAP
-// (PERBAIKAN: Dibungkus dengan DOMContentLoaded)
 // =================================================================
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -40,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutButton) {
         logoutButton.onclick = async () => {
             await _supabase.auth.signOut();
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
         };
     }
 
@@ -94,17 +92,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // -----------------------------------------------------------------
     // B. LOGIKA HALAMAN HOME (dashboard.html)
+    // === PERUBAHAN DI BLOK INI ===
     // -----------------------------------------------------------------
     const homePage = document.getElementById('dashboard-home');
     if (homePage) {
         (async () => {
             const session = await getActiveUserSession();
             if (!session) {
-                alert('Anda harus login terlebih dahulu!');
-                window.location.href = 'index.html';
+                alert('Login ulang bos sesi telah berakhir');
+                window.location.href = 'login.html'; // Pastikan ini halaman login Anda
                 return;
             }
-            await loadSharedDashboardData(session.user);
+            
+            // 1. Tangkap data karyawan saat memuat info sidebar
+            const karyawanData = await loadSharedDashboardData(session.user);
+            
+            // 2. Cari elemen h2 yang baru kita beri ID
+            const welcomeMessageEl = document.getElementById('welcome-message');
+            
+            // 3. Update teksnya
+            if (welcomeMessageEl && karyawanData && karyawanData.nama_lengkap) {
+                // Jika data karyawan ada, sapa dengan nama lengkap
+                welcomeMessageEl.textContent = `SELAMAT DATANG PAK ${karyawanData.nama_lengkap}!`;
+            } else if (welcomeMessageEl && session.user.email) {
+                // Jika tidak ada, sapa dengan email (fallback)
+                welcomeMessageEl.textContent = `Selamat Datang, ${session.user.email}!`;
+            }
+            // Jika tidak ada data sama sekali, h2 akan tetap "Selamat Datang!"
+            
         })();
     }
 
