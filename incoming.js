@@ -571,34 +571,37 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Fungsi Inisialisasi Halaman
      */
-    (async () => {
-        let session;
-        try {
-            session = await getActiveUserSession();
-            if (!session) {
-                alert('Anda harus login terlebih dahulu!');
-                window.location.href = 'index.html'; // Arahkan ke index/login
-                return;
+    setTimeout(() => {
+        (async () => {
+            // Cek sesi dan data user
+            let session;
+            try {
+                session = await getActiveUserSession(); // getActiveUserSession ada di app.js
+                if (!session) {
+                    alert('Anda harus login terlebih dahulu!');
+                    window.location.href = 'index.html'; // Arahkan ke login
+                    return;
+                }
+                currentUser = session.user;
+                currentKaryawan = await loadSharedDashboardData(currentUser); // loadSharedDashboardData ada di app.js
+            } catch (error) {
+                console.error("Error saat inisialisasi user:", error);
+                alert('Gagal memuat data user. Cek koneksi dan coba lagi.');
+                return; // Hentikan eksekusi jika user gagal dimuat
             }
-            currentUser = session.user; 
-            currentKaryawan = await loadSharedDashboardData(currentUser); 
-        } catch (error) {
-            console.error("Error saat inisialisasi user:", error);
-            alert('Gagal memuat data user. Cek koneksi dan coba lagi.');
-            return;
-        }
-        
-        // Jalankan reset form untuk set nilai default
-        resetFormAndState();
-        
-        // Muat riwayat & draft
-        try {
-            await loadIncomingDrafts();
-            await loadIncomingHistory(); 
-        } catch (error) {
-            console.error("Gagal memuat data:", error);
-            if (historyListEl) historyListEl.innerHTML = `<tr><td colspan="5" style="color: red;">Gagal memuat riwayat.</td></tr>`;
-            if (draftListEl) draftListEl.innerHTML = `<tr><td colspan="4" style="color: red;">Gagal memuat draft.</td></tr>`;
-        }
-    })();
+
+            // Jalankan reset form untuk set nilai default
+            resetFormAndState();
+
+            // Muat riwayat & draft
+            try {
+                await loadWusterDrafts();
+                await loadWusterHistory();
+            } catch (error) {
+                console.error("Gagal memuat data:", error);
+                if (historyListEl) historyListEl.innerHTML = `<tr><td colspan="5" style="color: red;">Gagal memuat riwayat.</td></tr>`;
+                if (draftListEl) draftListEl.innerHTML = `<tr><td colspan="4" style="color: red;">Gagal memuat draft.</td></tr>`;
+            }
+        })();
+    }, 150);
 });

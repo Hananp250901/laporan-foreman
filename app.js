@@ -256,35 +256,37 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- AKHIR FUNGSI BARU ---
 
 
-        (async () => {
-            const session = await getActiveUserSession();
-            if (!session) {
-                alert('Anda harus login terlebih dahulu!');
-                window.location.href = 'login.html'; // Pastikan ini halaman login Anda
-                return;
-            }
+        setTimeout(() => {
+            (async () => {
+                const session = await getActiveUserSession();
+                if (!session) {
+                    alert('Anda harus login terlebih dahulu!');
+                    window.location.href = 'index.html'; // Pastikan ini halaman login Anda
+                    return;
+                }
 
-            // 1. Muat data user dan sapaan selamat datang
-            const karyawanData = await loadSharedDashboardData(session.user);
-            const welcomeMessageEl = document.getElementById('welcome-message');
-            if (welcomeMessageEl && karyawanData && karyawanData.nama_lengkap) {
-                welcomeMessageEl.textContent = `Selamat Datang, ${karyawanData.nama_lengkap}!`;
-            } else if (welcomeMessageEl && session.user.email) {
-                welcomeMessageEl.textContent = `Selamat Datang, ${session.user.email}!`;
-            }
+                // Muat data user dan sapaan selamat datang
+                const karyawanData = await loadSharedDashboardData(session.user);
+                const welcomeMessageEl = document.getElementById('welcome-message');
+                if (welcomeMessageEl && karyawanData && karyawanData.nama_lengkap) {
+                    welcomeMessageEl.textContent = `Selamat Datang, ${karyawanData.nama_lengkap}!`;
+                } else if (welcomeMessageEl && session.user.email) {
+                    welcomeMessageEl.textContent = `Selamat Datang, ${session.user.email}!`;
+                }
 
-            // 2. Muat dan tampilkan grafik
-            try {
-                const wusterData = await fetchWusterDataForChart();
-                const chartData = processChartData(wusterData);
-                renderWusterChart(chartData);
-            } catch (error) {
-                 console.error("Failed to load and render chart:", error);
-                 const loadingMessageEl = document.getElementById('chart-loading-message');
-                 if (loadingMessageEl) loadingMessageEl.textContent = 'Gagal memuat data grafik.';
-            }
+                // Muat dan tampilkan grafik
+                try {
+                    const wusterData = await fetchWusterDataForChart();
+                    const chartData = processChartData(wusterData);
+                    renderWusterChart(chartData);
+                } catch (error) {
+                     console.error("Failed to load and render chart:", error);
+                     const loadingMessageEl = document.getElementById('chart-loading-message');
+                     if (loadingMessageEl) loadingMessageEl.textContent = 'Gagal memuat data grafik.';
+                }
 
-        })();
+            })();
+        }, 150);
     }
 
 }); // <-- Akhir dari pembungkus DOMContentLoaded
