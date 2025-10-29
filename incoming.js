@@ -49,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     /**
      * FUNGSI: Menambahkan baris item ke list dinamis
-     * (Diadaptasi dari wuster.js)
      */
     function addDynamicRow(container, nameClass, valueClass, itemName = "", itemValue = "") {
         if (!container) return;
@@ -173,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     /**
-     * FUNGSI PDF (Disalin dari incoming.js lama, tidak diubah)
+     * FUNGSI PDF (DIMODIFIKASI)
      */
     async function generatePDF(reportId) {
         alert('Membuat PDF... Mohon tunggu.');
@@ -182,6 +181,28 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const { jsPDF } = window.jspdf;
+
+        /**
+         * FUNGSI HELPER PDF BARU: Menghitung total dari string notes
+         */
+        function addTotalToNotes(notesString) {
+            if (!notesString || notesString.trim() === '') return '(Kosong)';
+            let sum = 0;
+            const lines = notesString.split('\n');
+            
+            lines.forEach(line => {
+                const parts = line.split(': ');
+                if (parts.length >= 2) {
+                    // Ambil bagian terakhir (angkanya) dan ubah jadi integer
+                    sum += parseInt(parts[parts.length - 1]) || 0;
+                }
+            });
+            
+            // Kembalikan string asli DITAMBAH baris TOTAL
+            return `${notesString}\n\nTOTAL: ${sum}`;
+        }
+        // --- Akhir fungsi helper ---
+
         try {
             const { data: report, error } = await _supabase
                 .from('laporan_incoming').select('*').eq('id', reportId).single();
@@ -203,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Tabel 1: Absensi
             doc.autoTable({
-                startY: 50, head: [['ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
+                startY: 50, head: [['1. ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
                 body: [
                     ['A. Line Incoming', report.absensi_incoming_masuk, report.absensi_incoming_tdk_masuk || ''],
                     ['B. Line Step Assy', report.absensi_step_assy_masuk, report.absensi_step_assy_tdk_masuk || ''],
@@ -213,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Tabel 2: Produksi Line Incoming
             doc.autoTable({
-                startY: doc.autoTable.previous.finalY + 7, head: [['PRODUKSI LINE INCOMING', 'Jumlah/Catatan']], 
+                startY: doc.autoTable.previous.finalY + 7, head: [['2. PRODUKSI LINE INCOMING', 'Jumlah/Catatan']], 
                 body: [
                     ['In Wuster', report.prod_wuster || ''], ['In Chrom', report.prod_chrom || ''],
                     ['Quality Item', report.quality_item || ''], ['Quality Cek', report.quality_cek || ''],
@@ -221,15 +242,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 ], ...tableStyles
             });
 
-            // Tabel 3 & 4 Gabungan
+            // Tabel 3 & 4 Gabungan (DIMODIFIKASI)
             doc.autoTable({
-                startY: doc.autoTable.previous.finalY + 7, head: [['PRODUKSI & CHECK THICKNESS', 'Catatan']],
+                startY: doc.autoTable.previous.finalY + 7,
+                head: [['3 & 4. PRODUKSI & CHECK THICKNESS', 'Catatan']],
                 body: [
-                    ['Prod. Line Step Assy', report.prod_step_assy_notes || ''],
-                    ['Prod. Line Buka Cap', report.prod_buka_cap_notes || ''],
-                    ['Prod. Assy Cup', report.prod_assy_cup_notes || ''],
+                    // === PERUBAHAN DI SINI ===
+                    ['Prod. Line Step Assy', addTotalToNotes(report.prod_step_assy_notes)],
+                    ['Prod. Line Buka Cap', addTotalToNotes(report.prod_buka_cap_notes)],
+                    ['Prod. Assy Cup', addTotalToNotes(report.prod_assy_cup_notes)],
+                    // === AKHIR PERUBAHAN ===
                     ['Check Thickness', report.check_thickness_notes || '']
-                ], ...tableStyles, columnStyles: { 0: { cellWidth: 60, fontStyle: 'bold' }, 1: { cellWidth: 130 } }
+                ],
+                ...tableStyles,
+                columnStyles: { 0: { cellWidth: 60, fontStyle: 'bold' }, 1: { cellWidth: 130 } }
             });
             
             // Footer
