@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Tabel 1: Absensi
             doc.autoTable({
-                startY: 50, head: [['1. ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
+                startY: 50, head: [['ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
                 body: [
                     ['A. Line Incoming', report.absensi_incoming_masuk, report.absensi_incoming_tdk_masuk || ''],
                     ['B. Line Step Assy', report.absensi_step_assy_masuk, report.absensi_step_assy_tdk_masuk || ''],
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Tabel 2: Produksi Line Incoming
             doc.autoTable({
-                startY: doc.autoTable.previous.finalY + 7, head: [['2. PRODUKSI LINE INCOMING', 'Jumlah/Catatan']], 
+                startY: doc.autoTable.previous.finalY + 7, head: [['PRODUKSI LINE INCOMING', 'Jumlah/Catatan']], 
                 body: [
                     ['In Wuster', report.prod_wuster || ''], ['In Chrom', report.prod_chrom || ''],
                     ['Quality Item', report.quality_item || ''], ['Quality Cek', report.quality_cek || ''],
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Tabel 3 & 4 Gabungan
             doc.autoTable({
-                startY: doc.autoTable.previous.finalY + 7, head: [['3 & 4. PRODUKSI & CHECK THICKNESS', 'Catatan']],
+                startY: doc.autoTable.previous.finalY + 7, head: [['PRODUKSI & CHECK THICKNESS', 'Catatan']],
                 body: [
                     ['Prod. Line Step Assy', report.prod_step_assy_notes || ''],
                     ['Prod. Line Buka Cap', report.prod_buka_cap_notes || ''],

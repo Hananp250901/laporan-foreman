@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const session = await getActiveUserSession();
             if (!session) {
                 alert('Login ulang bos sesi telah berakhir');
-                window.location.href = 'login.html'; // Pastikan ini halaman login Anda
+                window.location.href = 'index.html'; // Pastikan ini halaman login Anda
                 return;
             }
             
