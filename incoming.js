@@ -573,21 +573,20 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     setTimeout(() => {
         (async () => {
-            // Cek sesi dan data user
             let session;
             try {
-                session = await getActiveUserSession(); // getActiveUserSession ada di app.js
+                session = await getActiveUserSession();
                 if (!session) {
                     alert('Anda harus login terlebih dahulu!');
                     window.location.href = 'index.html'; // Arahkan ke login
                     return;
                 }
                 currentUser = session.user;
-                currentKaryawan = await loadSharedDashboardData(currentUser); // loadSharedDashboardData ada di app.js
+                currentKaryawan = await loadSharedDashboardData(currentUser);
             } catch (error) {
                 console.error("Error saat inisialisasi user:", error);
                 alert('Gagal memuat data user. Cek koneksi dan coba lagi.');
-                return; // Hentikan eksekusi jika user gagal dimuat
+                return;
             }
 
             // Jalankan reset form untuk set nilai default
@@ -595,8 +594,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Muat riwayat & draft
             try {
-                await loadWusterDrafts();
-                await loadWusterHistory();
+                await loadIncomingDrafts();
+                await loadIncomingHistory();
             } catch (error) {
                 console.error("Gagal memuat data:", error);
                 if (historyListEl) historyListEl.innerHTML = `<tr><td colspan="5" style="color: red;">Gagal memuat riwayat.</td></tr>`;
