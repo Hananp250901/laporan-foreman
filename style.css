@@ -697,3 +697,18 @@ fieldset.total-fieldset legend {
     margin-left: 1rem; /* Jarak dari label 'TOTAL' */
     color: var(--primary-color); /* Warna biru untuk angka total */
 }
+/* --- 14. Total Display for Dynamic Lists --- */
+.list-total-display {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+  font-weight: bold;
+  color: var(--text-primary);
+  text-align: right; /* Total rata kanan */
+  font-size: 0.9rem;
+}
+.list-total-display span {
+  margin-left: 1rem; /* Jarak dari label 'TOTAL' */
+  color: var(--primary-color); /* Warna biru untuk angka total */
+  font-size: 1rem;
+}

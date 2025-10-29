@@ -223,7 +223,7 @@ if (incomingForm) {
         const session = await getActiveUserSession();
         if (!session) {
             alert('Anda harus login terlebih dahulu!');
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
             return;
         }
         currentUser = session.user; 

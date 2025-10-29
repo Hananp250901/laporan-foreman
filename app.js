@@ -7,6 +7,7 @@ const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // =================================================================
 // BAGIAN 2: FUNGSI GLOBAL & BERSAMA
+// (Fungsi-fungsi ini aman ditaruh di luar)
 // =================================================================
 
 async function getActiveUserSession() {
@@ -28,79 +29,83 @@ async function loadSharedDashboardData(currentUser) {
     }
 }
 
-// Logika UI Global (Berlaku di semua halaman)
-const logoutButton = document.getElementById('logout-button');
-if (logoutButton) {
-    logoutButton.onclick = async () => {
-        await _supabase.auth.signOut();
-        window.location.href = 'login.html';
-    };
-}
+// =================================================================
+// BAGIAN 3: LOGIKA YANG BERJALAN SETELAH HALAMAN SIAP
+// (PERBAIKAN: Dibungkus dengan DOMContentLoaded)
+// =================================================================
+document.addEventListener('DOMContentLoaded', () => {
 
-const menuToggle = document.getElementById('menu-toggle');
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('overlay');
+    // Logika UI Global (Berlaku di semua halaman)
+    const logoutButton = document.getElementById('logout-button');
+    if (logoutButton) {
+        logoutButton.onclick = async () => {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
+        };
+    }
 
-if (menuToggle && sidebar && overlay) {
-    menuToggle.onclick = () => {
-        if (window.innerWidth <= 768) {
-            sidebar.classList.add('active');
-            overlay.classList.add('active');
-        } else {
-            document.body.classList.toggle('sidebar-collapsed');
-        }
-    };
-    overlay.onclick = () => {
-        sidebar.classList.remove('active');
-        overlay.classList.remove('active');
-    };
-    window.addEventListener('resize', () => {
-        if (window.innerWidth > 768) {
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    if (menuToggle && sidebar && overlay) {
+        menuToggle.onclick = () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+            } else {
+                document.body.classList.toggle('sidebar-collapsed');
+            }
+        };
+        overlay.onclick = () => {
             sidebar.classList.remove('active');
             overlay.classList.remove('active');
-        }
-    });
-}
+        };
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        });
+    }
 
-// =================================================================
-// BAGIAN 3: LOGIKA SPESIFIK HALAMAN (NON-INCOMING)
-// =================================================================
+    // -----------------------------------------------------------------
+    // A. LOGIKA HALAMAN LOGIN (login.html)
+    // -----------------------------------------------------------------
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.onsubmit = async (event) => {
+            event.preventDefault(); 
+            const nik = document.getElementById('nik').value;
+            const password = document.getElementById('password').value;
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = 'Mencoba login...';
+            try {
+                const { data: karyawanData, error: nikError } = await _supabase.from('karyawan').select('email').eq('nik', nik).single(); 
+                if (nikError || !karyawanData) throw new Error('NIK tidak terdaftar.');
+                const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({ email: karyawanData.email, password: password });
+                if (authError) throw new Error('Password salah.');
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                messageEl.textContent = error.message;
+            }
+        };
+    }
 
-// -----------------------------------------------------------------
-// A. LOGIKA HALAMAN LOGIN (login.html)
-// -----------------------------------------------------------------
-const loginForm = document.getElementById('login-form');
-if (loginForm) {
-    loginForm.onsubmit = async (event) => {
-        event.preventDefault(); 
-        const nik = document.getElementById('nik').value;
-        const password = document.getElementById('password').value;
-        const messageEl = document.getElementById('message');
-        messageEl.textContent = 'Mencoba login...';
-        try {
-            const { data: karyawanData, error: nikError } = await _supabase.from('karyawan').select('email').eq('nik', nik).single(); 
-            if (nikError || !karyawanData) throw new Error('NIK tidak terdaftar.');
-            const { data: authData, error: authError } = await _supabase.auth.signInWithPassword({ email: karyawanData.email, password: password });
-            if (authError) throw new Error('Password salah.');
-            window.location.href = 'dashboard.html';
-        } catch (error) {
-            messageEl.textContent = error.message;
-        }
-    };
-}
+    // -----------------------------------------------------------------
+    // B. LOGIKA HALAMAN HOME (dashboard.html)
+    // -----------------------------------------------------------------
+    const homePage = document.getElementById('dashboard-home');
+    if (homePage) {
+        (async () => {
+            const session = await getActiveUserSession();
+            if (!session) {
+                alert('Anda harus login terlebih dahulu!');
+                window.location.href = 'index.html';
+                return;
+            }
+            await loadSharedDashboardData(session.user);
+        })();
+    }
 
-// -----------------------------------------------------------------
-// B. LOGIKA HALAMAN HOME (dashboard.html)
-// -----------------------------------------------------------------
-const homePage = document.getElementById('dashboard-home');
-if (homePage) {
-    (async () => {
-        const session = await getActiveUserSession();
-        if (!session) {
-            alert('Anda harus login terlebih dahulu!');
-            window.location.href = 'login.html';
-            return;
-        }
-        await loadSharedDashboardData(session.user);
-    })();
-}
+}); // <-- Akhir dari pembungkus DOMContentLoaded
