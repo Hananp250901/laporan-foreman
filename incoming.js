@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextButton = document.getElementById('next-page-btn');
     const pageInfo = document.getElementById('page-info');
 
-    // Konfigurasi List Dinamis
+    // Konfigurasi List Dinamis untuk halaman Incoming
     const listConfigsIncoming = [
         { id: 'prod-step-assy', nameClass: 'step-assy-item-name', valueClass: 'step-assy-item-value', defaults: ["S/B K41K CW", "SB KPYX LH"], container: null, button: null, totalSpan: null, notesKey: 'prod_step_assy_notes' },
         { id: 'prod-buka-cap', nameClass: 'buka-cap-item-name', valueClass: 'buka-cap-item-value', defaults: ["M/C 2DP RH", "2DP LH"], container: null, button: null, totalSpan: null, notesKey: 'prod_buka_cap_notes' },
@@ -41,12 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ambil elemen HTML berdasarkan konfigurasi
     listConfigsIncoming.forEach(config => {
         config.container = document.getElementById(`${config.id}-list`);
-        config.button = document.getElementById(`add-${config.id.replace('prod-', '')}-item-btn`); // Hapus 'prod-' dari ID tombol
+        // ID tombol di HTML tidak pakai prefix 'prod-'
+        config.button = document.getElementById(`add-${config.id.replace('prod-', '')}-item-btn`);
         config.totalSpan = document.getElementById(`${config.id}-total`);
         // Peringatan jika elemen tidak ditemukan (membantu debugging)
         if (!config.container) console.warn(`Incoming: Element with ID ${config.id}-list not found.`);
-        if (!config.button) console.warn(`Incoming: Element with ID add-${config.id.replace('prod-', '')}-item-btn not found.`);
-        if (!config.totalSpan) console.warn(`Incoming: Element with ID ${config.id}-total not found.`);
+        if (!config.button) console.warn(`Incoming: Button add-${config.id.replace('prod-', '')}-item-btn not found.`);
+        if (!config.totalSpan) console.warn(`Incoming: Total span for ${config.id} list not found.`);
     });
     // --- Akhir Deklarasi Variabel ---
 
@@ -104,6 +105,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    /**
+     * Mengubah isi list dinamis menjadi satu string (format "Nama: Jumlah\n") untuk disimpan ke database.
+     */
+    function serializeDynamicList(config) {
+        if (!config.container) return ""; // Kembalikan string kosong jika container tidak ada
+        let resultString = "";
+        const rows = config.container.querySelectorAll('.dynamic-list-row'); // Ambil semua baris
+        rows.forEach(row => {
+            const nameInput = row.querySelector(`.${config.nameClass}`);
+            const valueInput = row.querySelector(`.${config.valueClass}`);
+            if (nameInput && valueInput) {
+                const name = nameInput.value.trim(); // Ambil nama, hapus spasi awal/akhir
+                const value = valueInput.value.trim(); // Ambil jumlah, hapus spasi
+                if (name || value) { // Hanya simpan jika ada nama atau jumlah
+                    resultString += `${name}: ${value}\n`; // Tambahkan ke string hasil
+                }
+            }
+        });
+        return resultString.trim(); // Kembalikan string hasil, hapus spasi/newline di akhir
+    }
     // --- Akhir Fungsi Helper List Dinamis ---
 
 
@@ -135,6 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
     listConfigsIncoming.forEach(config => {
          if (config.button) {
             config.button.addEventListener('click', () => addDynamicRow(config.container, config.nameClass, config.valueClass));
+         } else {
+             console.warn(`Incoming: Button element not found for list ${config.id}, cannot add listener.`);
          }
     });
 
@@ -161,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Fungsi PDF ---
     /**
-     * Helper function untuk PDF: Mengurai string "Nama: Jumlah\n", menghitung total, dan menambahkannya ke string.
+     * Helper function untuk PDF: Mengurai string "Nama: Jumlah\n", menghitung total, dan menambahkannya ke string jika ada angka.
      */
     function addTotalToNotes(notesString) {
         if (!notesString || notesString.trim() === '') return '(Kosong)'; // Tampilkan '(Kosong)' jika string kosong
@@ -170,16 +194,18 @@ document.addEventListener('DOMContentLoaded', () => {
         let hasNumericValue = false; // Flag untuk cek apakah ada angka valid
         lines.forEach(line => {
             const parts = line.split(': ');
+            // Hanya proses jika ada format "Nama: Value"
             if (parts.length >= 2) {
-                const valuePart = parts[parts.length - 1].trim(); // Ambil bagian paling belakang
+                const valuePart = parts[parts.length - 1].trim(); // Ambil bagian paling belakang setelah ':' terakhir
                 const num = parseInt(valuePart); // Coba ubah jadi angka
-                if (!isNaN(num)) { // Jika berhasil jadi angka
-                    sum += num;
-                    hasNumericValue = true; // Set flag
+                // Jika berhasil jadi angka (bukan NaN)
+                if (!isNaN(num)) {
+                    sum += num; // Tambahkan ke total
+                    hasNumericValue = true; // Set flag bahwa ada angka
                 }
             }
         });
-        // Hanya tambahkan baris TOTAL jika ada angka yang dijumlahkan
+        // Hanya tambahkan baris "TOTAL: xxx" jika memang ada angka yang dijumlahkan
         return hasNumericValue ? `${notesString}\n\nTOTAL: ${sum}` : notesString;
     }
 
@@ -297,7 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.text("Dept Head", col3X, finalY + 25, { align: 'right' });
 
             // --- Simpan PDF ---
-            doc.save(`Laporan_Incoming_${report.tanggal}_Shift${report.shift}.pdf`); // Nama file dinamis
+            // Gunakan fallback jika tanggal atau shift kosong
+            doc.save(`Laporan_Incoming_${report.tanggal || 'TanpaTanggal'}_Shift${report.shift || 'TanpaShift'}.pdf`);
 
         } catch (error) {
             // Tangani jika ada error saat generate PDF
@@ -452,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   if (element) {
                      element.value = report[id] ?? ''; // Isi value atau string kosong jika null/undefined
                   } else {
-                     console.warn(`Element with ID ${id} not found when loading report`);
+                     console.warn(`Incoming: Element with ID ${id} not found when loading report`);
                   }
               });
 
@@ -469,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mainSubmitBtn.textContent = 'Update Laporan Final'; // Ubah teks tombol submit
             saveDraftBtn.textContent = 'Update Draft';          // Ubah teks tombol draft
             cancelEditBtn.style.display = 'inline-block';      // Tampilkan tombol Batal
-            formMessageEl.textContent = 'Data berhasil dimuat. Silakan edit.';
+            formMessageEl.textContent = 'Data berhasil dimuat.';
 
             // Scroll ke form agar terlihat
             incomingForm.scrollIntoView({ behavior: 'smooth' });
@@ -519,6 +546,8 @@ document.addEventListener('DOMContentLoaded', () => {
                   const isNumber = element.type === 'number' || id.includes('_masuk') || id === 'shift';
                   // Ambil nilainya, konversi ke integer jika perlu (anggap 0 jika gagal konversi)
                   formData[id] = isNumber ? (parseInt(element.value) || 0) : element.value;
+              } else {
+                   console.warn(`Incoming: Element with ID ${id} not found in getFormData`);
               }
           });
 
@@ -544,10 +573,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let result;
             if (currentlyEditingId) { // Jika sedang dalam mode UPDATE
-                console.log(`Updating report ID: ${currentlyEditingId} with status: ${laporanData.status}`); // Debugging
+                console.log(`Incoming: Updating report ID: ${currentlyEditingId} with status: ${laporanData.status}`); // Debugging
                 result = await _supabase.from('laporan_incoming').update(laporanData).eq('id', currentlyEditingId);
             } else { // Jika sedang dalam mode INSERT (buat baru)
-                console.log(`Inserting new report with status: ${laporanData.status}`); // Debugging
+                console.log(`Incoming: Inserting new report with status: ${laporanData.status}`); // Debugging
                 result = await _supabase.from('laporan_incoming').insert(laporanData);
             }
 
@@ -574,19 +603,19 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Submit Error:', error);
         }
     }
+    // --- Akhir Fungsi CRUD ---
 
-    // Tambahkan event listener untuk submit form (Simpan Final)
+
+    // --- Event listener Submit Utama & Simpan Draft ---
     incomingForm.onsubmit = (e) => {
         e.preventDefault(); // Mencegah submit HTML biasa
         handleFormSubmit(false); // Panggil fungsi submit dengan status 'published'
     };
-    // Tambahkan event listener untuk tombol Simpan Draft
     saveDraftBtn.addEventListener('click', () => {
         handleFormSubmit(true); // Panggil fungsi submit dengan status 'draft'
     });
 
-
-    // Event listener pagination
+    // --- Event listener pagination ---
     prevButton.addEventListener('click', () => { if (currentPage > 1) { currentPage--; loadIncomingHistory(); } });
     nextButton.addEventListener('click', () => { if (!nextButton.disabled) { currentPage++; loadIncomingHistory(); } });
 
@@ -601,8 +630,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const session = await getActiveUserSession(); // Fungsi ini ada di app.js
 
         // Jika TIDAK ADA session, tampilkan alert dan redirect
+        // Pengecekan ini sudah ada di app.js, tapi kita tambahkan lagi di sini
+        // sebagai fallback jika user langsung membuka halaman ini.
         if (!session) {
-            console.warn("Incoming: No active session found, redirecting to index.html...");
+            console.warn("Incoming: No active session found during init, redirecting to index.html...");
             alert('Anda harus login terlebih dahulu!'); // Tampilkan peringatan
             window.location.href = 'index.html'; // Redirect ke halaman login (index.html)
             return; // Hentikan eksekusi script
@@ -614,9 +645,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Muat data karyawan (untuk footer PDF & info sidebar)
+            // Fungsi ini dipanggil lagi di sini untuk memastikan currentKaryawan terisi
             currentKaryawan = await loadSharedDashboardData(currentUser); // Fungsi ini ada di app.js
 
-            // Set form ke kondisi awal (kosong/default)
+            // Set form ke kondisi awal (kosong/default) dan hitung total awal
             resetFormAndState();
 
             // Muat data draft dan riwayat secara bersamaan
