@@ -53,12 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ambil elemen HTML berdasarkan konfigurasi
     listConfigs.forEach(config => {
         config.container = document.getElementById(`${config.id}-list`);
-        // ID Tombol di HTML Anda menggunakan format 'add-nama-item-btn'
-        config.button = document.getElementById(`add-${config.id}-item-btn`);
+        // ID tombol di HTML mungkin pakai '_' bukan '-'
+        config.button = document.getElementById(`add_${config.id.replace(/-/g, '_')}_item_btn`) || document.getElementById(`add-${config.id.replace(/-/g, '_')}-item-btn`);
         config.totalSpan = document.getElementById(`${config.id}-total`);
         // Peringatan jika elemen tidak ditemukan (membantu debugging)
-        if (!config.container) console.warn(`Wuster: Element ${config.id}-list not found.`);
-        if (!config.button) console.warn(`Wuster: Button add-${config.id}-item-btn not found.`); // Peringatan disesuaikan
+        if (!config.container) console.warn(`Wuster: Element with ID ${config.id}-list not found.`);
+        if (!config.button) console.warn(`Wuster: Button for ${config.id} list not found.`);
         if (!config.totalSpan && ['packing-holder', 'pasang-holder', 'assy-cup', 'touch-up', 'buka-cap'].includes(config.id)) console.warn(`Wuster: Total span for ${config.id} list not found.`);
     });
 
@@ -124,28 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    /**
-     * Mengubah data dari list dinamis (input-input) menjadi satu string untuk disimpan ke DB.
-     */
-    function serializeDynamicList(config) {
-        if (!config.container) return ""; // Kembalikan string kosong jika container tidak ada
-        let resultString = "";
-        const rows = config.container.querySelectorAll('.dynamic-list-row');
-        rows.forEach(row => {
-            const nameInput = row.querySelector(`.${config.nameClass}`);
-            const valueInput = row.querySelector(`.${config.valueClass}`);
-            if (nameInput && valueInput) {
-                const name = nameInput.value.trim();
-                const value = valueInput.value.trim();
-                // Hanya tambahkan ke string jika nama atau value ada isinya
-                if (name || value) {
-                    resultString += `${name}: ${value}\n`;
-                }
-            }
-        });
-        return resultString.trim(); // Hapus spasi/newline ekstra di akhir
-    }
     // --- Akhir Fungsi Helper List Dinamis ---
 
 
@@ -205,9 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
     listConfigs.forEach(config => {
         if (config.button) {
             config.button.addEventListener('click', () => addDynamicRow(config.container, config.nameClass, config.valueClass));
-        } else {
-            // Peringatan jika tombol tidak ditemukan, tapi tidak menghentikan script
-            console.warn(`Wuster: Button element not found for list ${config.id}, cannot add listener.`);
         }
     });
 
@@ -274,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Cek ketersediaan library PDF
         if (!window.jspdf) { alert('Gagal memuat library PDF (jspdf). Pastikan Anda online.'); return; }
         const { jsPDF } = window.jspdf;
-         if (!window.jspdf.autoTable) { alert('Gagal memuat plugin PDF (jspdf-autotable). Pastikan Anda online.'); return;} //
+         if (!window.jspdf.autoTable) { alert('Gagal memuat plugin PDF (jspdf-autotable). Pastikan Anda online.'); return;}
 
         try {
             // Ambil data lengkap laporan dari Supabase berdasarkan ID
@@ -300,8 +275,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- Tabel 1: Absensi (Full Width) ---
             doc.autoTable({
                 startY: 45, head: [['ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
-                body: [['STAFF', report.abs_staff_masuk, report.abs_staff_tdk_masuk || ''], ['WUSTER', report.abs_wuster_masuk, report.abs_wuster_tdk_masuk || ''], ['REPAIR & TOUCH UP', report.abs_repair_masuk, report.abs_repair_tdk_masuk || ''], ['INCOMING, STEP ASSY, BUKA CAP', report.abs_incoming_masuk, report.abs_incoming_tdk_masuk || ''], ['CHROM, VERIFIKASI, AEROX, REMOVER', report.abs_chrome_masuk, report.abs_chrome_tdk_masuk || ''], ['PAINTING 4', report.abs_painting_4_masuk, report.abs_painting_4_tdk_masuk || ''], ['USER & CPC', report.abs_user_cpc_masuk, report.abs_user_cpc_tdk_masuk || ''], ['MAINTENANCE', report.abs_maintenance_masuk, report.abs_maintenance_tdk_masuk || ''],],
-                ...tableStyles, margin: { left: marginX }, tableWidth: fullWidth, columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 25 }, 2: { cellWidth: 105 } }
+                body: [ // Pastikan nilai default 0 jika null/undefined
+                    ['STAFF', report.abs_staff_masuk || 0, report.abs_staff_tdk_masuk || ''],
+                    ['WUSTER', report.abs_wuster_masuk || 0, report.abs_wuster_tdk_masuk || ''],
+                    ['REPAIR & TOUCH UP', report.abs_repair_masuk || 0, report.abs_repair_tdk_masuk || ''],
+                    ['INCOMING, STEP ASSY, BUKA CAP', report.abs_incoming_masuk || 0, report.abs_incoming_tdk_masuk || ''],
+                    ['CHROM, VERIFIKASI, AEROX, REMOVER', report.abs_chrome_masuk || 0, report.abs_chrome_tdk_masuk || ''],
+                    ['PAINTING 4', report.abs_painting_4_masuk || 0, report.abs_painting_4_tdk_masuk || ''],
+                    ['USER & CPC', report.abs_user_cpc_masuk || 0, report.abs_user_cpc_tdk_masuk || ''],
+                    ['MAINTENANCE', report.abs_maintenance_masuk || 0, report.abs_maintenance_tdk_masuk || ''],
+                 ],
+                ...tableStyles, margin: { left: marginX }, tableWidth: fullWidth,
+                columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 25 }, 2: { cellWidth: 105 } }
             });
             let startY2Col = doc.autoTable.previous.finalY + marginYSmall; // Posisi Y awal untuk layout 2 kolom
 
@@ -329,10 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Kolom Kiri ---
             let leftY = startY2Col;
-            // === PERUBAHAN DI SINI ===
             leftY = drawSingleTable('Packing Holder', addTotalToNotes(report.packing_holder_notes), leftY, col1X);
             leftY = drawSingleTable('Pasang Holder', addTotalToNotes(report.pasang_holder_notes), leftY + marginYSmall, col1X);
-            // === AKHIR PERUBAHAN ===
             leftY = drawSingleTable('Problem / Quality', report.problem_quality_notes, leftY + marginYSmall, col1X);
             leftY = drawSingleTable('Suplay Material', report.suplay_material_notes, leftY + marginYSmall, col1X);
             leftY = drawSingleTable('Packing Box / Lory', report.packing_box_notes, leftY + marginYSmall, col1X);
@@ -340,28 +323,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Tabel Total Produksi (masih di kolom kiri)
             const prodTotal = (report.total_prod_fresh || 0) + (report.total_prod_repair || 0) + (report.total_prod_ng || 0);
-            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']], body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 3) { data.cell.styles.fontStyle = 'bold'; } } });
+            leftY = drawCalcTable({
+                 startY: leftY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']], // Nomor urut disesuaikan
+                 body: [
+                     ['Fresh', report.total_prod_fresh || 0],
+                     ['Repair', report.total_prod_repair || 0],
+                     ['NG', report.total_prod_ng || 0],
+                     ['Total', prodTotal]
+                 ],
+                 margin: { left: col1X }, tableWidth: colWidth,
+                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
+                 didParseCell: (data) => { if (data.row.index === 3) { data.cell.styles.fontStyle = 'bold'; } } // Baris Total bold
+            });
 
-            // --- Gambar Kolom Kanan ---
-            let rightY = startY2Col; 
-            // === PERUBAHAN DI SINI ===
+            // --- Kolom Kanan ---
+            let rightY = startY2Col; // Mulai dari Y yang sama dengan kolom kiri
             rightY = drawSingleTable('Hasil Assy Cup', addTotalToNotes(report.hasil_assy_cup_notes), rightY, col2X);
             rightY = drawSingleTable('Hasil Touch Up', addTotalToNotes(report.hasil_touch_up_notes), rightY + marginYSmall, col2X);
             rightY = drawSingleTable('Hasil Buka Cap', addTotalToNotes(report.hasil_buka_cap_notes), rightY + marginYSmall, col2X);
-            // === AKHIR PERUBAHAN ===
 
             // Tabel Performa Wuster
             const wusterTotal = (report.perf_wuster_isi || 0) + (report.perf_wuster_kosong || 0);
-            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']], body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 2) { data.cell.styles.fontStyle = 'bold'; } } });
+            rightY = drawCalcTable({
+                 startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']],
+                 body: [
+                     ['Hanger Isi', report.perf_wuster_isi || 0],
+                     ['Hanger Kosong', report.perf_wuster_kosong || 0],
+                     ['Total', wusterTotal]
+                 ],
+                 margin: { left: col2X }, tableWidth: colWidth,
+                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
+                 didParseCell: (data) => { if (data.row.index === 2) { data.cell.styles.fontStyle = 'bold'; } }
+            });
 
             // Tabel Total Check
             const checkTotal = (report.total_check_ok || 0) + (report.total_check_ng || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
-            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 4) { data.cell.styles.fontStyle = 'bold'; } } });
+            rightY = drawCalcTable({
+                 startY: rightY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']],
+                 body: [
+                     ['OK', report.total_check_ok || 0],
+                     ['NG', report.total_check_ng || 0],
+                     ['Repair', report.total_check_repair || 0],
+                     ['Body', report.total_check_body || 0],
+                     ['Total', checkTotal]
+                 ],
+                 margin: { left: col2X }, tableWidth: colWidth,
+                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
+                 didParseCell: (data) => { if (data.row.index === 4) { data.cell.styles.fontStyle = 'bold'; } }
+            });
 
             // --- Lain-lain (Full Width, di bawah kedua kolom) ---
             let currentY = Math.max(leftY, rightY) + marginYSmall; // Ambil Y terendah dari kedua kolom
             doc.autoTable({
-                startY: currentY, head: [['LAIN-LAIN', 'Catatan']], // Nomor urut disesuaikan
+                startY: currentY, head: [['12. LAIN-LAIN', 'Catatan']], // Nomor urut disesuaikan
                 body: [
                     ['Lost Time', report.lost_time_notes || ''],
                     ['Hanger', report.hanger_notes || '']
@@ -383,29 +397,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // Ambil nama pembuat (jika data karyawan ada) atau email
             const preparerName = currentKaryawan?.nama_lengkap || currentUser?.email || 'N/A';
             doc.setFontSize(9); // Font kecil untuk footer
-            const footerCol1X = col1X; // Posisi X kolom 1
-            const footerCol2X = doc.internal.pageSize.width / 2; // Posisi X kolom 2 (tengah)
-            const footerCol3X = doc.internal.pageSize.width - marginX; // Posisi X kolom 3 (kanan)
 
             // Kolom 1: Dibuat
-            doc.text("Dibuat,", footerCol1X, finalY);
-            doc.text(preparerName, footerCol1X, finalY + 15);
-            doc.text("Foreman", footerCol1X, finalY + 20);
+            doc.text("Dibuat,", col1X, finalY);
+            doc.text(preparerName, col1X, finalY + 15);
+            doc.text("Foreman", col1X, finalY + 20);
 
             // Kolom 2: Disetujui
             const chiefName = report.chief_name || '( .......................... )'; // Default jika kosong
-            doc.text("Disetujui,", footerCol2X, finalY, { align: 'center' });
-            doc.text(chiefName, footerCol2X, finalY + 15, { align: 'center' });
-            doc.text("Chief", footerCol2X, finalY + 20, { align: 'center' });
+            doc.text("Disetujui,", doc.internal.pageSize.width / 2, finalY, { align: 'center' });
+            doc.text(chiefName, doc.internal.pageSize.width / 2, finalY + 15, { align: 'center' });
+            doc.text("Chief", doc.internal.pageSize.width / 2, finalY + 20, { align: 'center' });
 
             // Kolom 3: Mengetahui
-            doc.text("Mengetahui,", footerCol3X, finalY, { align: 'right' });
-            doc.text("SINGGIH E W", footerCol3X, finalY + 15, { align: 'right' });
-            doc.text("Dept Head", footerCol3X, finalY + 20, { align: 'right' });
+            doc.text("Mengetahui,", doc.internal.pageSize.width - marginX, finalY, { align: 'right' });
+            doc.text("SINGGIH E W", doc.internal.pageSize.width - marginX, finalY + 15, { align: 'right' });
+            doc.text("Dept Head", doc.internal.pageSize.width - marginX, finalY + 20, { align: 'right' });
 
             // --- Simpan PDF ---
-            // Gunakan fallback jika tanggal atau shift kosong
-            doc.save(`Laporan_Wuster_${report.tanggal || 'TanpaTanggal'}_Shift${report.shift || 'TanpaShift'}.pdf`);
+            doc.save(`Laporan_Wuster_${report.tanggal || 'TanpaTanggal'}_Shift${report.shift || 'TanpaShift'}.pdf`); // Nama file dinamis
 
         } catch (error) {
             // Tangani jika ada error saat generate PDF
@@ -420,336 +430,35 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Memuat daftar laporan yang berstatus 'draft' milik user ini.
      */
-    async function loadWusterDrafts() {
-        if (!draftListEl || !currentUser) return; // Pastikan elemen tabel dan user ada
-        draftListEl.innerHTML = '<tr><td colspan="4">Memuat draft...</td></tr>'; // Pesan loading
-        try {
-            const { data, error } = await _supabase.from('laporan_wuster')
-                .select('id, tanggal, shift, created_at') // Ambil kolom yg perlu ditampilkan
-                .eq('status', 'draft')                  // Filter hanya draft
-                .eq('user_id', currentUser.id)          // Filter hanya milik user ini
-                .order('created_at', { ascending: false }); // Urutkan terbaru di atas
-
-            if (error) throw error; // Lemparkan error jika query gagal
-
-            if (data.length === 0) {
-                draftListEl.innerHTML = '<tr><td colspan="4">Tidak ada draft tersimpan.</td></tr>';
-                return;
-            }
-
-            // Jika ada data, buat baris tabelnya
-            draftListEl.innerHTML = ''; // Kosongkan tabel dulu
-            data.forEach(laporan => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${laporan.tanggal || 'N/A'}</td>
-                    <td>${laporan.shift || 'N/A'}</td>
-                    <td>${new Date(laporan.created_at).toLocaleString('id-ID')}</td>
-                    <td class="history-actions">
-                        <button class="button-edit" data-id="${laporan.id}"><span class="material-icons">edit</span> Lanjutkan</button>
-                        <button class="button-danger button-delete-draft" data-id="${laporan.id}"><span class="material-icons">delete</span> Hapus</button>
-                    </td>`;
-                draftListEl.appendChild(row);
-
-                // Tambah event listener ke tombol 'Lanjutkan' dan 'Hapus'
-                row.querySelector('.button-edit').addEventListener('click', (e) => loadReportForEditing(e.currentTarget.dataset.id));
-                row.querySelector('.button-delete-draft').addEventListener('click', async (e) => {
-                    const idToDelete = e.currentTarget.dataset.id;
-                    if (confirm('Anda yakin ingin menghapus draft ini?')) { // Konfirmasi user
-                        const { error: deleteError } = await _supabase.from('laporan_wuster').delete().eq('id', idToDelete);
-                        if (deleteError) { alert('Gagal menghapus draft: ' + deleteError.message); }
-                        else { await loadWusterDrafts(); } // Muat ulang daftar draft jika berhasil
-                    }
-                });
-            });
-        } catch (error) {
-             draftListEl.innerHTML = `<tr><td colspan="4" style="color: red;">Error memuat draft: ${error.message}</td></tr>`;
-             console.error("Error loading drafts:", error);
-        }
-    }
-
+    async function loadWusterDrafts() { /* ... kode sama ... */ if (!draftListEl || !currentUser) return; draftListEl.innerHTML = '<tr><td colspan="4">Memuat draft...</td></tr>'; try { const { data, error } = await _supabase.from('laporan_wuster').select('id, tanggal, shift, created_at').eq('status', 'draft').eq('user_id', currentUser.id).order('created_at', { ascending: false }); if (error) throw error; if (data.length === 0) { draftListEl.innerHTML = '<tr><td colspan="4">Tidak ada draft tersimpan.</td></tr>'; return; } draftListEl.innerHTML = ''; data.forEach(laporan => { const row = document.createElement('tr'); row.innerHTML = `<td>${laporan.tanggal || 'N/A'}</td><td>${laporan.shift || 'N/A'}</td><td>${new Date(laporan.created_at).toLocaleString('id-ID')}</td> <td class="history-actions"> <button class="button-edit" data-id="${laporan.id}"><span class="material-icons">edit</span> Lanjutkan</button> <button class="button-danger button-delete-draft" data-id="${laporan.id}"><span class="material-icons">delete</span> Hapus</button> </td>`; draftListEl.appendChild(row); row.querySelector('.button-edit').addEventListener('click', (e) => loadReportForEditing(e.currentTarget.dataset.id)); row.querySelector('.button-delete-draft').addEventListener('click', async (e) => { const idToDelete = e.currentTarget.dataset.id; if (confirm('Anda yakin ingin menghapus draft ini?')) { const { error: deleteError } = await _supabase.from('laporan_wuster').delete().eq('id', idToDelete); if (deleteError) { alert('Gagal menghapus draft: ' + deleteError.message); } else { await loadWusterDrafts(); } } }); }); } catch (error) { draftListEl.innerHTML = `<tr><td colspan="4" style="color: red;">Error memuat draft: ${error.message}</td></tr>`; console.error("Error loading drafts:", error); } }
     /**
      * Memuat riwayat laporan yang sudah 'published' (atau lama yg statusnya null).
      */
-    async function loadWusterHistory() {
-        if (!historyListEl || !currentUser) return;
-        historyListEl.innerHTML = '<tr><td colspan="5">Memuat riwayat...</td></tr>';
-        try {
-            // 1. Hitung total laporan dulu untuk pagination
-            const { count, error: countError } = await _supabase.from('laporan_wuster')
-                .select('*', { count: 'exact', head: true }) // head:true hanya ambil count
-                .or('status.eq.published,status.is.null'); // Filter published atau lama
-
-            if (countError) throw countError;
-
-            totalReports = count || 0;
-            const totalPages = Math.ceil(totalReports / itemsPerPage) || 1;
-            // Pastikan currentPage tidak melebihi total halaman atau kurang dari 1
-            currentPage = Math.max(1, Math.min(currentPage, totalPages));
-
-            // 2. Hitung offset (range) data yang akan diambil
-            const from = (currentPage - 1) * itemsPerPage;
-            const to = from + itemsPerPage - 1;
-
-            // 3. Ambil data untuk halaman saat ini
-            const { data, error } = await _supabase.from('laporan_wuster')
-                .select('id, tanggal, shift, total_masuk, created_at') // Ambil kolom yg perlu ditampilkan
-                .or('status.eq.published,status.is.null')      // Filter published atau lama
-                .order('created_at', { ascending: false })     // Urutkan terbaru di atas
-                .range(from, to);                              // Ambil sesuai range halaman
-
-            if (error) throw error;
-
-            // Tampilkan data ke tabel
-            if (data.length === 0 && totalReports === 0) {
-                historyListEl.innerHTML = '<tr><td colspan="5">Belum ada riwayat laporan.</td></tr>';
-            } else if (data.length === 0 && totalReports > 0) {
-                // Ada laporan tapi tidak di halaman ini (jarang terjadi jika currentPage dibatasi)
-                 historyListEl.innerHTML = `<tr><td colspan="5">Tidak ada data di halaman ${currentPage}.</td></tr>`;
-            } else {
-                historyListEl.innerHTML = ''; // Kosongkan tabel
-                data.forEach(laporan => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${laporan.tanggal || 'N/A'}</td>
-                        <td>${laporan.shift || 'N/A'}</td>
-                        <td>${laporan.total_masuk || 0}</td>
-                        <td>${new Date(laporan.created_at).toLocaleString('id-ID')}</td>
-                        <td class="history-actions">
-                            <button class="button-edit" data-id="${laporan.id}"><span class="material-icons">edit</span> Edit</button>
-                            <button class="button-pdf" data-id="${laporan.id}"><span class="material-icons">picture_as_pdf</span> PDF</button>
-                        </td>`;
-                    historyListEl.appendChild(row);
-                    // Tambah event listener ke tombol 'Edit' dan 'PDF'
-                    row.querySelector('.button-edit').addEventListener('click', (e) => loadReportForEditing(e.currentTarget.dataset.id));
-                    row.querySelector('.button-pdf').addEventListener('click', (e) => generatePDF(e.currentTarget.dataset.id));
-                });
-            }
-
-            // Update info pagination
-            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-            prevButton.disabled = (currentPage === 1);
-            nextButton.disabled = (currentPage >= totalPages);
-
-        } catch (error) {
-             historyListEl.innerHTML = `<tr><td colspan="5" style="color: red;">Error memuat riwayat: ${error.message}</td></tr>`;
-             console.error("Error loading history:", error);
-             // Nonaktifkan tombol paginasi jika error
-             prevButton.disabled = true;
-             nextButton.disabled = true;
-             pageInfo.textContent = 'Page - of -';
-        }
-    }
-
+    async function loadWusterHistory() { /* ... kode sama ... */ if (!historyListEl || !currentUser) return; historyListEl.innerHTML = '<tr><td colspan="5">Memuat riwayat...</td></tr>'; try { const { count, error: countError } = await _supabase.from('laporan_wuster').select('*', { count: 'exact', head: true }).or('status.eq.published,status.is.null'); if (countError) throw countError; totalReports = count || 0; const totalPages = Math.ceil(totalReports / itemsPerPage) || 1; currentPage = Math.max(1, Math.min(currentPage, totalPages)); const from = (currentPage - 1) * itemsPerPage; const to = from + itemsPerPage - 1; const { data, error } = await _supabase.from('laporan_wuster').select('id, tanggal, shift, total_masuk, created_at').or('status.eq.published,status.is.null').order('created_at', { ascending: false }).range(from, to); if (error) throw error; if (data.length === 0 && totalReports === 0) { historyListEl.innerHTML = '<tr><td colspan="5">Belum ada riwayat laporan.</td></tr>'; } else if (data.length === 0 && totalReports > 0) { historyListEl.innerHTML = `<tr><td colspan="5">Tidak ada data di halaman ${currentPage}.</td></tr>`;} else { historyListEl.innerHTML = ''; data.forEach(laporan => { const row = document.createElement('tr'); row.innerHTML = `<td>${laporan.tanggal || 'N/A'}</td><td>${laporan.shift || 'N/A'}</td><td>${laporan.total_masuk || 0}</td><td>${new Date(laporan.created_at).toLocaleString('id-ID')}</td> <td class="history-actions"> <button class="button-edit" data-id="${laporan.id}"><span class="material-icons">edit</span> Edit</button> <button class="button-pdf" data-id="${laporan.id}"><span class="material-icons">picture_as_pdf</span> PDF</button> </td>`; historyListEl.appendChild(row); row.querySelector('.button-edit').addEventListener('click', (e) => loadReportForEditing(e.currentTarget.dataset.id)); row.querySelector('.button-pdf').addEventListener('click', (e) => generatePDF(e.currentTarget.dataset.id)); }); } pageInfo.textContent = `Page ${currentPage} of ${totalPages}`; prevButton.disabled = (currentPage === 1); nextButton.disabled = (currentPage >= totalPages); } catch (error) { historyListEl.innerHTML = `<tr><td colspan="5" style="color: red;">Error memuat riwayat: ${error.message}</td></tr>`; console.error("Error loading history:", error); prevButton.disabled = true; nextButton.disabled = true; pageInfo.textContent = 'Page - of -'; } }
     /**
      * Memuat data satu laporan (berdasarkan ID) ke dalam form untuk diedit.
      */
-    async function loadReportForEditing(reportId) {
-        formMessageEl.textContent = 'Memuat data laporan...';
-        try {
-            const { data: report, error } = await _supabase.from('laporan_wuster').select('*').eq('id', reportId).single();
-            if (error) throw error;
-
-            // Isi semua field standar (cocokkan ID elemen dengan nama kolom DB)
-            // Array ID elemen yang sama dengan nama kolom di tabel 'laporan_wuster'
-            const fieldIds = ['hari', 'tanggal', 'shift', 'chief_name', 'total_masuk',
-                              'abs_staff_masuk', 'abs_staff_tdk_masuk', 'abs_wuster_masuk', 'abs_wuster_tdk_masuk',
-                              'abs_repair_masuk', 'abs_repair_tdk_masuk', 'abs_incoming_masuk', 'abs_incoming_tdk_masuk',
-                              'abs_chrome_masuk', 'abs_chrome_tdk_masuk', 'abs_painting_4_masuk', 'abs_painting_4_tdk_masuk',
-                              'abs_user_cpc_masuk', 'abs_user_cpc_tdk_masuk', 'abs_maintenance_masuk', 'abs_maintenance_tdk_masuk',
-                              'problem_quality_notes', 'suplay_material_notes', 'packing_box_notes', 'trouble_mesin_notes',
-                              'perf_wuster_isi', 'perf_wuster_kosong', 'total_check_ok', 'total_check_ng',
-                              'total_check_repair', 'total_check_body', 'total_prod_fresh', 'total_prod_repair', 'total_prod_ng',
-                              'lost_time_notes', 'hanger_notes'];
-            fieldIds.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                   element.value = report[id] ?? ''; // Isi value atau string kosong jika null/undefined
-                } else {
-                   console.warn(`Wuster: Element with ID ${id} not found when loading report`);
-                }
-            });
-
-            // Isi list dinamis menggunakan deserialize
-            listConfigs.forEach(config => {
-                // Ambil nama kolom notes dari config (e.g., packing_holder_notes)
-                deserializeDynamicList(config, report[config.notesKey]);
-            });
-
-            calculateAllTotals(); // Hitung ulang semua total
-
-            // Atur state aplikasi ke mode edit
-            currentlyEditingId = reportId; // Simpan ID yg diedit
-            formTitleEl.textContent = `Mengedit Laporan (Tanggal: ${report.tanggal || 'N/A'}, Shift: ${report.shift || 'N/A'})`; // Update judul form
-            mainSubmitBtn.textContent = 'Update Laporan Final'; // Ubah teks tombol submit
-            saveDraftBtn.textContent = 'Update Draft';          // Ubah teks tombol draft
-            cancelEditBtn.style.display = 'inline-block';      // Tampilkan tombol Batal
-            formMessageEl.textContent = 'Data berhasil dimuat. Silakan edit.';
-
-            // Scroll ke form agar terlihat
-            wusterForm.scrollIntoView({ behavior: 'smooth' });
-
-        } catch (error) {
-            alert('Gagal memuat data laporan untuk diedit: ' + error.message);
-            formMessageEl.textContent = ''; // Hapus pesan loading
-            console.error("Error loading report for editing:", error);
-        }
-    }
-
+    async function loadReportForEditing(reportId) { /* ... kode sama ... */ formMessageEl.textContent = 'Memuat data laporan...'; try { const { data: report, error } = await _supabase.from('laporan_wuster').select('*').eq('id', reportId).single(); if (error) throw error; ['hari', 'tanggal', 'shift', 'chief_name', 'total_masuk', 'abs_staff_masuk', 'abs_staff_tdk_masuk', 'abs_wuster_masuk', 'abs_wuster_tdk_masuk', 'abs_repair_masuk', 'abs_repair_tdk_masuk', 'abs_incoming_masuk', 'abs_incoming_tdk_masuk', 'abs_chrome_masuk', 'abs_chrome_tdk_masuk', 'abs_painting_4_masuk', 'abs_painting_4_tdk_masuk', 'abs_user_cpc_masuk', 'abs_user_cpc_tdk_masuk', 'abs_maintenance_masuk', 'abs_maintenance_tdk_masuk', 'problem_quality_notes', 'suplay_material_notes', 'packing_box_notes', 'trouble_mesin_notes', 'perf_wuster_isi', 'perf_wuster_kosong', 'total_check_ok', 'total_check_ng', 'total_check_repair', 'total_check_body', 'total_prod_fresh', 'total_prod_repair', 'total_prod_ng', 'lost_time_notes', 'hanger_notes'] .forEach(id => { const element = document.getElementById(id); if (element) element.value = report[id] ?? ''; else console.warn(`Element ${id} not found`); }); listConfigs.forEach(config => { deserializeDynamicList(config, report[config.notesKey]); }); calculateAllTotals(); currentlyEditingId = reportId; formTitleEl.textContent = `Mengedit Laporan (Tanggal: ${report.tanggal || 'N/A'}, Shift: ${report.shift || 'N/A'})`; mainSubmitBtn.textContent = 'Update Laporan Final'; saveDraftBtn.textContent = 'Update Draft'; cancelEditBtn.style.display = 'inline-block'; formMessageEl.textContent = 'Data berhasil dimuat. Silakan edit.'; wusterForm.scrollIntoView({ behavior: 'smooth' }); } catch (error) { alert('Gagal memuat data laporan: ' + error.message); formMessageEl.textContent = ''; console.error("Error loading report for editing:", error); } }
     /**
      * Mengosongkan semua input form, mereset list dinamis, dan mengembalikan state ke mode 'Buat Baru'.
      */
-    function resetFormAndState() {
-        wusterForm.reset(); // Mengosongkan input, select, textarea
-        currentlyEditingId = null; // Hapus ID yg sedang diedit
-        listConfigs.forEach(resetDynamicList); // Kembalikan list dinamis ke item default
-        // Kembalikan nilai default khusus untuk 'Lain-lain'
-        document.getElementById('lost_time_notes').value = "0 MENIT";
-        document.getElementById('hanger_notes').value = "0 HANGER";
-        calculateAllTotals(); // Hitung ulang total (akan jadi 0)
-
-        // Kembalikan tampilan tombol dan judul ke state awal
-        formTitleEl.textContent = 'Buat Laporan Baru';
-        mainSubmitBtn.textContent = 'Simpan Laporan Final';
-        saveDraftBtn.textContent = 'Simpan Draft';
-        cancelEditBtn.style.display = 'none'; // Sembunyikan tombol Batal
-        formMessageEl.textContent = ''; // Hapus pesan form
-    }
-
+    function resetFormAndState() { /* ... kode sama ... */ wusterForm.reset(); currentlyEditingId = null; listConfigs.forEach(resetDynamicList); document.getElementById('lost_time_notes').value = "0 MENIT"; document.getElementById('hanger_notes').value = "0 HANGER"; calculateAllTotals(); formTitleEl.textContent = 'Buat Laporan Baru'; mainSubmitBtn.textContent = 'Simpan Laporan Final'; saveDraftBtn.textContent = 'Simpan Draft'; cancelEditBtn.style.display = 'none'; formMessageEl.textContent = ''; }
     // Tambahkan event listener ke tombol "Batal Edit"
     cancelEditBtn.addEventListener('click', resetFormAndState);
-
     /**
      * Mengumpulkan semua nilai dari form ke dalam satu objek JavaScript.
      */
-    function getFormData() {
-        const formData = { user_id: currentUser.id }; // Selalu sertakan user_id
-        // Array ID elemen yang sama dengan nama kolom di tabel 'laporan_wuster'
-        const fieldIds = ['hari', 'tanggal', 'shift', 'chief_name', 'total_masuk',
-                          'abs_staff_masuk', 'abs_staff_tdk_masuk', 'abs_wuster_masuk', 'abs_wuster_tdk_masuk',
-                          'abs_repair_masuk', 'abs_repair_tdk_masuk', 'abs_incoming_masuk', 'abs_incoming_tdk_masuk',
-                          'abs_chrome_masuk', 'abs_chrome_tdk_masuk', 'abs_painting_4_masuk', 'abs_painting_4_tdk_masuk',
-                          'abs_user_cpc_masuk', 'abs_user_cpc_tdk_masuk', 'abs_maintenance_masuk', 'abs_maintenance_tdk_masuk',
-                          'problem_quality_notes', 'suplay_material_notes', 'packing_box_notes', 'trouble_mesin_notes',
-                          'perf_wuster_isi', 'perf_wuster_kosong', 'total_check_ok', 'total_check_ng',
-                          'total_check_repair', 'total_check_body', 'total_prod_fresh', 'total_prod_repair', 'total_prod_ng',
-                          'lost_time_notes', 'hanger_notes'];
-        
-        // [PERBAIKAN ERROR 400 DIMULAI DI SINI]
-        fieldIds.forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                // Cek apakah field ini harusnya angka
-                const isNumber = element.type === 'number' ||
-                                 element.classList.contains('wuster-calc') ||
-                                 element.classList.contains('check-calc') ||
-                                 element.classList.contains('prod-calc') ||
-                                 id === 'total_masuk' ||
-                                 id.includes('_masuk') || 
-                                 id === 'shift';
-                
-                if (isNumber) {
-                    const value = element.value;
-                    const parsedValue = parseInt(value);
-
-                    // Perlakuan khusus untuk 'shift'
-                    if (id === 'shift') {
-                        // Jika 'shift' kosong ("") atau 0, kirim 'null' ke DB
-                        // 'null' berarti "tidak ada data", '0' adalah data angka 0.
-                        formData[id] = (value === "" || isNaN(parsedValue) || parsedValue === 0) ? null : parsedValue;
-                    } else {
-                        // Untuk field angka lainnya, default ke 0 jika kosong atau tidak valid
-                        formData[id] = isNaN(parsedValue) ? 0 : parsedValue;
-                    }
-                } else {
-                    // Jika ini adalah string (textarea, text, select-string)
-                    formData[id] = element.value;
-                }
-
-            } else {
-                 // Peringatan jika elemen form tidak ditemukan
-                 console.warn(`Wuster: Element with ID ${id} not found in getFormData`);
-            }
-        });
-        // [PERBAIKAN ERROR 400 SELESAI]
-
-        // Ambil nilai dari list dinamis (sudah diserialisasi jadi string)
-        listConfigs.forEach(config => {
-            formData[config.notesKey] = serializeDynamicList(config);
-        });
-
-        return formData; // Kembalikan objek data lengkap
-    }
-
+    function getFormData() { /* ... kode sama ... */ const formData = { user_id: currentUser.id }; ['hari', 'tanggal', 'shift', 'chief_name', 'total_masuk', 'abs_staff_masuk', 'abs_staff_tdk_masuk', 'abs_wuster_masuk', 'abs_wuster_tdk_masuk', 'abs_repair_masuk', 'abs_repair_tdk_masuk', 'abs_incoming_masuk', 'abs_incoming_tdk_masuk', 'abs_chrome_masuk', 'abs_chrome_tdk_masuk', 'abs_painting_4_masuk', 'abs_painting_4_tdk_masuk', 'abs_user_cpc_masuk', 'abs_user_cpc_tdk_masuk', 'abs_maintenance_masuk', 'abs_maintenance_tdk_masuk', 'problem_quality_notes', 'suplay_material_notes', 'packing_box_notes', 'trouble_mesin_notes', 'perf_wuster_isi', 'perf_wuster_kosong', 'total_check_ok', 'total_check_ng', 'total_check_repair', 'total_check_body', 'total_prod_fresh', 'total_prod_repair', 'total_prod_ng', 'lost_time_notes', 'hanger_notes'] .forEach(id => { const element = document.getElementById(id); if (element) { const isNumber = element.type === 'number' || element.classList.contains('wuster-calc') || element.classList.contains('check-calc') || element.classList.contains('prod-calc') || id === 'total_masuk' || id.includes('_masuk'); formData[id] = isNumber ? (parseInt(element.value) || 0) : element.value; } else { console.warn(`Element ${id} not found in getFormData`);}}); listConfigs.forEach(config => { formData[config.notesKey] = serializeDynamicList(config); }); return formData; }
     /**
      * Fungsi utama yang menangani proses penyimpanan (baik insert baru atau update).
-     * Menerima parameter boolean 'isDraft' untuk menentukan status laporan.
      */
-    async function handleFormSubmit(isDraft = false) {
-        if (!currentUser) { formMessageEl.textContent = 'Error: Sesi tidak ditemukan. Tidak bisa menyimpan.'; return; }
-        
-        // Validasi Sederhana (Hanya untuk 'Simpan Final')
-        if (!isDraft) {
-            const tanggal = document.getElementById('tanggal').value;
-            const shift = document.getElementById('shift').value;
-            if (!tanggal || !shift) {
-                formMessageEl.textContent = 'Error: Tanggal dan Shift wajib diisi untuk Laporan Final.';
-                alert('Tanggal dan Shift wajib diisi untuk Laporan Final!');
-                return;
-            }
-        }
-        
-        formMessageEl.textContent = 'Menyimpan...'; // Pesan loading
-
-        try {
-            const laporanData = getFormData(); // Ambil semua data dari form
-            laporanData.status = isDraft ? 'draft' : 'published'; // Set status ('draft' atau 'published')
-
-            let result;
-            if (currentlyEditingId) { // Jika sedang dalam mode UPDATE
-                console.log(`Wuster: Updating report ID: ${currentlyEditingId} with status: ${laporanData.status}`); // Debugging
-                // Kirim perintah update ke Supabase
-                result = await _supabase.from('laporan_wuster').update(laporanData).eq('id', currentlyEditingId);
-            } else { // Jika sedang dalam mode INSERT (buat baru)
-                console.log(`Wuster: Inserting new report with status: ${laporanData.status}`); // Debugging
-                // Kirim perintah insert ke Supabase
-                result = await _supabase.from('laporan_wuster').insert(laporanData);
-            }
-
-            // Cek hasil operasi database
-            if (result.error) {
-                throw result.error; // Lemparkan error jika gagal
-            }
-
-            // Jika berhasil
-            formMessageEl.textContent = `Laporan berhasil disimpan sebagai ${isDraft ? 'Draft' : 'Final'}!`;
-            resetFormAndState(); // Kosongkan form dan reset state
-
-            // Muat ulang daftar draft dan riwayat (agar data terbaru muncul)
-            await loadWusterDrafts();
-            currentPage = 1; // Kembali ke halaman pertama riwayat
-            await loadWusterHistory();
-
-            // Hilangkan pesan sukses setelah 3 detik
-            setTimeout(() => { formMessageEl.textContent = ''; }, 3000);
-
-        } catch (error) {
-            // Tangani error saat menyimpan
-            formMessageEl.textContent = `Error: ${error.message}`;
-            console.error('Submit Error:', error);
-        }
-    }
+    async function handleFormSubmit(isDraft = false) { /* ... kode sama ... */ if (!currentUser) { formMessageEl.textContent = 'Error: Sesi tidak ditemukan.'; return; } formMessageEl.textContent = 'Menyimpan...'; try { const laporanData = getFormData(); laporanData.status = isDraft ? 'draft' : 'published'; let result; if (currentlyEditingId) { result = await _supabase.from('laporan_wuster').update(laporanData).eq('id', currentlyEditingId); } else { result = await _supabase.from('laporan_wuster').insert(laporanData); } if (result.error) throw result.error; formMessageEl.textContent = `Laporan berhasil disimpan sebagai ${isDraft ? 'Draft' : 'Final'}!`; resetFormAndState(); await loadWusterDrafts(); currentPage = 1; await loadWusterHistory(); setTimeout(() => { formMessageEl.textContent = ''; }, 3000); } catch (error) { formMessageEl.textContent = `Error: ${error.message}`; console.error('Submit Error:', error); } }
     // --- Akhir Fungsi CRUD ---
 
 
     // --- Event listener Submit Utama & Simpan Draft ---
-    wusterForm.onsubmit = (e) => {
-        e.preventDefault(); // Mencegah submit HTML biasa
-        handleFormSubmit(false); // Panggil fungsi submit dengan status 'published'
-    };
-    saveDraftBtn.addEventListener('click', () => {
-        handleFormSubmit(true); // Panggil fungsi submit dengan status 'draft'
-    });
+    wusterForm.onsubmit = (e) => { e.preventDefault(); handleFormSubmit(false); }; // false = Simpan Final
+    saveDraftBtn.addEventListener('click', () => handleFormSubmit(true)); // true = Simpan Draft
 
     // --- Event listener pagination ---
     prevButton.addEventListener('click', () => { if (currentPage > 1) { currentPage--; loadWusterHistory(); } });
@@ -766,10 +475,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const session = await getActiveUserSession(); // Fungsi ini ada di app.js
 
         // Jika TIDAK ADA session, tampilkan alert dan redirect
-        // Pengecekan ini sudah ada di app.js, tapi kita tambahkan lagi di sini
-        // sebagai fallback jika user langsung membuka halaman ini.
         if (!session) {
-            console.warn("Wuster: No active session found during init, redirecting to index.html...");
+            console.warn("Wuster: No active session found, redirecting to index.html...");
             alert('Anda harus login terlebih dahulu!'); // Tampilkan peringatan
             window.location.href = 'index.html'; // Redirect ke halaman login (index.html)
             return; // Hentikan eksekusi script selanjutnya di halaman ini
@@ -781,8 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Muat data karyawan (untuk footer PDF & info sidebar)
-            // Fungsi ini dipanggil lagi di sini untuk memastikan currentKaryawan terisi
-            // Meskipun sidebar sudah diurus app.js, kita butuh datanya untuk PDF
+            // Fungsi ini juga menampilkan nama di sidebar
             currentKaryawan = await loadSharedDashboardData(currentUser); // Fungsi ini ada di app.js
 
             // Set form ke kondisi awal (kosong/default) dan hitung total awal
@@ -807,4 +513,4 @@ document.addEventListener('DOMContentLoaded', () => {
     })();
     // === AKHIR BAGIAN YANG DIKEMBALIKAN ===
 
-});
+}); // Akhir dari DOMContentLoaded

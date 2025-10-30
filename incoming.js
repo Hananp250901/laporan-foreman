@@ -30,25 +30,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextButton = document.getElementById('next-page-btn');
     const pageInfo = document.getElementById('page-info');
 
-    // === Variabel List Dinamis BARU ===
-    const stepAssyListContainer = document.getElementById('prod-step-assy-list');
-    const addStepAssyItemBtn = document.getElementById('add-step-assy-item-btn');
-    const defaultStepAssyItems = ["S/B K41K CW", "SB KPYX LH"];
-    const stepAssyTotalSpan = document.getElementById('prod-step-assy-total');
+    // Konfigurasi List Dinamis untuk halaman Incoming
+    const listConfigsIncoming = [
+        { id: 'prod-step-assy', nameClass: 'step-assy-item-name', valueClass: 'step-assy-item-value', defaults: ["S/B K41K CW", "SB KPYX LH"], container: null, button: null, totalSpan: null, notesKey: 'prod_step_assy_notes' },
+        { id: 'prod-buka-cap', nameClass: 'buka-cap-item-name', valueClass: 'buka-cap-item-value', defaults: ["M/C 2DP RH", "2DP LH"], container: null, button: null, totalSpan: null, notesKey: 'prod_buka_cap_notes' },
+        { id: 'prod-assy-cup', nameClass: 'assy-cup-item-name', valueClass: 'assy-cup-item-value', defaults: ["M/C 200 LH", "K12V CBS"], container: null, button: null, totalSpan: null, notesKey: 'prod_assy_cup_notes' }
+    ];
+    // Ambil elemen HTML berdasarkan konfigurasi
+    listConfigsIncoming.forEach(config => {
+        config.container = document.getElementById(`${config.id}-list`);
+        // ID tombol di HTML tidak pakai prefix 'prod-'
+        config.button = document.getElementById(`add-${config.id.replace('prod-', '')}-item-btn`);
+        config.totalSpan = document.getElementById(`${config.id}-total`);
+        // Peringatan jika elemen tidak ditemukan (membantu debugging)
+        if (!config.container) console.warn(`Incoming: Element with ID ${config.id}-list not found.`);
+        if (!config.button) console.warn(`Incoming: Button add-${config.id.replace('prod-', '')}-item-btn not found.`);
+        if (!config.totalSpan) console.warn(`Incoming: Total span for ${config.id} list not found.`);
+    });
+    // --- Akhir Deklarasi Variabel ---
 
-    const bukaCapListContainer = document.getElementById('prod-buka-cap-list');
-    const addBukaCapItemBtn = document.getElementById('add-buka-cap-item-btn');
-    const defaultBukaCapItems = ["M/C 2DP RH", "2DP LH"];
-    const bukaCapTotalSpan = document.getElementById('prod-buka-cap-total');
 
-    const assyCupListContainer = document.getElementById('prod-assy-cup-list');
-    const addAssyCupItemBtn = document.getElementById('add-assy-cup-item-btn');
-    const defaultAssyCupItems = ["M/C 200 LH", "K12V CBS"];
-    const assyCupTotalSpan = document.getElementById('prod-assy-cup-total');
-    
+    // --- Fungsi Helper List Dinamis ---
     /**
-     * FUNGSI: Menambahkan baris item ke list dinamis
-     * (Diadaptasi dari wuster.js)
+     * Menambahkan baris input baru (Nama Item + Jumlah Angka) ke container list.
      */
     function addDynamicRow(container, nameClass, valueClass, itemName = "", itemValue = "") {
         if (!container) return;
@@ -102,51 +106,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Event listener untuk tombol "Tambah Item"
-    if (addStepAssyItemBtn) addStepAssyItemBtn.addEventListener('click', () => addDynamicRow(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value'));
-    if (addBukaCapItemBtn) addBukaCapItemBtn.addEventListener('click', () => addDynamicRow(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value'));
-    if (addAssyCupItemBtn) addAssyCupItemBtn.addEventListener('click', () => addDynamicRow(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value'));
-
-    // Event listener untuk tombol "Hapus" (Delegasi)
-    incomingForm.addEventListener('click', (e) => {
-        if (e.target.closest('.button-remove')) {
-            const row = e.target.closest('.dynamic-list-row');
-            if (!row) return;
-            row.remove(); // Hapus baris
-            calculateAllDynamicTotals(); // Hitung ulang total
-        }
-    });
-
-    // Event listener untuk perubahan input di list dinamis
-    incomingForm.addEventListener('input', (e) => {
-        const targetClass = e.target.classList;
-        if (targetClass.contains('step-assy-item-value') ||
-            targetClass.contains('buka-cap-item-value') ||
-            targetClass.contains('assy-cup-item-value')) {
-            calculateAllDynamicTotals(); // Hitung ulang total
-        }
-    });
-
     /**
-     * FUNGSI: Serialisasi data list dinamis (untuk disimpan ke DB)
+     * Mengubah isi list dinamis menjadi satu string (format "Nama: Jumlah\n") untuk disimpan ke database.
      */
-    function serializeDynamicList(container, nameClass, valueClass) {
-        if (!container) return ""; 
+    function serializeDynamicList(config) {
+        if (!config.container) return ""; // Kembalikan string kosong jika container tidak ada
         let resultString = "";
-        const rows = container.querySelectorAll('.dynamic-list-row');
+        const rows = config.container.querySelectorAll('.dynamic-list-row'); // Ambil semua baris
         rows.forEach(row => {
-            const nameInput = row.querySelector(`.${nameClass}`);
-            const valueInput = row.querySelector(`.${valueClass}`);
+            const nameInput = row.querySelector(`.${config.nameClass}`);
+            const valueInput = row.querySelector(`.${config.valueClass}`);
             if (nameInput && valueInput) {
-                const name = nameInput.value;
-                const value = valueInput.value;
-                 if (name || value) {
-                    resultString += `${name || ''}: ${value || ''}\n`; 
+                const name = nameInput.value.trim(); // Ambil nama, hapus spasi awal/akhir
+                const value = valueInput.value.trim(); // Ambil jumlah, hapus spasi
+                if (name || value) { // Hanya simpan jika ada nama atau jumlah
+                    resultString += `${name}: ${value}\n`; // Tambahkan ke string hasil
                 }
             }
         });
-        return resultString.trim();
+        return resultString.trim(); // Kembalikan string hasil, hapus spasi/newline di akhir
     }
+    // --- Akhir Fungsi Helper List Dinamis ---
+
 
     /**
      * FUNGSI: Menghitung total untuk list dinamis
@@ -165,14 +146,70 @@ document.addEventListener('DOMContentLoaded', () => {
      * FUNGSI HELPER BARU: Menjalankan semua kalkulasi total
      */
     function calculateAllDynamicTotals() {
-        calculateDynamicListTotal(stepAssyListContainer, 'step-assy-item-value', stepAssyTotalSpan);
-        calculateDynamicListTotal(bukaCapListContainer, 'buka-cap-item-value', bukaCapTotalSpan);
-        calculateDynamicListTotal(assyCupListContainer, 'assy-cup-item-value', assyCupTotalSpan);
+        listConfigsIncoming.forEach(calculateDynamicListTotal); // Panggil fungsi hitung untuk setiap list
+    }
+    // --- Akhir Fungsi Kalkulasi Total ---
+
+
+    // --- Event Listener Dinamis (Tambah, Hapus, Input) ---
+    // Tambahkan event listener ke setiap tombol "Tambah Item"
+    listConfigsIncoming.forEach(config => {
+         if (config.button) {
+            config.button.addEventListener('click', () => addDynamicRow(config.container, config.nameClass, config.valueClass));
+         } else {
+             console.warn(`Incoming: Button element not found for list ${config.id}, cannot add listener.`);
+         }
+    });
+
+    // Gunakan event delegation di form untuk tombol "Hapus" dan perubahan "Input Jumlah"
+    incomingForm.addEventListener('click', (e) => {
+        // Jika tombol Hapus (- lingkaran merah) atau ikon di dalamnya yg diklik
+        if (e.target.closest('.button-remove')) {
+            const row = e.target.closest('.dynamic-list-row'); // Cari baris terdekat
+            if (row) {
+                row.remove(); // Hapus baris dari tampilan
+                calculateAllDynamicTotals(); // Hitung ulang totalnya
+            }
+        }
+    });
+    incomingForm.addEventListener('input', (e) => {
+        // Cek apakah yang berubah adalah input jumlah di salah satu list dinamis
+        const isDynamicInput = listConfigsIncoming.some(config => e.target.classList.contains(config.valueClass));
+        if (isDynamicInput) {
+            calculateAllDynamicTotals(); // Jika ya, hitung ulang semua total
+        }
+    });
+    // --- Akhir Event Listener Dinamis ---
+
+
+    // --- Fungsi PDF ---
+    /**
+     * Helper function untuk PDF: Mengurai string "Nama: Jumlah\n", menghitung total, dan menambahkannya ke string jika ada angka.
+     */
+    function addTotalToNotes(notesString) {
+        if (!notesString || notesString.trim() === '') return '(Kosong)'; // Tampilkan '(Kosong)' jika string kosong
+        let sum = 0;
+        const lines = notesString.split('\n');
+        let hasNumericValue = false; // Flag untuk cek apakah ada angka valid
+        lines.forEach(line => {
+            const parts = line.split(': ');
+            // Hanya proses jika ada format "Nama: Value"
+            if (parts.length >= 2) {
+                const valuePart = parts[parts.length - 1].trim(); // Ambil bagian paling belakang setelah ':' terakhir
+                const num = parseInt(valuePart); // Coba ubah jadi angka
+                // Jika berhasil jadi angka (bukan NaN)
+                if (!isNaN(num)) {
+                    sum += num; // Tambahkan ke total
+                    hasNumericValue = true; // Set flag bahwa ada angka
+                }
+            }
+        });
+        // Hanya tambahkan baris "TOTAL: xxx" jika memang ada angka yang dijumlahkan
+        return hasNumericValue ? `${notesString}\n\nTOTAL: ${sum}` : notesString;
     }
 
-    
     /**
-     * FUNGSI PDF (Disalin dari incoming.js lama, tidak diubah)
+     * Fungsi utama untuk generate PDF laporan Incoming.
      */
     async function generatePDF(reportId) {
         alert('Membuat PDF... Mohon tunggu.');
@@ -247,7 +284,10 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.text("Disetujui,", 105, finalY, { align: 'center' }); const chiefName = report.chief_name || '( .......................... )'; doc.text(chiefName, 105, finalY + 20, { align: 'center' }); doc.text("Chief", 105, finalY + 25, { align: 'center' });
             doc.text("Mengetahui,", 190, finalY, { align: 'right' }); doc.text("SINGGIH E W", 190, finalY + 20, { align: 'right' }); doc.text("Dept Head", 190, finalY + 25, { align: 'right' });
 
-            doc.save(`Laporan_Incoming_${report.tanggal}_Shift${report.shift}.pdf`);
+            // --- Simpan PDF ---
+            // Gunakan fallback jika tanggal atau shift kosong
+            doc.save(`Laporan_Incoming_${report.tanggal || 'TanpaTanggal'}_Shift${report.shift || 'TanpaShift'}.pdf`);
+
         } catch (error) {
             alert(`Gagal membuat PDF: ${error.message}`);
             console.error('PDF Generation Error:', error);
@@ -375,58 +415,47 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function loadReportForEditing(reportId) {
         formMessageEl.textContent = 'Memuat data laporan...';
-        const { data: report, error } = await _supabase
-            .from('laporan_incoming')
-            .select('*')
-            .eq('id', reportId)
-            .single();
+        try {
+            const { data: report, error } = await _supabase.from('laporan_incoming').select('*').eq('id', reportId).single();
+            if (error) throw error;
 
-        if (error) {
-            alert('Gagal memuat data laporan: ' + error.message);
-            formMessageEl.textContent = '';
-            return;
+            // Isi semua field standar (cocokkan ID elemen dengan nama kolom DB)
+             ['hari', 'tanggal', 'shift', 'chief_name', 'absensi_incoming_masuk', 'absensi_incoming_tdk_masuk',
+              'absensi_step_assy_masuk', 'absensi_step_assy_tdk_masuk', 'absensi_buka_cap_masuk', 'absensi_buka_cap_tdk_masuk',
+              'prod_wuster', 'prod_chrom', 'quality_item', 'quality_cek', 'quality_ng', 'quality_balik_material',
+              'check_thickness_notes']
+              .forEach(id => {
+                  const element = document.getElementById(id);
+                  if (element) {
+                     element.value = report[id] ?? ''; // Isi value atau string kosong jika null/undefined
+                  } else {
+                     console.warn(`Incoming: Element with ID ${id} not found when loading report`);
+                  }
+              });
+
+            // Isi list dinamis menggunakan deserialize
+            listConfigsIncoming.forEach(config => {
+                 deserializeDynamicList(config, report[config.notesKey]);
+            });
+
+            calculateAllDynamicTotals(); // Hitung ulang total list dinamis
+
+            // Atur state aplikasi ke mode edit
+            currentlyEditingId = reportId; // Simpan ID yg diedit
+            formTitleEl.textContent = `Mengedit Laporan (Tanggal: ${report.tanggal || 'N/A'}, Shift: ${report.shift || 'N/A'})`; // Update judul form
+            mainSubmitBtn.textContent = 'Update Laporan Final'; // Ubah teks tombol submit
+            saveDraftBtn.textContent = 'Update Draft';          // Ubah teks tombol draft
+            cancelEditBtn.style.display = 'inline-block';      // Tampilkan tombol Batal
+            formMessageEl.textContent = 'Data berhasil dimuat.';
+
+            // Scroll ke form agar terlihat
+            incomingForm.scrollIntoView({ behavior: 'smooth' });
+
+        } catch (error) {
+            alert('Gagal memuat data laporan untuk diedit: ' + error.message);
+            formMessageEl.textContent = ''; // Hapus pesan loading
+            console.error("Error loading report for editing:", error);
         }
-
-        // Isi semua field
-        document.getElementById('hari').value = report.hari;
-        document.getElementById('tanggal').value = report.tanggal;
-        document.getElementById('shift').value = report.shift;
-        document.getElementById('chief_name').value = report.chief_name;
-        
-        document.getElementById('absensi_incoming_masuk').value = report.absensi_incoming_masuk;
-        document.getElementById('absensi_incoming_tdk_masuk').value = report.absensi_incoming_tdk_masuk;
-        document.getElementById('absensi_step_assy_masuk').value = report.absensi_step_assy_masuk;
-        document.getElementById('absensi_step_assy_tdk_masuk').value = report.absensi_step_assy_tdk_masuk;
-        document.getElementById('absensi_buka_cap_masuk').value = report.absensi_buka_cap_masuk;
-        document.getElementById('absensi_buka_cap_tdk_masuk').value = report.absensi_buka_cap_tdk_masuk;
-        
-        document.getElementById('prod_wuster').value = report.prod_wuster;
-        document.getElementById('prod_chrom').value = report.prod_chrom;
-        
-        document.getElementById('quality_item').value = report.quality_item;
-        document.getElementById('quality_cek').value = report.quality_cek;
-        document.getElementById('quality_ng').value = report.quality_ng;
-        document.getElementById('quality_balik_material').value = report.quality_balik_material;
-        
-        document.getElementById('check_thickness_notes').value = report.check_thickness_notes;
-
-        // Isi dynamic lists
-        deserializeDynamicList(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value', report.prod_step_assy_notes, defaultStepAssyItems);
-        deserializeDynamicList(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value', report.prod_buka_cap_notes, defaultBukaCapItems);
-        deserializeDynamicList(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value', report.prod_assy_cup_notes, defaultAssyCupItems);
-
-        // Hitung ulang semua total
-        calculateAllDynamicTotals();
-        
-        // Atur state form
-        currentlyEditingId = reportId;
-        formTitleEl.textContent = `Mengedit Laporan (Tanggal: ${report.tanggal}, Shift: ${report.shift})`;
-        mainSubmitBtn.textContent = 'Update Laporan Final';
-        saveDraftBtn.textContent = 'Update Draft';
-        cancelEditBtn.style.display = 'inline-block';
-        
-        formMessageEl.textContent = 'Data berhasil dimuat. Silakan edit.';
-        incomingForm.scrollIntoView({ behavior: 'smooth' });
     }
 
     /**
@@ -459,69 +488,60 @@ document.addEventListener('DOMContentLoaded', () => {
      * FUNGSI BARU: Mengumpulkan semua data form ke 1 objek
      */
     function getFormData() {
-        return {
-            user_id: currentUser.id,
-            hari: document.getElementById('hari').value,
-            tanggal: document.getElementById('tanggal').value,
-            shift: parseInt(document.getElementById('shift').value), 
-            chief_name: document.getElementById('chief_name').value,
-            
-            absensi_incoming_masuk: parseInt(document.getElementById('absensi_incoming_masuk').value),
-            absensi_incoming_tdk_masuk: document.getElementById('absensi_incoming_tdk_masuk').value,
-            absensi_step_assy_masuk: parseInt(document.getElementById('absensi_step_assy_masuk').value),
-            absensi_step_assy_tdk_masuk: document.getElementById('absensi_step_assy_tdk_masuk').value,
-            absensi_buka_cap_masuk: parseInt(document.getElementById('absensi_buka_cap_masuk').value),
-            absensi_buka_cap_tdk_masuk: document.getElementById('absensi_buka_cap_tdk_masuk').value,
-            
-            prod_wuster: document.getElementById('prod_wuster').value,
-            prod_chrom: document.getElementById('prod_chrom').value,
-            
-            quality_item: document.getElementById('quality_item').value,
-            quality_cek: document.getElementById('quality_cek').value,
-            quality_ng: document.getElementById('quality_ng').value,
-            quality_balik_material: document.getElementById('quality_balik_material').value,
-            
-            // Serialisasi list dinamis
-            prod_step_assy_notes: serializeDynamicList(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value'),
-            prod_buka_cap_notes: serializeDynamicList(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value'),
-            prod_assy_cup_notes: serializeDynamicList(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value'),
+        const formData = { user_id: currentUser.id }; // Selalu sertakan user_id
 
-            check_thickness_notes: document.getElementById('check_thickness_notes').value
-        };
+        // Ambil nilai dari field input standar
+         ['hari', 'tanggal', 'shift', 'chief_name', 'absensi_incoming_masuk', 'absensi_incoming_tdk_masuk',
+          'absensi_step_assy_masuk', 'absensi_step_assy_tdk_masuk', 'absensi_buka_cap_masuk', 'absensi_buka_cap_tdk_masuk',
+          'prod_wuster', 'prod_chrom', 'quality_item', 'quality_cek', 'quality_ng', 'quality_balik_material',
+          'check_thickness_notes']
+          .forEach(id => {
+              const element = document.getElementById(id);
+              if (element) {
+                  // Cek apakah field ini harusnya angka
+                  const isNumber = element.type === 'number' || id.includes('_masuk') || id === 'shift';
+                  // Ambil nilainya, konversi ke integer jika perlu (anggap 0 jika gagal konversi)
+                  formData[id] = isNumber ? (parseInt(element.value) || 0) : element.value;
+              } else {
+                   console.warn(`Incoming: Element with ID ${id} not found in getFormData`);
+              }
+          });
+
+        // Ambil nilai dari list dinamis (sudah diserialisasi jadi string)
+        listConfigsIncoming.forEach(config => {
+             formData[config.notesKey] = serializeDynamicList(config);
+        });
+
+        return formData; // Kembalikan objek data lengkap
     }
 
     /**
-     * FUNGSI BARU: Logika submit yang di-refactor
+     * Fungsi utama yang menangani proses penyimpanan (baik insert baru atau update).
+     * Menerima parameter boolean 'isDraft' untuk menentukan status laporan.
      */
     async function handleFormSubmit(isDraft = false) {
-        if (!currentUser) {
-            formMessageEl.textContent = 'Error: Sesi tidak ditemukan. Harap refresh.'; return;
-        }
-        formMessageEl.textContent = 'Menyimpan...';
+        if (!currentUser) { formMessageEl.textContent = 'Error: Sesi tidak ditemukan. Tidak bisa menyimpan.'; return; }
+        formMessageEl.textContent = 'Menyimpan...'; // Pesan loading
 
-        const laporanData = getFormData();
-        laporanData.status = isDraft ? 'draft' : 'published'; // SET STATUS
+        try {
+            const laporanData = getFormData(); // Ambil semua data dari form
+            laporanData.status = isDraft ? 'draft' : 'published'; // Set status ('draft' atau 'published')
 
-        let error;
-        if (currentlyEditingId) {
-            // MODE UPDATE
-            const { error: updateError } = await _supabase
-                .from('laporan_incoming')
-                .update(laporanData)
-                .eq('id', currentlyEditingId);
-            error = updateError;
-        } else {
-            // MODE INSERT
-            const { error: insertError } = await _supabase
-                .from('laporan_incoming')
-                .insert(laporanData);
-            error = insertError;
-        }
+            let result;
+            if (currentlyEditingId) { // Jika sedang dalam mode UPDATE
+                console.log(`Incoming: Updating report ID: ${currentlyEditingId} with status: ${laporanData.status}`); // Debugging
+                result = await _supabase.from('laporan_incoming').update(laporanData).eq('id', currentlyEditingId);
+            } else { // Jika sedang dalam mode INSERT (buat baru)
+                console.log(`Incoming: Inserting new report with status: ${laporanData.status}`); // Debugging
+                result = await _supabase.from('laporan_incoming').insert(laporanData);
+            }
 
-        if (error) {
-            formMessageEl.textContent = `Error: ${error.message}`;
-            console.error('Submit Error:', error);
-        } else {
+            // Cek hasil operasi database
+            if (result.error) {
+                throw result.error; // Lemparkan error jika gagal
+            }
+
+            // Jika berhasil
             formMessageEl.textContent = `Laporan berhasil disimpan sebagai ${isDraft ? 'Draft' : 'Final'}!`;
             resetFormAndState(); // Reset form
             
@@ -531,22 +551,27 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadIncomingHistory(); 
             
             setTimeout(() => { formMessageEl.textContent = ''; }, 3000);
+
+        } catch (error) {
+            // Tangani error saat menyimpan
+            formMessageEl.textContent = `Error: ${error.message}`;
+            console.error('Submit Error:', error);
         }
     }
+    // --- Akhir Fungsi CRUD ---
 
-    // Event listener "Simpan Laporan Final" (submit utama)
-    incomingForm.onsubmit = async (event) => {
-        event.preventDefault();
-        await handleFormSubmit(false); // false = bukan draft
+
+    // --- Event listener Submit Utama & Simpan Draft ---
+    incomingForm.onsubmit = (e) => {
+        e.preventDefault(); // Mencegah submit HTML biasa
+        handleFormSubmit(false); // Panggil fungsi submit dengan status 'published'
     };
-
-    // Event listener "Simpan Draft"
-    saveDraftBtn.addEventListener('click', async () => {
-        await handleFormSubmit(true); // true = draft
+    saveDraftBtn.addEventListener('click', () => {
+        handleFormSubmit(true); // Panggil fungsi submit dengan status 'draft'
     });
 
 
-    // Event listener pagination
+    // --- Event listener pagination ---
     prevButton.addEventListener('click', () => { if (currentPage > 1) { currentPage--; loadIncomingHistory(); } });
     nextButton.addEventListener('click', () => { const totalPages = Math.ceil(totalReports / itemsPerPage); if (currentPage < totalPages) { currentPage++; loadIncomingHistory(); } });
 
@@ -554,29 +579,40 @@ document.addEventListener('DOMContentLoaded', () => {
      * Fungsi Inisialisasi Halaman (Jalan sekali setelah DOM siap)
      */
     (async () => {
-        let session;
-        try {
-            session = await getActiveUserSession();
-            if (!session) {
-                alert('Anda harus login terlebih dahulu!');
-                window.location.href = 'index.html'; // Arahkan ke index/login
-                return;
-            }
-            currentUser = session.user; 
-            currentKaryawan = await loadSharedDashboardData(currentUser); 
-        } catch (error) {
-            console.error("Error saat inisialisasi user:", error);
-            alert('Gagal memuat data user. Cek koneksi dan coba lagi.');
-            return;
+        console.log("Incoming: Initializing page...");
+        // Langsung cek session saat halaman dimuat
+        const session = await getActiveUserSession(); // Fungsi ini ada di app.js
+
+        // Jika TIDAK ADA session, tampilkan alert dan redirect
+        // Pengecekan ini sudah ada di app.js, tapi kita tambahkan lagi di sini
+        // sebagai fallback jika user langsung membuka halaman ini.
+        if (!session) {
+            console.warn("Incoming: No active session found during init, redirecting to index.html...");
+            alert('Anda harus login terlebih dahulu!'); // Tampilkan peringatan
+            window.location.href = 'index.html'; // Redirect ke halaman login (index.html)
+            return; // Hentikan eksekusi script
         }
-        
-        // Jalankan reset form untuk set nilai default
-        resetFormAndState();
-        
-        // Muat riwayat & draft
+
+        // Jika lolos cek session, lanjutkan
+        console.log("Incoming: Session found, proceeding.");
+        currentUser = session.user; // Simpan info user yg login
+
         try {
-            await loadIncomingDrafts();
-            await loadIncomingHistory(); 
+            // Muat data karyawan (untuk footer PDF & info sidebar)
+            // Fungsi ini dipanggil lagi di sini untuk memastikan currentKaryawan terisi
+            currentKaryawan = await loadSharedDashboardData(currentUser); // Fungsi ini ada di app.js
+
+            // Set form ke kondisi awal (kosong/default) dan hitung total awal
+            resetFormAndState();
+
+            // Muat data draft dan riwayat secara bersamaan
+            await Promise.all([
+                loadIncomingDrafts(),
+                loadIncomingHistory()
+            ]);
+
+            console.log("Incoming: Initialization complete.");
+
         } catch (error) {
             console.error("Gagal memuat data:", error);
             if (historyListEl) historyListEl.innerHTML = `<tr><td colspan="5" style="color: red;">Gagal memuat riwayat.</td></tr>`;
