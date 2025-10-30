@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variabel Total
     const wusterInputs = document.querySelectorAll('.wuster-calc');
     const wusterTotalSpan = document.getElementById('perf_wuster_total');
-    const checkInputs = document.querySelectorAll('.check-calc');
+    const checkInputs = document.querySelectorAll('.check-calc'); // <- Ini tetap mengambil semua 4 input
     const checkTotalSpan = document.getElementById('total_check_total');
     const prodInputs = document.querySelectorAll('.prod-calc');
     const prodTotalSpan = document.getElementById('total_prod_total');
@@ -108,8 +108,6 @@ absensiInputs.forEach(input => {
 // --- AKHIR KODE AUTO-SUM ---
 
 
-// === AWAL PERUBAHAN ===
-
 // --- KODE UNTUK AUTO-SUM TOTAL TIDAK MASUK ---
 
 // 1. Definisikan ID dari semua input "Tdk Masuk" (org)
@@ -153,8 +151,6 @@ absensiTdkMasukInputs.forEach(input => {
 });
 
 // --- AKHIR KODE AUTO-SUM ---
-
-// === AKHIR PERUBAHAN ===
 
 
 // 4. Panggil sekali saat load (jika ada data draft)
@@ -302,17 +298,32 @@ calculateAllTotals();
         });
         totalSpan.textContent = sum;
     }
+    
+
+    /**
+     * FUNGSI BARU: Menghitung total HANYA UNTUK 'Total Check'
+     * (OK + REPAIR + BODY)
+     */
+    function calculateCheckTotal() {
+        if (!checkTotalSpan) return;
+        let sum = 0;
+        sum += parseInt(document.getElementById('total_check_ok').value) || 0;
+        sum += parseInt(document.getElementById('total_check_repair').value) || 0;
+        sum += parseInt(document.getElementById('total_check_body').value) || 0;
+        checkTotalSpan.textContent = sum;
+    }
+
 
     /**
      * FUNGSI HELPER BARU: Menjalankan semua kalkulasi total
      */
     function calculateAllTotals() {
         calculateTotal(wusterInputs, wusterTotalSpan);
-        calculateTotal(checkInputs, checkTotalSpan);
+        calculateCheckTotal(); // <-- Logika 'Total Check' (OK+REPAIR+BODY)
         calculateTotal(prodInputs, prodTotalSpan);
         calculateAllDynamicTotals();
         updateMasukTotal();
-        updateTdkMasukTotal(); // <-- === PERUBAHAN DI SINI ===
+        updateTdkMasukTotal(); 
     }
     
     function calculateAllDynamicTotals() {
@@ -325,12 +336,12 @@ calculateAllTotals();
 
     // Tambahkan event listener ke setiap input kalkulasi
     wusterInputs.forEach(input => input.addEventListener('input', () => calculateTotal(wusterInputs, wusterTotalSpan)));
-    checkInputs.forEach(input => input.addEventListener('input', () => calculateTotal(checkInputs, checkTotalSpan)));
+    checkInputs.forEach(input => input.addEventListener('input', calculateCheckTotal)); // <-- Event listener untuk 'Total Check'
     prodInputs.forEach(input => input.addEventListener('input', () => calculateTotal(prodInputs, prodTotalSpan)));
 
     
     /**
-     * FUNGSI PDF (Tidak berubah)
+     * FUNGSI PDF (TELAH DIMODIFIKASI)
      */
     async function generatePDF(reportId) {
         alert('Membuat PDF... Mohon tunggu.');
@@ -344,8 +355,7 @@ calculateAllTotals();
             if (error) throw new Error(`Gagal mengambil data laporan: ${error.message}`);
             
             const doc = new jsPDF({ format: 'legal' });
-            // ... (Seluruh kode jsPDF Anda dari file sebelumnya ada di sini) ...
-            // ... (Saya singkat agar tidak terlalu panjang, TAPI KODE PDF INI SAMA PERSIS) ...
+            
             const tableStyles = {
                 theme: 'grid', styles: { cellWidth: 'wrap', fontSize: 8, cellPadding: 1 }, 
                 headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255], fontSize: 9 } 
@@ -362,8 +372,17 @@ calculateAllTotals();
             doc.text("SHIFT", col1X, 33); doc.text(`: ${report.shift}`, col1X + 30, 33);
             doc.text("TOTAL MASUK", col1X, 37); doc.text(`: ${report.total_masuk} Orang`, col1X + 30, 37);
 
+            // === AWAL PERUBAHAN ===
+            // Menambahkan Total Tdk Masuk di PDF
+            doc.text("TOTAL TDK MASUK", col1X, 41); doc.text(`: ${report.total_tdk_masuk_org || 0} Orang`, col1X + 30, 41);
+            // === AKHIR PERUBAHAN ===
+
             doc.autoTable({
-                startY: 45, head: [['ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
+                // === AWAL PERUBAHAN ===
+                // Menggeser tabel absensi ke bawah (dari 45 menjadi 49)
+                startY: 49, 
+                // === AKHIR PERUBAHAN ===
+                head: [['ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
                 body: [['STAFF', report.abs_staff_masuk, report.abs_staff_tdk_masuk || ''], ['WUSTER', report.abs_wuster_masuk, report.abs_wuster_tdk_masuk || ''], ['REPAIR & TOUCH UP', report.abs_repair_masuk, report.abs_repair_tdk_masuk || ''], ['INCOMING, STEP ASSY, BUKA CAP', report.abs_incoming_masuk, report.abs_incoming_tdk_masuk || ''], ['CHROM, VERIFIKASI, AEROX, REMOVER', report.abs_chrome_masuk, report.abs_chrome_tdk_masuk || ''], ['PAINTING 4', report.abs_painting_4_masuk, report.abs_painting_4_tdk_masuk || ''], ['USER & CPC', report.abs_user_cpc_masuk, report.abs_user_cpc_tdk_masuk || ''], ['MAINTENANCE', report.abs_maintenance_masuk, report.abs_maintenance_tdk_masuk || ''],],
                 ...tableStyles, margin: { left: marginX }, tableWidth: fullWidth, columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 25 }, 2: { cellWidth: 105 } }
             });
@@ -391,14 +410,17 @@ calculateAllTotals();
             const wusterTotal = (report.perf_wuster_isi || 0) + (report.perf_wuster_kosong || 0);
             rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']], body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 2) { data.cell.styles.fontStyle = 'bold'; } } });
 
-            const checkTotal = (report.total_check_ok || 0) + (report.total_check_ng || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
+            
+            // Versi BARU (OK+Repair+Body):
+            const checkTotal = (report.total_check_ok || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
+            
             rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 4) { data.cell.styles.fontStyle = 'bold'; } } });
 
             let currentY = Math.max(leftY, rightY) + marginYSmall;
             doc.autoTable({ startY: currentY, head: [['LAIN-LAIN', 'Catatan']], body: [['Lost Time', report.lost_time_notes || ''], ['Hanger', report.hanger_notes || '']], ...tableStyles, margin: { left: marginX }, tableWidth: fullWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 140 } } });
 
             let finalY = doc.autoTable.previous.finalY + 10;
-            // ... (Kode Footer PDF tidak berubah) ...
+            
             const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
             doc.setFontSize(9);
             doc.text("Dibuat,", col1X, finalY); doc.text(preparerName, col1X, finalY + 15); doc.text("Foreman", col1X, finalY + 20);
@@ -452,29 +474,24 @@ calculateAllTotals();
                     loadReportForEditing(e.currentTarget.getAttribute('data-id'));
                 });
 
-                // === PERBAIKAN DI SINI ===
                 // Event listener untuk tombol "Hapus"
                 row.querySelector('.button-delete-draft').addEventListener('click', async (e) => {
                     const idToDelete = e.currentTarget.getAttribute('data-id');
                     if (confirm('Anda yakin ingin menghapus draft ini?')) {
                         
-                        // Tambahkan error handling
                         const { error } = await _supabase
                             .from('laporan_wuster')
                             .delete()
                             .eq('id', idToDelete);
 
                         if (error) {
-                            // Jika error, tampilkan pesan
                             alert('Gagal menghapus draft: ' + error.message);
                             console.error('Delete error:', error);
                         } else {
-                            // Jika berhasil, baru muat ulang
                             await loadWusterDrafts(); 
                         }
                     }
                 });
-                // === AKHIR PERBAIKAN ===
             });
         }
     }
@@ -486,7 +503,6 @@ calculateAllTotals();
         if (!historyListEl) return;
         historyListEl.innerHTML = '<tr><td colspan="5">Memuat riwayat...</td></tr>';
         
-        // Filter HANYA untuk yang 'published' atau yang lama (NULL)
         const { count, error: countError } = await _supabase
             .from('laporan_wuster')
             .select('*', { count: 'exact', head: true })
@@ -564,42 +580,40 @@ calculateAllTotals();
         document.getElementById('chief_name').value = report.chief_name;
         document.getElementById('total_masuk').value = report.total_masuk;
         
-        // === AWAL PERUBAHAN ===
-        document.getElementById('total_tdk_masuk_org').value = report.total_tdk_masuk_org; // Tambahkan ini
+        document.getElementById('total_tdk_masuk_org').value = report.total_tdk_masuk_org; 
         
         document.getElementById('abs_staff_masuk').value = report.abs_staff_masuk;
-        document.getElementById('abs_staff_tdk_masuk_org').value = report.abs_staff_tdk_masuk_org; // Tambahkan ini
+        document.getElementById('abs_staff_tdk_masuk_org').value = report.abs_staff_tdk_masuk_org; 
         document.getElementById('abs_staff_tdk_masuk').value = report.abs_staff_tdk_masuk;
         
         document.getElementById('abs_wuster_masuk').value = report.abs_wuster_masuk;
-        document.getElementById('abs_wuster_tdk_masuk_org').value = report.abs_wuster_tdk_masuk_org; // Tambahkan ini
+        document.getElementById('abs_wuster_tdk_masuk_org').value = report.abs_wuster_tdk_masuk_org; 
         document.getElementById('abs_wuster_tdk_masuk').value = report.abs_wuster_tdk_masuk;
         
         document.getElementById('abs_repair_masuk').value = report.abs_repair_masuk;
-        document.getElementById('abs_repair_tdk_masuk_org').value = report.abs_repair_tdk_masuk_org; // Tambahkan ini
+        document.getElementById('abs_repair_tdk_masuk_org').value = report.abs_repair_tdk_masuk_org; 
         document.getElementById('abs_repair_tdk_masuk').value = report.abs_repair_tdk_masuk;
         
         document.getElementById('abs_incoming_masuk').value = report.abs_incoming_masuk;
-        document.getElementById('abs_incoming_tdk_masuk_org').value = report.abs_incoming_tdk_masuk_org; // Tambahkan ini
+        document.getElementById('abs_incoming_tdk_masuk_org').value = report.abs_incoming_tdk_masuk_org; 
         document.getElementById('abs_incoming_tdk_masuk').value = report.abs_incoming_tdk_masuk;
         
         document.getElementById('abs_chrome_masuk').value = report.abs_chrome_masuk;
-        document.getElementById('abs_chrome_tdk_masuk_org').value = report.abs_chrome_tdk_masuk_org; // Tambahkan ini
+        document.getElementById('abs_chrome_tdk_masuk_org').value = report.abs_chrome_tdk_masuk_org; 
         document.getElementById('abs_chrome_tdk_masuk').value = report.abs_chrome_tdk_masuk;
         
         document.getElementById('abs_painting_4_masuk').value = report.abs_painting_4_masuk;
-        document.getElementById('abs_painting_4_tdk_masuk_org').value = report.abs_painting_4_tdk_masuk_org; // Tambahkan ini
+        document.getElementById('abs_painting_4_tdk_masuk_org').value = report.abs_painting_4_tdk_masuk_org; 
         document.getElementById('abs_painting_4_tdk_masuk').value = report.abs_painting_4_tdk_masuk;
         
         document.getElementById('abs_user_cpc_masuk').value = report.abs_user_cpc_masuk;
-        document.getElementById('abs_user_cpc_tdk_masuk_org').value = report.abs_user_cpc_tdk_masuk_org; // Tambahkan ini
+        document.getElementById('abs_user_cpc_tdk_masuk_org').value = report.abs_user_cpc_tdk_masuk_org; 
         document.getElementById('abs_user_cpc_tdk_masuk').value = report.abs_user_cpc_tdk_masuk;
         
         document.getElementById('abs_maintenance_masuk').value = report.abs_maintenance_masuk;
-        document.getElementById('abs_maintenance_tdk_masuk_org').value = report.abs_maintenance_tdk_masuk_org; // Tambahkan ini
+        document.getElementById('abs_maintenance_tdk_masuk_org').value = report.abs_maintenance_tdk_masuk_org; 
         document.getElementById('abs_maintenance_tdk_masuk').value = report.abs_maintenance_tdk_masuk;
         
-        // === AKHIR PERUBAHAN ===
 
         document.getElementById('problem_quality_notes').value = report.problem_quality_notes;
         document.getElementById('suplay_material_notes').value = report.suplay_material_notes;
@@ -682,42 +696,40 @@ calculateAllTotals();
             chief_name: document.getElementById('chief_name').value,
             total_masuk: parseInt(document.getElementById('total_masuk').value),
             
-            // === AWAL PERUBAHAN ===
-            total_tdk_masuk_org: parseInt(document.getElementById('total_tdk_masuk_org').value) || 0, // Tambahkan ini
+            total_tdk_masuk_org: parseInt(document.getElementById('total_tdk_masuk_org').value) || 0, 
 
             abs_staff_masuk: parseInt(document.getElementById('abs_staff_masuk').value) || 0,
-            abs_staff_tdk_masuk_org: parseInt(document.getElementById('abs_staff_tdk_masuk_org').value) || 0, // Tambahkan ini
+            abs_staff_tdk_masuk_org: parseInt(document.getElementById('abs_staff_tdk_masuk_org').value) || 0, 
             abs_staff_tdk_masuk: document.getElementById('abs_staff_tdk_masuk').value,
 
             abs_wuster_masuk: parseInt(document.getElementById('abs_wuster_masuk').value) || 0,
-            abs_wuster_tdk_masuk_org: parseInt(document.getElementById('abs_wuster_tdk_masuk_org').value) || 0, // Tambahkan ini
+            abs_wuster_tdk_masuk_org: parseInt(document.getElementById('abs_wuster_tdk_masuk_org').value) || 0, 
             abs_wuster_tdk_masuk: document.getElementById('abs_wuster_tdk_masuk').value,
 
             abs_repair_masuk: parseInt(document.getElementById('abs_repair_masuk').value) || 0,
-            abs_repair_tdk_masuk_org: parseInt(document.getElementById('abs_repair_tdk_masuk_org').value) || 0, // Tambahkan ini
+            abs_repair_tdk_masuk_org: parseInt(document.getElementById('abs_repair_tdk_masuk_org').value) || 0, 
             abs_repair_tdk_masuk: document.getElementById('abs_repair_tdk_masuk').value,
 
             abs_incoming_masuk: parseInt(document.getElementById('abs_incoming_masuk').value) || 0,
-            abs_incoming_tdk_masuk_org: parseInt(document.getElementById('abs_incoming_tdk_masuk_org').value) || 0, // Tambahkan ini
+            abs_incoming_tdk_masuk_org: parseInt(document.getElementById('abs_incoming_tdk_masuk_org').value) || 0, 
             abs_incoming_tdk_masuk: document.getElementById('abs_incoming_tdk_masuk').value,
 
             abs_chrome_masuk: parseInt(document.getElementById('abs_chrome_masuk').value) || 0,
-            abs_chrome_tdk_masuk_org: parseInt(document.getElementById('abs_chrome_tdk_masuk_org').value) || 0, // Tambahkan ini
+            abs_chrome_tdk_masuk_org: parseInt(document.getElementById('abs_chrome_tdk_masuk_org').value) || 0, 
             abs_chrome_tdk_masuk: document.getElementById('abs_chrome_tdk_masuk').value,
 
             abs_painting_4_masuk: parseInt(document.getElementById('abs_painting_4_masuk').value) || 0,
-            abs_painting_4_tdk_masuk_org: parseInt(document.getElementById('abs_painting_4_tdk_masuk_org').value) || 0, // Tambahkan ini
+            abs_painting_4_tdk_masuk_org: parseInt(document.getElementById('abs_painting_4_tdk_masuk_org').value) || 0, 
             abs_painting_4_tdk_masuk: document.getElementById('abs_painting_4_tdk_masuk').value,
 
             abs_user_cpc_masuk: parseInt(document.getElementById('abs_user_cpc_masuk').value) || 0,
-            abs_user_cpc_tdk_masuk_org: parseInt(document.getElementById('abs_user_cpc_tdk_masuk_org').value) || 0, // Tambahkan ini
+            abs_user_cpc_tdk_masuk_org: parseInt(document.getElementById('abs_user_cpc_tdk_masuk_org').value) || 0, 
             abs_user_cpc_tdk_masuk: document.getElementById('abs_user_cpc_tdk_masuk').value,
 
             abs_maintenance_masuk: parseInt(document.getElementById('abs_maintenance_masuk').value) || 0,
-            abs_maintenance_tdk_masuk_org: parseInt(document.getElementById('abs_maintenance_tdk_masuk_org').value) || 0, // Tambahkan ini
+            abs_maintenance_tdk_masuk_org: parseInt(document.getElementById('abs_maintenance_tdk_masuk_org').value) || 0, 
             abs_maintenance_tdk_masuk: document.getElementById('abs_maintenance_tdk_masuk').value,
-            // === AKHIR PERUBAHAN ===
-
+            
             packing_holder_notes: serializeDynamicList(holderListContainer, 'packing-item-name', 'packing-item-value'),
             pasang_holder_notes: serializeDynamicList(pasangListContainer, 'pasang-item-name', 'pasang-item-value'),
             problem_quality_notes: document.getElementById('problem_quality_notes').value,
