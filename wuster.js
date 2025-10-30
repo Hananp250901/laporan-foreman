@@ -63,6 +63,103 @@ document.addEventListener('DOMContentLoaded', () => {
     const packingHolderTotalSpan = document.getElementById('packing-holder-total'); 
     const pasangHolderTotalSpan = document.getElementById('pasang-holder-total'); 
 
+   // --- KODE UNTUK AUTO-SUM TOTAL MASUK ---
+
+// 1. Definisikan ID dari semua input "Masuk" (SESUAI HTML)
+const absensiInputIDs = [
+    'abs_staff_masuk',
+    'abs_wuster_masuk',
+    'abs_repair_masuk',
+    'abs_incoming_masuk',
+    'abs_chrome_masuk', // <-- Hati-hati, ini 'chrome' di HTML
+    'abs_painting_4_masuk',
+    'abs_user_cpc_masuk',
+    'abs_maintenance_masuk'
+];
+
+// 2. Ambil elemen-elemennya (SESUAI HTML)
+const totalMasukInput = document.getElementById('total_masuk'); // <-- Ubah di sini
+const absensiInputs = absensiInputIDs.map(id => document.getElementById(id));
+
+/**
+ * Fungsi untuk menghitung total dan memperbarui field Total Masuk
+ */
+function updateMasukTotal() {
+    let total = 0;
+    absensiInputs.forEach(input => {
+        if (input) {
+            // (parseInt(input.value) || 0) memastikan nilai kosong dibaca 0
+            total += parseInt(input.value) || 0;
+        }
+    });
+
+    if (totalMasukInput) {
+        totalMasukInput.value = total;
+    }
+}
+
+// 3. Tambahkan event listener ke setiap input "Masuk"
+absensiInputs.forEach(input => {
+    if (input) {
+        input.addEventListener('input', updateMasukTotal);
+    }
+});
+
+// --- AKHIR KODE AUTO-SUM ---
+
+
+// === AWAL PERUBAHAN ===
+
+// --- KODE UNTUK AUTO-SUM TOTAL TIDAK MASUK ---
+
+// 1. Definisikan ID dari semua input "Tdk Masuk" (org)
+const absensiTdkMasukInputIDs = [
+    'abs_staff_tdk_masuk_org',
+    'abs_wuster_tdk_masuk_org',
+    'abs_repair_tdk_masuk_org',
+    'abs_incoming_tdk_masuk_org',
+    'abs_chrome_tdk_masuk_org',
+    'abs_painting_4_tdk_masuk_org',
+    'abs_user_cpc_tdk_masuk_org',
+    'abs_maintenance_tdk_masuk_org'
+];
+
+// 2. Ambil elemen-elemennya
+const totalTdkMasukInput = document.getElementById('total_tdk_masuk_org');
+const absensiTdkMasukInputs = absensiTdkMasukInputIDs.map(id => document.getElementById(id));
+
+/**
+ * Fungsi untuk menghitung total dan memperbarui field Total Tdk Masuk
+ */
+function updateTdkMasukTotal() {
+    let total = 0;
+    absensiTdkMasukInputs.forEach(input => {
+        if (input) {
+            // (parseInt(input.value) || 0) memastikan nilai kosong dibaca 0
+            total += parseInt(input.value) || 0;
+        }
+    });
+
+    if (totalTdkMasukInput) {
+        totalTdkMasukInput.value = total;
+    }
+}
+
+// 3. Tambahkan event listener ke setiap input "Tdk Masuk"
+absensiTdkMasukInputs.forEach(input => {
+    if (input) {
+        input.addEventListener('input', updateTdkMasukTotal);
+    }
+});
+
+// --- AKHIR KODE AUTO-SUM ---
+
+// === AKHIR PERUBAHAN ===
+
+
+// 4. Panggil sekali saat load (jika ada data draft)
+calculateAllTotals();
+
     /**
      * FUNGSI: Menambahkan baris item ke list dinamis
      */
@@ -83,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             inputType = "number";
             inputPlaceholder = "Jumlah";
-            inputValue = itemValue || 0; 
+            inputValue = itemValue || ''; 
         }
 
         row.innerHTML = `
@@ -214,6 +311,8 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal(checkInputs, checkTotalSpan);
         calculateTotal(prodInputs, prodTotalSpan);
         calculateAllDynamicTotals();
+        updateMasukTotal();
+        updateTdkMasukTotal(); // <-- === PERUBAHAN DI SINI ===
     }
     
     function calculateAllDynamicTotals() {
@@ -464,23 +563,43 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('shift').value = report.shift;
         document.getElementById('chief_name').value = report.chief_name;
         document.getElementById('total_masuk').value = report.total_masuk;
-
+        
+        // === AWAL PERUBAHAN ===
+        document.getElementById('total_tdk_masuk_org').value = report.total_tdk_masuk_org; // Tambahkan ini
+        
         document.getElementById('abs_staff_masuk').value = report.abs_staff_masuk;
+        document.getElementById('abs_staff_tdk_masuk_org').value = report.abs_staff_tdk_masuk_org; // Tambahkan ini
         document.getElementById('abs_staff_tdk_masuk').value = report.abs_staff_tdk_masuk;
+        
         document.getElementById('abs_wuster_masuk').value = report.abs_wuster_masuk;
+        document.getElementById('abs_wuster_tdk_masuk_org').value = report.abs_wuster_tdk_masuk_org; // Tambahkan ini
         document.getElementById('abs_wuster_tdk_masuk').value = report.abs_wuster_tdk_masuk;
+        
         document.getElementById('abs_repair_masuk').value = report.abs_repair_masuk;
+        document.getElementById('abs_repair_tdk_masuk_org').value = report.abs_repair_tdk_masuk_org; // Tambahkan ini
         document.getElementById('abs_repair_tdk_masuk').value = report.abs_repair_tdk_masuk;
+        
         document.getElementById('abs_incoming_masuk').value = report.abs_incoming_masuk;
+        document.getElementById('abs_incoming_tdk_masuk_org').value = report.abs_incoming_tdk_masuk_org; // Tambahkan ini
         document.getElementById('abs_incoming_tdk_masuk').value = report.abs_incoming_tdk_masuk;
+        
         document.getElementById('abs_chrome_masuk').value = report.abs_chrome_masuk;
+        document.getElementById('abs_chrome_tdk_masuk_org').value = report.abs_chrome_tdk_masuk_org; // Tambahkan ini
         document.getElementById('abs_chrome_tdk_masuk').value = report.abs_chrome_tdk_masuk;
-        document.getElementById('abs_painting_4_masuk').value = report.abs_painting_4_masuk; // <-- Ada typo di kode Anda sebelumnya, saya perbaiki
+        
+        document.getElementById('abs_painting_4_masuk').value = report.abs_painting_4_masuk;
+        document.getElementById('abs_painting_4_tdk_masuk_org').value = report.abs_painting_4_tdk_masuk_org; // Tambahkan ini
         document.getElementById('abs_painting_4_tdk_masuk').value = report.abs_painting_4_tdk_masuk;
+        
         document.getElementById('abs_user_cpc_masuk').value = report.abs_user_cpc_masuk;
+        document.getElementById('abs_user_cpc_tdk_masuk_org').value = report.abs_user_cpc_tdk_masuk_org; // Tambahkan ini
         document.getElementById('abs_user_cpc_tdk_masuk').value = report.abs_user_cpc_tdk_masuk;
+        
         document.getElementById('abs_maintenance_masuk').value = report.abs_maintenance_masuk;
+        document.getElementById('abs_maintenance_tdk_masuk_org').value = report.abs_maintenance_tdk_masuk_org; // Tambahkan ini
         document.getElementById('abs_maintenance_tdk_masuk').value = report.abs_maintenance_tdk_masuk;
+        
+        // === AKHIR PERUBAHAN ===
 
         document.getElementById('problem_quality_notes').value = report.problem_quality_notes;
         document.getElementById('suplay_material_notes').value = report.suplay_material_notes;
@@ -524,24 +643,21 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * FUNGSI BARU: Mengosongkan form dan mereset state
      */
-    function resetFormAndState() {
-        wusterForm.reset(); // Reset semua input
-        currentlyEditingId = null; // Hapus ID edit
+   function resetFormAndState() {
+    wusterForm.reset(); // Reset semua input
+    currentlyEditingId = null; // Hapus ID edit
 
-        // Reset semua list dinamis ke default
-        resetDynamicList(holderListContainer, defaultHolderItems, 'packing-item-name', 'packing-item-value');
-        resetDynamicList(pasangListContainer, defaultPasangItems, 'pasang-item-name', 'pasang-item-value');
-        resetDynamicList(assyCupListContainer, defaultAssyCupItems, 'assy-cup-item-name', 'assy-cup-item-value');
-        resetDynamicList(touchUpListContainer, defaultTouchUpItems, 'touch-up-item-name', 'touch-up-item-value');
-        resetDynamicList(bukaCapListContainer, defaultBukaCapItems, 'buka-cap-item-name', 'buka-cap-item-value');
-        
-        // Reset nilai default untuk Lain-lain
-        document.getElementById('lost_time_notes').value = "0 MENIT";
-        document.getElementById('hanger_notes').value = "0 HANGER";
+    // Reset semua list dinamis ke default
+    resetDynamicList(holderListContainer, defaultHolderItems, 'packing-item-name', 'packing-item-value');
+    resetDynamicList(pasangListContainer, defaultPasangItems, 'pasang-item-name', 'pasang-item-value');
+    resetDynamicList(assyCupListContainer, defaultAssyCupItems, 'assy-cup-item-name', 'assy-cup-item-value');
+    resetDynamicList(touchUpListContainer, defaultTouchUpItems, 'touch-up-item-name', 'touch-up-item-value');
+    resetDynamicList(bukaCapListContainer, defaultBukaCapItems, 'buka-cap-item-name', 'buka-cap-item-value');
 
-        // Hitung ulang semua total (jadi 0)
-        calculateAllTotals();
-        
+    // (Dua baris redundan sudah dihapus)
+
+    // Hitung ulang semua total (jadi 0)
+    calculateAllTotals();
         // Kembalikan teks tombol dan judul
         formTitleEl.textContent = 'Buat Laporan Baru';
         mainSubmitBtn.textContent = 'Simpan Laporan Final';
@@ -565,23 +681,42 @@ document.addEventListener('DOMContentLoaded', () => {
             shift: parseInt(document.getElementById('shift').value),
             chief_name: document.getElementById('chief_name').value,
             total_masuk: parseInt(document.getElementById('total_masuk').value),
+            
+            // === AWAL PERUBAHAN ===
+            total_tdk_masuk_org: parseInt(document.getElementById('total_tdk_masuk_org').value) || 0, // Tambahkan ini
 
             abs_staff_masuk: parseInt(document.getElementById('abs_staff_masuk').value) || 0,
+            abs_staff_tdk_masuk_org: parseInt(document.getElementById('abs_staff_tdk_masuk_org').value) || 0, // Tambahkan ini
             abs_staff_tdk_masuk: document.getElementById('abs_staff_tdk_masuk').value,
+
             abs_wuster_masuk: parseInt(document.getElementById('abs_wuster_masuk').value) || 0,
+            abs_wuster_tdk_masuk_org: parseInt(document.getElementById('abs_wuster_tdk_masuk_org').value) || 0, // Tambahkan ini
             abs_wuster_tdk_masuk: document.getElementById('abs_wuster_tdk_masuk').value,
+
             abs_repair_masuk: parseInt(document.getElementById('abs_repair_masuk').value) || 0,
+            abs_repair_tdk_masuk_org: parseInt(document.getElementById('abs_repair_tdk_masuk_org').value) || 0, // Tambahkan ini
             abs_repair_tdk_masuk: document.getElementById('abs_repair_tdk_masuk').value,
+
             abs_incoming_masuk: parseInt(document.getElementById('abs_incoming_masuk').value) || 0,
+            abs_incoming_tdk_masuk_org: parseInt(document.getElementById('abs_incoming_tdk_masuk_org').value) || 0, // Tambahkan ini
             abs_incoming_tdk_masuk: document.getElementById('abs_incoming_tdk_masuk').value,
+
             abs_chrome_masuk: parseInt(document.getElementById('abs_chrome_masuk').value) || 0,
+            abs_chrome_tdk_masuk_org: parseInt(document.getElementById('abs_chrome_tdk_masuk_org').value) || 0, // Tambahkan ini
             abs_chrome_tdk_masuk: document.getElementById('abs_chrome_tdk_masuk').value,
+
             abs_painting_4_masuk: parseInt(document.getElementById('abs_painting_4_masuk').value) || 0,
+            abs_painting_4_tdk_masuk_org: parseInt(document.getElementById('abs_painting_4_tdk_masuk_org').value) || 0, // Tambahkan ini
             abs_painting_4_tdk_masuk: document.getElementById('abs_painting_4_tdk_masuk').value,
+
             abs_user_cpc_masuk: parseInt(document.getElementById('abs_user_cpc_masuk').value) || 0,
+            abs_user_cpc_tdk_masuk_org: parseInt(document.getElementById('abs_user_cpc_tdk_masuk_org').value) || 0, // Tambahkan ini
             abs_user_cpc_tdk_masuk: document.getElementById('abs_user_cpc_tdk_masuk').value,
+
             abs_maintenance_masuk: parseInt(document.getElementById('abs_maintenance_masuk').value) || 0,
+            abs_maintenance_tdk_masuk_org: parseInt(document.getElementById('abs_maintenance_tdk_masuk_org').value) || 0, // Tambahkan ini
             abs_maintenance_tdk_masuk: document.getElementById('abs_maintenance_tdk_masuk').value,
+            // === AKHIR PERUBAHAN ===
 
             packing_holder_notes: serializeDynamicList(holderListContainer, 'packing-item-name', 'packing-item-value'),
             pasang_holder_notes: serializeDynamicList(pasangListContainer, 'pasang-item-name', 'pasang-item-value'),

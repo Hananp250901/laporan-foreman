@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutButton) {
         logoutButton.onclick = async () => {
             await _supabase.auth.signOut();
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         };
     }
 

@@ -617,6 +617,46 @@ fieldset.absensi-fieldset legend {
     font-size: 0.9rem;
 }
 
+/* --- 11b. Absensi Form 4 Kolom (Baru) --- */
+.absensi-grid-4col {
+    display: grid;
+    /* Kolom: Label | Masuk (org) | Tdk Masuk (org) | Tdk Masuk (Nama) */
+    grid-template-columns: auto 1fr 1fr 1fr; 
+    gap: 0.75rem 1rem;
+    align-items: center;
+}
+.absensi-grid-4col .grid-header {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+.absensi-grid-4col label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: left;
+}
+/* Mengatur layout baris header */
+.absensi-grid-4col > label:first-of-type {
+    grid-column: 1 / 2;
+}
+.absensi-grid-4col .grid-header:nth-of-type(1) {
+    grid-column: 2 / 3;
+}
+.absensi-grid-4col .grid-header:nth-of-type(2) {
+    grid-column: 3 / 4;
+}
+.absensi-grid-4col .grid-header:nth-of-type(3) {
+    grid-column: 4 / 5;
+}
+.absensi-grid-4col input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
 /* --- 12. Dynamic Item List (Packing Holder) --- */
 .dynamic-list-container {
   display: flex;
@@ -741,4 +781,14 @@ fieldset.total-fieldset legend {
   margin-left: 1rem; /* Jarak dari label 'TOTAL' */
   color: var(--primary-color); /* Warna biru untuk angka total */
   font-size: 1rem;
+}
+
+/* Style untuk header tabel draft */
+.header-draft {
+    background-color: #ffc107;
+    color: #333;
+}
+.header-draft h3 .material-icons {
+    vertical-align: bottom;
+    margin-right: 8px;
 }
