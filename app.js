@@ -7,6 +7,7 @@ const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // =================================================================
 // BAGIAN 2: FUNGSI GLOBAL & BERSAMA
+// (Fungsi-fungsi ini aman ditaruh di luar)
 // =================================================================
 
 async function getActiveUserSession() {
@@ -40,6 +41,7 @@ if (window.ChartDataLabels) {
 
 // =================================================================
 // BAGIAN 3: LOGIKA YANG BERJALAN SETELAH HALAMAN SIAP
+// (PERBAIKAN: Dibungkus dengan DOMContentLoaded)
 // =================================================================
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -48,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutButton) {
         logoutButton.onclick = async () => {
             await _supabase.auth.signOut();
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         };
     }
 
@@ -112,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // -----------------------------------------------------------------
     // B. LOGIKA HALAMAN HOME (dashboard.html)
-    // === PERUBAHAN DI BLOK INI ===
     // -----------------------------------------------------------------
     const homePage = document.getElementById('dashboard-home');
     if (homePage) {
@@ -273,31 +274,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const session = await getActiveUserSession();
             // Jika TIDAK ADA session, tampilkan alert dan redirect
             if (!session) {
-                alert('Anda harus login terlebih dahulu!');
+                alert('Login ulang bos sesi telah berakhir');
                 window.location.href = 'login.html'; // Pastikan ini halaman login Anda
                 return;
             }
-
-            // 1. Muat data user dan sapaan selamat datang
+            
+            // 1. Tangkap data karyawan saat memuat info sidebar
             const karyawanData = await loadSharedDashboardData(session.user);
+            
+            // 2. Cari elemen h2 yang baru kita beri ID
             const welcomeMessageEl = document.getElementById('welcome-message');
+            
+            // 3. Update teksnya
             if (welcomeMessageEl && karyawanData && karyawanData.nama_lengkap) {
-                welcomeMessageEl.textContent = `Selamat Datang, ${karyawanData.nama_lengkap}!`;
+                // Jika data karyawan ada, sapa dengan nama lengkap
+                welcomeMessageEl.textContent = `SELAMAT DATANG PAK ${karyawanData.nama_lengkap}!`;
             } else if (welcomeMessageEl && session.user.email) {
+                // Jika tidak ada, sapa dengan email (fallback)
                 welcomeMessageEl.textContent = `Selamat Datang, ${session.user.email}!`;
             }
-
-            // 2. Muat dan tampilkan grafik
-            try {
-                const wusterData = await fetchWusterDataForChart();
-                const chartData = processChartData(wusterData);
-                renderWusterChart(chartData);
-            } catch (error) {
-                 console.error("Failed to load and render chart:", error);
-                 const loadingMessageEl = document.getElementById('chart-loading-message');
-                 if (loadingMessageEl) loadingMessageEl.textContent = 'Gagal memuat data grafik.';
-            }
-
+            // Jika tidak ada data sama sekali, h2 akan tetap "Selamat Datang!"
+            
         })();
         // === AKHIR BAGIAN YANG DIKEMBALIKAN ===
     }

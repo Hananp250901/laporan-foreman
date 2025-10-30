@@ -222,7 +222,7 @@ button {
   /* Full width di mobile */
   width: 100%;
   padding: 1.5rem;
-  /* transition: margin-left 0.3s ease-in-out; */
+  transition: margin-left 0.3s ease-in-out;
   overflow-y: auto;
 }
 
@@ -249,70 +249,40 @@ button {
 }
 
 .content-wrapper {
-  max-width: 100%;
+  max-width: 900px;
   margin: 0 auto;
 }
 
 /* --- 4. Desktop Styles (Push Content) --- */
 @media (min-width: 769px) {
+  /* Tampilkan sidebar by default di desktop */
+  body:not(.sidebar-collapsed) .sidebar {
+    transform: translateX(0);
+  }
   
-  /* 1. Ubah container jadi 2 kolom */
-  .dashboard-container {
-    display: grid; /* Pastikan ini grid */
-    /* Kolom 1 = 260px, Kolom 2 = sisa ruang */
-    grid-template-columns: var(--sidebar-width) 1fr;
-    /* Tambahkan transisi untuk hide/show */
-    transition: grid-template-columns 0.3s ease-in-out;
+  /* Dorong konten utama ke kanan */
+  body:not(.sidebar-collapsed) .main-content {
+    margin-left: var(--sidebar-width);
   }
 
-  /* 2. Ubah sidebar dari 'fixed' (mobile) jadi bagian dari grid */
-  .sidebar {
-    position: sticky; /* Menempel di atas saat scroll */
-    top: 0;
-    height: 100vh; /* Selalu 100% tinggi layar */
-    transform: translateX(0); /* Tampilkan sidebar */
-    z-index: 1000;
-    /* Tambahkan transisi untuk hide/show */
-    transition: transform 0.3s ease-in-out;
-    /* Sembunyikan konten yang 'overflow' saat transisi */
-    overflow-x: hidden;
-  }
-
-  /* 3. Hapus 'margin-left' dari konten */
-  .main-content {
-    margin-left: 0; 
-    /* Pastikan konten bisa scroll jika lebih panjang dari layar */
-    overflow-y: auto; 
-    width: 100%; /* Pastikan lebar penuh di dalam kolom grid-nya */
-  }
-
-  /* 4. JANGAN sembunyikan tombol menu, tapi JANGAN putar by default */
-  .menu-toggle .material-icons {
-     transition: transform 0.3s ease;
-     transform: rotate(0deg); /* State default */
-  }
-
-  /* 5. Sembunyikan overlay di desktop */
-  .overlay {
-    display: none !important;
-  }
-
-  /* --- ATURAN SAAT SIDEBAR DI-HIDE --- */
-  
-  /* Saat body.sidebar-collapsed... */
-  body.sidebar-collapsed .dashboard-container {
-    /* Ubah grid jadi 0px untuk sidebar, 1fr untuk konten */
-    grid-template-columns: 0px 1fr;
-  }
-
+  /* Sembunyikan sidebar jika 'sidebar-collapsed' ada di body */
   body.sidebar-collapsed .sidebar {
-    /* Geser sidebar keluar layar */
     transform: translateX(-100%);
   }
+
+  /* Konten jadi full width jika sidebar collaps */
+  body.sidebar-collapsed .main-content {
+    margin-left: 0;
+  }
   
+  /* Putar ikon menu */
   body.sidebar-collapsed .menu-toggle .material-icons {
-     /* Putar ikon menu */
      transform: rotate(180deg);
+  }
+
+  /* Jangan pernah tampilkan overlay di desktop */
+  .overlay {
+    display: none !important;
   }
 }
 
