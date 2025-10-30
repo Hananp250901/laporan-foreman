@@ -100,5 +100,4 @@ const overlay = document.getElementById('overlay');
             await loadSharedDashboardData(session.user);
         })();
     }
-
-}); // <-- Akhir dari pembungkus DOMContentLoaded
+// <-- Akhir dari pembungkus DOMContentLoaded

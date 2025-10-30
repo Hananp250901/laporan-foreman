@@ -64,15 +64,54 @@
                         <fieldset class="input-group-border"><legend>Produksi</legend><label>In Wuster:</label><input type="text" id="prod_wuster" placeholder="cth: 56"><label>In Chrom:</label><input type="text" id="prod_chrom" placeholder="cth: 12"></fieldset>
                         <fieldset class="input-group-border"><legend>Quality</legend><label>Item:</label><input type="text" id="quality_item" placeholder="cth: COVER ELEMENT 1DY"><label>Cek:</label><input type="text" id="quality_cek" placeholder="cth: 80"><label>NG (Ket.):</label><input type="text" id="quality_ng" placeholder="cth: 68 (Kerut, Kasar)"><label>Balik Material:</label><input type="text" id="quality_balik_material" placeholder="cth: 68"></fieldset>
                     </div>
-                    <h4 class="form-section-title">3 & 4. Produksi (Step Assy & Buka Cap)</h4>
-                    <div class="form-grid-2">
-                        <div class="input-group"><label for="prod_step_assy_notes">Produksi Line Step Assy</label><textarea id="prod_step_assy_notes" rows="5" placeholder="cth: S/B K41K CW: 278 Pcs&#10;SB KPYX LH: 20 Pcs&#10;TOTAL: 298 Pcs"></textarea></div>
-                        <div class="input-group"><label for="prod_buka_cap_notes">Produksi Line Buka Cap</label><textarea id="prod_buka_cap_notes" rows="5" placeholder="cth: M/C 2DP RH: 1196 Pcs&#10;2DP LH: 1916 Pcs&#10;TOTAL: 3112 Pcs "></textarea></div>
-                        <div class="input-group"><label for="prod_assy_cup_notes">Produksi Assy Cup</label><textarea id="prod_assy_cup_notes" rows="5" placeholder="cth: M/C 200 LH: 310 Pcs&#10;K12V CBS: 384 Pcs&#10;TOTAL: 694 Pcs"></textarea></div>
-                    </div>
+                    <h4 class="form-section-title">3 & 4. Produksi (Step Assy, Buka Cap, Assy Cup)</h4>
+
+                        <div class="form-grid-3 dynamic-list-section">
+
+                            <fieldset class="input-group-border dynamic-list-container">
+                                <legend>Prod. Line Step Assy</legend>
+                                <div id="prod-step-assy-list" class="dynamic-list-body">
+                                    </div>
+                                <div class="dynamic-list-footer">
+                                    <button type="button" id="add-step-assy-item-btn" class="button-add"><span class="material-icons">add_circle</span> Tambah Item</button>
+                                    <div class="dynamic-list-total">
+                                        <strong>Total: <span id="prod-step-assy-total">0</span></strong>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="input-group-border dynamic-list-container">
+                                <legend>Prod. Line Buka Cap</legend>
+                                <div id="prod-buka-cap-list" class="dynamic-list-body">
+                                    </div>
+                                <div class="dynamic-list-footer">
+                                    <button type="button" id="add-buka-cap-item-btn" class="button-add"><span class="material-icons">add_circle</span> Tambah Item</button>
+                                    <div class="dynamic-list-total">
+                                        <strong>Total: <span id="prod-buka-cap-total">0</span></strong>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="input-group-border dynamic-list-container">
+                                <legend>Prod. Assy Cup</legend>
+                                <div id="prod-assy-cup-list" class="dynamic-list-body">
+                                    </div>
+                                <div class="dynamic-list-footer">
+                                    <button type="button" id="add-assy-cup-item-btn" class="button-add"><span class="material-icons">add_circle</span> Tambah Item</button>
+                                    <div class="dynamic-list-total">
+                                        <strong>Total: <span id="prod-assy-cup-total">0</span></strong>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                        </div>
                     <h4 class="form-section-title">Check Thickness</h4>
                     <div class="input-group"><label for="check_thickness_notes">Catatan Check Thickness</label><textarea id="check_thickness_notes" rows="3" placeholder="cth: CH BKW TOTAL CEK: 82, OK: 80, NG: 2 "></textarea></div>
-                    <button type="submit" class="button-primary">Simpan Laporan</button>
+                    <div class="form-actions">
+                        <button type="submit" id="main-submit-btn" class="button-primary">Simpan Laporan Final</button>
+                        <button type="button" id="save-draft-btn" class="button-secondary">Simpan Draft</button>
+                        <button type="button" id="cancel-edit-btn" class="button-secondary" style="display: none;">Batal Edit</button>
+                    </div>
                     <p id="form-message"></p>
                 </form>
                 <br>
