@@ -582,36 +582,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Pengecekan ini sudah ada di app.js, tapi kita tambahkan lagi di sini
         // sebagai fallback jika user langsung membuka halaman ini.
         if (!session) {
-            console.warn("Incoming: No active session found during init, redirecting to index.html...");
-            alert('Anda harus login terlebih dahulu!'); // Tampilkan peringatan
-            window.location.href = 'index.html'; // Redirect ke halaman login (index.html)
-            return; // Hentikan eksekusi script
+            alert('Anda harus login terlebih dahulu!');
+            window.location.href = 'index.html';
+            return;
         }
-
-        // Jika lolos cek session, lanjutkan
-        console.log("Incoming: Session found, proceeding.");
-        currentUser = session.user; // Simpan info user yg login
-
-        try {
-            // Muat data karyawan (untuk footer PDF & info sidebar)
-            // Fungsi ini dipanggil lagi di sini untuk memastikan currentKaryawan terisi
-            currentKaryawan = await loadSharedDashboardData(currentUser); // Fungsi ini ada di app.js
-
-            // Set form ke kondisi awal (kosong/default) dan hitung total awal
-            resetFormAndState();
-
-            // Muat data draft dan riwayat secara bersamaan
-            await Promise.all([
-                loadIncomingDrafts(),
-                loadIncomingHistory()
-            ]);
-
-            console.log("Incoming: Initialization complete.");
-
-        } catch (error) {
-            console.error("Gagal memuat data:", error);
-            if (historyListEl) historyListEl.innerHTML = `<tr><td colspan="5" style="color: red;">Gagal memuat riwayat.</td></tr>`;
-            if (draftListEl) draftListEl.innerHTML = `<tr><td colspan="4" style="color: red;">Gagal memuat draft.</td></tr>`;
-        }
+        currentUser = session.user; 
+        currentKaryawan = await loadSharedDashboardData(currentUser); 
+        await loadIncomingHistory(); 
     })();
 });

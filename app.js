@@ -7,7 +7,6 @@ const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // =================================================================
 // BAGIAN 2: FUNGSI GLOBAL & BERSAMA
-// (Fungsi-fungsi ini aman ditaruh di luar)
 // =================================================================
 
 async function getActiveUserSession() {
@@ -29,56 +28,42 @@ async function loadSharedDashboardData(currentUser) {
     }
 }
 
-// =================================================================
-// BAGIAN 3: LOGIKA YANG BERJALAN SETELAH HALAMAN SIAP
-// (PERBAIKAN: Dibungkus dengan DOMContentLoaded)
-// =================================================================
-document.addEventListener('DOMContentLoaded', () => {
+// Logika UI Global (Berlaku di semua halaman)
+const logoutButton = document.getElementById('logout-button');
+if (logoutButton) {
+    logoutButton.onclick = async () => {
+        await _supabase.auth.signOut();
+        window.location.href = 'login.html';
+    };
+}
 
-    // Logika UI Global (Berlaku di semua halaman)
-    const logoutButton = document.getElementById('logout-button');
-    if (logoutButton) {
-        logoutButton.onclick = async () => {
-            await _supabase.auth.signOut();
-            window.location.href = 'index.html';
-        };
-    }
-
-    const menuToggle = document.getElementById('menu-toggle');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
+const menuToggle = document.getElementById('menu-toggle');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
 
     if (menuToggle && sidebar && overlay) {
         menuToggle.onclick = () => {
-            // Logika untuk toggle sidebar di mobile vs desktop
-            if (window.innerWidth <= 768) { // Mobile/Tablet
+            if (window.innerWidth <= 768) {
                 sidebar.classList.add('active');
                 overlay.classList.add('active');
-            } else { // Desktop
+            } else {
                 document.body.classList.toggle('sidebar-collapsed');
             }
         };
-        // Logika untuk menutup sidebar di mobile via overlay
         overlay.onclick = () => {
             sidebar.classList.remove('active');
             overlay.classList.remove('active');
         };
-        // Logika saat resize window
         window.addEventListener('resize', () => {
-            // Pastikan overlay & mobile sidebar tertutup jika layar jadi besar
             if (window.innerWidth > 768) {
                 sidebar.classList.remove('active');
                 overlay.classList.remove('active');
             }
-            // Hapus class collapsed jika layar diperkecil lalu diperbesar lagi (opsional)
-             if (window.innerWidth <= 768 && document.body.classList.contains('sidebar-collapsed')) {
-                 document.body.classList.remove('sidebar-collapsed');
-             }
         });
     }
 
     // -----------------------------------------------------------------
-    // A. LOGIKA HALAMAN LOGIN (index.html)
+    // A. LOGIKA HALAMAN LOGIN (login.html)
     // -----------------------------------------------------------------
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
@@ -87,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const nik = document.getElementById('nik').value;
             const password = document.getElementById('password').value;
             const messageEl = document.getElementById('message');
-            messageEl.textContent = 'Mencoba login...'; // Pesan loading
+            messageEl.textContent = 'Mencoba login...';
             try {
                 const { data: karyawanData, error: nikError } = await _supabase.from('karyawan').select('email').eq('nik', nik).single(); 
                 if (nikError || !karyawanData) throw new Error('NIK tidak terdaftar.');
@@ -95,48 +80,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (authError) throw new Error('Password salah.');
                 window.location.href = 'dashboard.html';
             } catch (error) {
-                // Tangani semua jenis error (NIK tak ada, password salah, dll)
-                console.error("Login error:", error);
-                messageEl.textContent = error.message || 'Terjadi kesalahan saat login.';
+                messageEl.textContent = error.message;
             }
         };
     }
 
     // -----------------------------------------------------------------
     // B. LOGIKA HALAMAN HOME (dashboard.html)
-    // === PERUBAHAN DI BLOK INI ===
     // -----------------------------------------------------------------
     const homePage = document.getElementById('dashboard-home');
     if (homePage) {
         (async () => {
-            console.log("Home: Initializing...");
-            // Langsung cek session saat halaman dimuat
             const session = await getActiveUserSession();
-            // Jika TIDAK ADA session, tampilkan alert dan redirect
             if (!session) {
                 alert('Anda harus login terlebih dahulu!');
-                window.location.href = 'login.html'; // Pastikan ini halaman login Anda
+                window.location.href = 'index.html';
                 return;
             }
-            
-            // 1. Tangkap data karyawan saat memuat info sidebar
-            const karyawanData = await loadSharedDashboardData(session.user);
-            
-            // 2. Cari elemen h2 yang baru kita beri ID
-            const welcomeMessageEl = document.getElementById('welcome-message');
-            
-            // 3. Update teksnya
-            if (welcomeMessageEl && karyawanData && karyawanData.nama_lengkap) {
-                // Jika data karyawan ada, sapa dengan nama lengkap
-                welcomeMessageEl.textContent = `SELAMAT DATANG PAK ${karyawanData.nama_lengkap}!`;
-            } else if (welcomeMessageEl && session.user.email) {
-                // Jika tidak ada, sapa dengan email (fallback)
-                welcomeMessageEl.textContent = `Selamat Datang, ${session.user.email}!`;
-            }
-            // Jika tidak ada data sama sekali, h2 akan tetap "Selamat Datang!"
-            
+            await loadSharedDashboardData(session.user);
         })();
-        // === AKHIR BAGIAN YANG DIKEMBALIKAN ===
     }
 
 }); // <-- Akhir dari pembungkus DOMContentLoaded
