@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Fungsi Helper List Dinamis ---
     /**
-     * Menambahkan baris input baru (Nama Item + Jumlah Angka) ke container list.
+     * FUNGSI: Menambahkan baris item ke list dinamis
      */
     function addDynamicRow(container, nameClass, valueClass, itemName = "", itemValue = "") {
         if (!container) return; // Jangan lakukan apa-apa jika container tidak ada
@@ -210,18 +210,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Fungsi utama untuk generate PDF laporan Incoming.
+     * FUNGSI PDF (DIMODIFIKASI)
      */
     async function generatePDF(reportId) {
         alert('Membuat PDF... Mohon tunggu.');
         // Cek ketersediaan library PDF
         if (!window.jspdf) { alert('Gagal memuat library PDF (jspdf). Pastikan Anda online.'); return; }
         const { jsPDF } = window.jspdf;
-         if (!window.jspdf.autoTable) { alert('Gagal memuat plugin PDF (jspdf-autotable). Pastikan Anda online.'); return;}
+
+        /**
+         * FUNGSI HELPER PDF BARU: Menghitung total dari string notes
+         */
+        function addTotalToNotes(notesString) {
+            if (!notesString || notesString.trim() === '') return '(Kosong)';
+            let sum = 0;
+            const lines = notesString.split('\n');
+            
+            lines.forEach(line => {
+                const parts = line.split(': ');
+                if (parts.length >= 2) {
+                    // Ambil bagian terakhir (angkanya) dan ubah jadi integer
+                    sum += parseInt(parts[parts.length - 1]) || 0;
+                }
+            });
+            
+            // Kembalikan string asli DITAMBAH baris TOTAL
+            return `${notesString}\n\nTOTAL: ${sum}`;
+        }
+        // --- Akhir fungsi helper ---
 
         try {
-            // Ambil data lengkap laporan dari Supabase berdasarkan ID
-            const { data: report, error } = await _supabase.from('laporan_incoming').select('*').eq('id', reportId).single();
+            const { data: report, error } = await _supabase
+                .from('laporan_incoming').select('*').eq('id', reportId).single();
             if (error) throw new Error(`Gagal mengambil data laporan: ${error.message}`);
 
             const doc = new jsPDF({ format: 'legal' }); // Ukuran kertas Legal
@@ -238,8 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Tabel 1: Absensi ---
             doc.autoTable({
-                startY: 45, // Mulai tabel sedikit di bawah header
-                head: [['1. ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
+                startY: 50, head: [['1. ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
                 body: [
                     ['A. Line Incoming', report.absensi_incoming_masuk || 0, report.absensi_incoming_tdk_masuk || ''],
                     ['B. Line Step Assy', report.absensi_step_assy_masuk || 0, report.absensi_step_assy_tdk_masuk || ''],
@@ -250,8 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Tabel 2: Produksi Line Incoming ---
             doc.autoTable({
-                startY: doc.autoTable.previous.finalY + 7, // Mulai 7pt di bawah tabel sebelumnya
-                head: [['2. PRODUKSI LINE INCOMING', 'Jumlah/Catatan']],
+                startY: doc.autoTable.previous.finalY + 7, head: [['2. PRODUKSI LINE INCOMING', 'Jumlah/Catatan']], 
                 body: [
                     ['In Wuster', report.prod_wuster || ''],
                     ['In Chrom', report.prod_chrom || ''],
@@ -263,44 +281,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...tableStyles // Gunakan style umum
             });
 
-            // --- Tabel 3 & 4 Gabungan (Produksi List Dinamis & Check Thickness) ---
+            // Tabel 3 & 4 Gabungan (DIMODIFIKASI)
             doc.autoTable({
-                startY: doc.autoTable.previous.finalY + 7,
-                head: [['3 & 4. PRODUKSI & CHECK THICKNESS', 'Catatan']],
+                startY: doc.autoTable.previous.finalY + 7, head: [['PRODUKSI & CHECK THICKNESS', 'Catatan']],
                 body: [
-                    // Gunakan helper addTotalToNotes untuk list dinamis
+                    // === PERUBAHAN DI SINI ===
                     ['Prod. Line Step Assy', addTotalToNotes(report.prod_step_assy_notes)],
                     ['Prod. Line Buka Cap', addTotalToNotes(report.prod_buka_cap_notes)],
                     ['Prod. Assy Cup', addTotalToNotes(report.prod_assy_cup_notes)],
-                    // Kolom Check Thickness biasa
+                    // === AKHIR PERUBAHAN ===
                     ['Check Thickness', report.check_thickness_notes || '']
                 ],
-                 ...tableStyles, // Gunakan style umum
-                 columnStyles: { // Atur lebar kolom
-                    0: { cellWidth: 60, fontStyle: 'bold' }, // Kolom pertama (Label)
-                    1: { cellWidth: 130 }                  // Kolom kedua (Catatan)
-                 },
-                 // Style tambahan: Buat teks "TOTAL: xxx" jadi bold
-                 didParseCell: (data) => {
-                     // Jika isi cell mengandung "TOTAL:"
-                     if (data.cell.raw?.toString().includes('TOTAL:')) {
-                         data.cell.styles.fontStyle = 'bold'; // Jadikan bold
-                     }
-                 }
+                ...tableStyles,
+                columnStyles: { 0: { cellWidth: 60, fontStyle: 'bold' }, 1: { cellWidth: 130 } }
             });
-
-            // --- Footer PDF (Tanda Tangan) ---
-            let finalY = doc.autoTable.previous.finalY + 15; // Jarak dari tabel terakhir
-            const pageHeight = doc.internal.pageSize.height;
-             const bottomMargin = 15; // Jarak aman dari bawah kertas
-             // Cek jika footer akan melewati batas bawah, jika ya, tambah halaman baru
-             if (finalY + 40 > pageHeight - bottomMargin) { // Perkirakan tinggi footer ~40pt
-                 doc.addPage();
-                 finalY = 20; // Mulai dari atas di halaman baru
-             }
-
-            // Ambil nama pembuat (jika data karyawan ada) atau email
-            const preparerName = currentKaryawan?.nama_lengkap || currentUser?.email || 'N/A';
+            
+            // Footer
+            let finalY = doc.autoTable.previous.finalY + 20; 
+            if (finalY > 300) { doc.addPage(); finalY = 20; } 
+            const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
             doc.setFontSize(10);
             const col1X = 20;
             const col2X = doc.internal.pageSize.width / 2;

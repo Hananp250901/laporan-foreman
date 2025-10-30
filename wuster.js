@@ -300,18 +300,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- Tabel 1: Absensi (Full Width) ---
             doc.autoTable({
                 startY: 45, head: [['ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
-                body: [ // Pastikan nilai default 0 jika null/undefined
-                    ['STAFF', report.abs_staff_masuk || 0, report.abs_staff_tdk_masuk || ''],
-                    ['WUSTER', report.abs_wuster_masuk || 0, report.abs_wuster_tdk_masuk || ''],
-                    ['REPAIR & TOUCH UP', report.abs_repair_masuk || 0, report.abs_repair_tdk_masuk || ''],
-                    ['INCOMING, STEP ASSY, BUKA CAP', report.abs_incoming_masuk || 0, report.abs_incoming_tdk_masuk || ''],
-                    ['CHROM, VERIFIKASI, AEROX, REMOVER', report.abs_chrome_masuk || 0, report.abs_chrome_tdk_masuk || ''],
-                    ['PAINTING 4', report.abs_painting_4_masuk || 0, report.abs_painting_4_tdk_masuk || ''],
-                    ['USER & CPC', report.abs_user_cpc_masuk || 0, report.abs_user_cpc_tdk_masuk || ''],
-                    ['MAINTENANCE', report.abs_maintenance_masuk || 0, report.abs_maintenance_tdk_masuk || ''],
-                 ],
-                ...tableStyles, margin: { left: marginX }, tableWidth: fullWidth,
-                columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 25 }, 2: { cellWidth: 105 } }
+                body: [['STAFF', report.abs_staff_masuk, report.abs_staff_tdk_masuk || ''], ['WUSTER', report.abs_wuster_masuk, report.abs_wuster_tdk_masuk || ''], ['REPAIR & TOUCH UP', report.abs_repair_masuk, report.abs_repair_tdk_masuk || ''], ['INCOMING, STEP ASSY, BUKA CAP', report.abs_incoming_masuk, report.abs_incoming_tdk_masuk || ''], ['CHROM, VERIFIKASI, AEROX, REMOVER', report.abs_chrome_masuk, report.abs_chrome_tdk_masuk || ''], ['PAINTING 4', report.abs_painting_4_masuk, report.abs_painting_4_tdk_masuk || ''], ['USER & CPC', report.abs_user_cpc_masuk, report.abs_user_cpc_tdk_masuk || ''], ['MAINTENANCE', report.abs_maintenance_masuk, report.abs_maintenance_tdk_masuk || ''],],
+                ...tableStyles, margin: { left: marginX }, tableWidth: fullWidth, columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 25 }, 2: { cellWidth: 105 } }
             });
             let startY2Col = doc.autoTable.previous.finalY + marginYSmall; // Posisi Y awal untuk layout 2 kolom
 
@@ -339,8 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Kolom Kiri ---
             let leftY = startY2Col;
+            // === PERUBAHAN DI SINI ===
             leftY = drawSingleTable('Packing Holder', addTotalToNotes(report.packing_holder_notes), leftY, col1X);
             leftY = drawSingleTable('Pasang Holder', addTotalToNotes(report.pasang_holder_notes), leftY + marginYSmall, col1X);
+            // === AKHIR PERUBAHAN ===
             leftY = drawSingleTable('Problem / Quality', report.problem_quality_notes, leftY + marginYSmall, col1X);
             leftY = drawSingleTable('Suplay Material', report.suplay_material_notes, leftY + marginYSmall, col1X);
             leftY = drawSingleTable('Packing Box / Lory', report.packing_box_notes, leftY + marginYSmall, col1X);
@@ -348,54 +340,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Tabel Total Produksi (masih di kolom kiri)
             const prodTotal = (report.total_prod_fresh || 0) + (report.total_prod_repair || 0) + (report.total_prod_ng || 0);
-            leftY = drawCalcTable({
-                 startY: leftY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']], // Nomor urut disesuaikan
-                 body: [
-                     ['Fresh', report.total_prod_fresh || 0],
-                     ['Repair', report.total_prod_repair || 0],
-                     ['NG', report.total_prod_ng || 0],
-                     ['Total', prodTotal]
-                 ],
-                 margin: { left: col1X }, tableWidth: colWidth,
-                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
-                 didParseCell: (data) => { if (data.row.index === 3) { data.cell.styles.fontStyle = 'bold'; } } // Baris Total bold
-            });
+            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']], body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 3) { data.cell.styles.fontStyle = 'bold'; } } });
 
-            // --- Kolom Kanan ---
-            let rightY = startY2Col; // Mulai dari Y yang sama dengan kolom kiri
+            // --- Gambar Kolom Kanan ---
+            let rightY = startY2Col; 
+            // === PERUBAHAN DI SINI ===
             rightY = drawSingleTable('Hasil Assy Cup', addTotalToNotes(report.hasil_assy_cup_notes), rightY, col2X);
             rightY = drawSingleTable('Hasil Touch Up', addTotalToNotes(report.hasil_touch_up_notes), rightY + marginYSmall, col2X);
             rightY = drawSingleTable('Hasil Buka Cap', addTotalToNotes(report.hasil_buka_cap_notes), rightY + marginYSmall, col2X);
+            // === AKHIR PERUBAHAN ===
 
             // Tabel Performa Wuster
             const wusterTotal = (report.perf_wuster_isi || 0) + (report.perf_wuster_kosong || 0);
-            rightY = drawCalcTable({
-                 startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']],
-                 body: [
-                     ['Hanger Isi', report.perf_wuster_isi || 0],
-                     ['Hanger Kosong', report.perf_wuster_kosong || 0],
-                     ['Total', wusterTotal]
-                 ],
-                 margin: { left: col2X }, tableWidth: colWidth,
-                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
-                 didParseCell: (data) => { if (data.row.index === 2) { data.cell.styles.fontStyle = 'bold'; } }
-            });
+            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']], body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 2) { data.cell.styles.fontStyle = 'bold'; } } });
 
             // Tabel Total Check
             const checkTotal = (report.total_check_ok || 0) + (report.total_check_ng || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
-            rightY = drawCalcTable({
-                 startY: rightY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']],
-                 body: [
-                     ['OK', report.total_check_ok || 0],
-                     ['NG', report.total_check_ng || 0],
-                     ['Repair', report.total_check_repair || 0],
-                     ['Body', report.total_check_body || 0],
-                     ['Total', checkTotal]
-                 ],
-                 margin: { left: col2X }, tableWidth: colWidth,
-                 columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } },
-                 didParseCell: (data) => { if (data.row.index === 4) { data.cell.styles.fontStyle = 'bold'; } }
-            });
+            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 4) { data.cell.styles.fontStyle = 'bold'; } } });
 
             // --- Lain-lain (Full Width, di bawah kedua kolom) ---
             let currentY = Math.max(leftY, rightY) + marginYSmall; // Ambil Y terendah dari kedua kolom
