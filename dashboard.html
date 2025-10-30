@@ -49,8 +49,13 @@
             
             <div class="content-wrapper">
                 <div class="card">
-                    <h2>Selamat Datang!</h2>
-                    <p>Selamat datang di dashboard Anda. Silakan pilih menu di sidebar untuk memulai.</p>
+                    <h2 id="welcome-message">Selamat Datang!</h2> <p>Selamat datang di dashboard Anda. Silakan pilih menu di sidebar untuk memulai.</p>
+                </div>
+                <div class="card" style="margin-top: 2rem;">
+                    <h2>Performa Wuster Harian (Hanger Isi vs Kosong)</h2>
+                    <div style="height: 400px; position: relative;"> <canvas id="wusterChart"></canvas>
+                    </div>
+                    <p id="chart-loading-message" style="text-align: center; margin-top: 1rem;">Memuat data grafik...</p>
                 </div>
             </div>
         </main>

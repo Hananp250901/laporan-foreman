@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Fungsi Helper List Dinamis ---
     /**
-     * Menambahkan baris input baru (Nama Item + Jumlah Angka) ke container list.
+     * FUNGSI: Menambahkan baris item ke list dinamis
      */
     function addDynamicRow(container, nameClass, valueClass, itemName = "", itemValue = "") {
         if (!container) return;
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Fungsi utama untuk generate PDF laporan Incoming.
+     * FUNGSI PDF (DIMODIFIKASI)
      */
     async function generatePDF(reportId) {
         alert('Membuat PDF... Mohon tunggu.');
@@ -239,8 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Tabel 1: Absensi
             doc.autoTable({
-                startY: 50,
-                head: [['1. ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']], // Judul diubah
+                startY: 50, head: [['1. ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
                 body: [
                     ['A. Line Incoming', report.absensi_incoming_masuk, report.absensi_incoming_tdk_masuk || ''],
                     ['B. Line Step Assy', report.absensi_step_assy_masuk, report.absensi_step_assy_tdk_masuk || ''],
@@ -250,8 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- Tabel 2: Produksi Line Incoming ---
             doc.autoTable({
-                startY: doc.autoTable.previous.finalY + 7,
-                head: [['2. PRODUKSI LINE INCOMING', 'Jumlah/Catatan']], 
+                startY: doc.autoTable.previous.finalY + 7, head: [['2. PRODUKSI LINE INCOMING', 'Jumlah/Catatan']], 
                 body: [
                     ['In Wuster', report.prod_wuster || ''], ['In Chrom', report.prod_chrom || ''],
                     ['Quality Item', report.quality_item || ''], ['Quality Cek', report.quality_cek || ''],
@@ -259,19 +257,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 ], ...tableStyles
             });
 
-            // Tabel 3 & 4 Gabungan (DIMODIFIKASI)
+            // Tabel 3 & 4 Gabungan
             doc.autoTable({
-                startY: doc.autoTable.previous.finalY + 7, head: [['3 & 4. PRODUKSI & CHECK THICKNESS', 'Catatan']],
+                startY: doc.autoTable.previous.finalY + 7,
+                head: [['3 & 4. PRODUKSI & CHECK THICKNESS', 'Catatan']],
                 body: [
-                    // === PERUBAHAN DI SINI ===
-                    ['Prod. Line Step Assy', addTotalToNotes(report.prod_step_assy_notes)],
-                    ['Prod. Line Buka Cap', addTotalToNotes(report.prod_buka_cap_notes)],
-                    ['Prod. Assy Cup', addTotalToNotes(report.prod_assy_cup_notes)],
-                    // === AKHIR PERUBAHAN ===
+                    ['Prod. Line Step Assy', report.prod_step_assy_notes || ''],
+                    ['Prod. Line Buka Cap', report.prod_buka_cap_notes || ''],
+                    ['Prod. Assy Cup', report.prod_assy_cup_notes || ''],
                     ['Check Thickness', report.check_thickness_notes || '']
-                ],
-                ...tableStyles,
-                columnStyles: { 0: { cellWidth: 60, fontStyle: 'bold' }, 1: { cellWidth: 130 } }
+                ], ...tableStyles, columnStyles: { 0: { cellWidth: 60, fontStyle: 'bold' }, 1: { cellWidth: 130 } }
             });
             
             // Footer
