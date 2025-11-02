@@ -9,7 +9,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
+    
+    </head>
 <body>
 
     <div class="dashboard-container">
@@ -64,8 +65,8 @@
                         <div class="input-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div>
                         <div class="input-group"><label for="shift">Shift</label><select id="shift" required><option value="">Pilih Shift...</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
                         <div class="input-group"><label for="chief_name">Nama Chief</label><select id="chief_name"><option value="">( Kosong )</option><option value="YANTO H">YANTO H</option><option value="SUBAGYO">SUBAGYO</option><option value="SARNO">SARNO</option></select></div>
-                        <div class="input-group"><label for="total_masuk">Total Masuk (org)</label><input type="number" id="total_masuk"></div>
-                        <div class="input-group"><label for="total_tdk_masuk_org">Total Tdk Masuk (org)</label><input type="number" id="total_tdk_masuk_org"></div>
+                        <div class="input-group"><label for="total_masuk">Total Masuk (org)</label><input type="number" id="total_masuk" readonly style="background-color: #333;"></div>
+                        <div class="input-group"><label for="total_tdk_masuk_org">Total Tdk Masuk (org)</label><input type="number" id="total_tdk_masuk_org" readonly style="background-color: #333;"></div>
                     </div>
                     <h4 class="form-section-title">Absensi</h4>
                     <fieldset class="absensi-fieldset">
@@ -185,8 +186,9 @@
             </div>
         </main>
     </div>
-
+    
     <script src="app.js"></script>
+    <script src="font-pdf.js"></script>
     <script src="wuster.js"></script>
 </body>
 </html>

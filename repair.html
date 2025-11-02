@@ -3,37 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Laporan Repair & Touch Up</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
-<body id="dashboard-home"> <div class="dashboard-container">
+    <style>
+        /* Container untuk satu baris (misal: "IN REPAIR" dan semua datanya) */
+        .activity-row-container {
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+            margin-bottom: 1rem; /* Jarak antar baris (IN REPAIR, HASIL REPAIR, dll) */
+        }
         
+        /* Kotak TOTAL di sebelah kiri */
+        .activity-total-box {
+            flex-basis: 150px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            border: 1px solid #555;
+            padding: 0.5rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .activity-total-box label {
+            font-weight: bold;
+            margin: 0;
+        }
+        .activity-total-box input {
+            width: 100%;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 0.5rem; /* Buat lebih besar */
+        }
+
+        /* Wrapper untuk 3 grup leader di sebelah kanan */
+        .leader-groups-wrapper {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr; /* 3 leaders side-by-side */
+            gap: 0.5rem;
+        }
+        
+        /* Satu grup leader (Wahyu, Khasanul, Sunarno) */
+        .leader-group {
+            border: 1px solid #555;
+            padding: 0.5rem;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .leader-name {
+            display: block;
+            text-align: center;
+            font-weight: bold;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #444;
+        }
+        
+        /* Grup label + input (Fresh, R1, R2) */
+        .input-group-row {
+            display: grid;
+            grid-template-columns: 4.5rem 1fr; /* Label dibuat lebar 4.5rem */
+            gap: 0.5rem;
+            align-items: stretch; /* Ubah ke stretch */
+        }
+        
+        .input-group-row label {
+            font-size: 0.9em;
+            margin: 0;
+            text-align: right; 
+            
+            /* Style agar terlihat seperti kotak input */
+            border: 1px solid #555;
+            padding: 0.5rem; /* Sesuaikan padding agar sama dgn input */
+            border-radius: 4px;
+            box-sizing: border-box;
+            height: 100%; /* Penuhi tinggi */
+            display: flex;
+            align-items: center; /* Rata tengah vertikal */
+            justify-content: flex-end; /* Rata kanan horizontal */
+            background-color: #333; /* Warna latar (opsional, agar mirip readonly) */
+            color: #ccc; /* Warna teks (opsional) */
+        }
+
+        .input-group-row input {
+            width: 100%;
+            border: 1px solid #555; /* Tambahkan border agar seragam */
+            box-sizing: border-box; /* Pastikan border tidak merusak layout */
+        }
+
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .activity-row-container {
+                flex-direction: column; /* Stack TOTAL box di atas leaders */
+            }
+            .activity-total-box {
+                flex-basis: auto; /* Reset width */
+            }
+            .leader-groups-wrapper {
+                grid-template-columns: 1fr; /* Stack leaders secara vertikal */
+            }
+        }
+        
+        @media (max-width: 600px) {
+             .input-group-row {
+                /* Di HP terkecil, buat Fresh, R1, R2 jadi baris sendiri */
+                grid-template-columns: 1fr; 
+            }
+            .input-group-row label {
+                 text-align: center; /* Label di tengah */
+                 justify-content: center; /* Rata tengah horizontal */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
                 <h3>Laporan Foreman</h3>
                 <div id="user-info"><h4>Memuat...</h4></div>
-
                 <nav class="sidebar-nav">
                     <ul>
-                        <li>
-                            <a href="dashboard.html"> <span class="material-icons">home</span>
-                                Home
-                            </a>
-                        </li>
-                        <li>
-                            <a href="incoming.html"> <span class="material-icons">inventory_2</span>
-                                Incoming
-                            </a>
-                        </li>
+                        <li><a href="dashboard.html"><span class="material-icons">home</span>Home</a></li>
+                        <li><a href="incoming.html"><span class="material-icons">inventory_2</span>Incoming</a></li>
                         <li><a href="wuster.html"><span class="material-icons">cleaning_services</span>Wuster</a></li>
                         <li><a href="repair.html" class="active"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
                         <li><a href="chrom.html"><span class="material-icons">auto_awesome</span>Chrom</a></li>
                     </ul>
                 </nav>
             </div>
-            
             <div class="sidebar-bottom">
                 <button id="logout-button"><span class="material-icons">logout</span>Logout</button>
             </div>
@@ -44,17 +153,266 @@
         <main class="main-content">
             <header>
                 <button class="menu-toggle" id="menu-toggle"><span class="material-icons">menu</span></button>
-                <h2>Dashboard</h2>
+                <h2>Laporan Internal Painting - Repair & Touch Up</h2>
             </header>
-            
+
             <div class="content-wrapper">
-                <div class="card">
-                    <h2 id="welcome-message">Selamat Datang!</h2> <p>Web line repair dan touch up dalam masa pengembangan silahkan hubungi developer atau info Hanan untuk info lebih lanjut.</p>
+
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="history-header" style="background-color: #ffc107; color: #333;">
+                        <h3><span class="material-icons" style="vertical-align: bottom; margin-right: 8px;">edit_note</span> Draft Laporan (Belum Selesai)</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="history-table" id="repair-draft-list">
+                            <thead><tr><th>Tanggal</th><th>Shift</th><th>Terakhir Disimpan</th><th>Aksi</th></tr></thead>
+                            <tbody><tr><td colspan="4">Memuat draft...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <form id="repair-form" class="card">
+                    <h3 id="form-title">Buat Laporan Baru</h3>
+                    
+                    <fieldset class="absensi-fieldset">
+                        <div class="form-grid-4">
+                            <div class="input-group"><label for="hari">Hari</label><select id="hari" required><option value="">Pilih Hari...</option><option value="Senin">Senin</option><option value="Selasa">Selasa</option><option value="Rabu">Rabu</option><option value="Kamis">Kamis</option><option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option><option value="Minggu">Minggu</option></select></div>
+                            <div class="input-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div>
+                            <div class="input-group"><label for="shift">Shift</label><select id="shift" required><option value="">Pilih Shift...</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+                            <div class="input-group"><label for="chief_name">Nama Chief</label><select id="chief_name"><option value="">( Kosong )</option><option value="YANTO H">YANTO H</option><option value="SUBAGYO">SUBAGYO</option><option value="SARNO">SARNO</option></select></div>
+                        </div>
+                    </fieldset>
+
+
+                    <h4 class="form-section-title">Main Power</h4>
+                    <fieldset class="absensi-fieldset">
+                        <div class="form-grid-3">
+                            <div class="input-group"><label for="mp_masuk_repair">Masuk REPAIR</label><input type="number" id="mp_masuk_repair" class="mp-calc" value="0"></div>
+                            <div class="input-group"><label for="mp_masuk_touchup">Masuk TOUCH UP</label><input type="number" id="mp_masuk_touchup" class="mp-calc" value="0"></div>
+                            
+                            <div class="input-group"><label for="mp_ijin">Ijin (Nama)</label><input type="text" id="mp_ijin" placeholder="Nama orang..."></div>
+                            <div class="input-group"><label for="mp_off">Off (Nama)</label><input type="text" id="mp_off" placeholder="Nama orang..."></div>
+                            <div class="input-group"><label for="mp_sakit">Sakit (Nama)</label><input type="text" id="mp_sakit" placeholder="Nama orang..."></div>
+
+                            <div class="input-group"><label for="mp_total">Total (Hanya Masuk)</label><input type="number" id="mp_total" value="0" readonly style="background-color: #333;"></div>
+                        </div>
+                    </fieldset>
+
+                    <h4 class="form-section-title">Activity</h4>
+                    
+                    <fieldset class="absensi-fieldset activity-row-container">
+                        <legend>IN REPAIR</legend>
+                        <div class="activity-total-box">
+                            <label for="act_in_repair_total">TOTAL</label>
+                            <input type="number" id="act_in_repair_total" readonly style="background-color: #333;">
+                        </div>
+                        <div class="leader-groups-wrapper">
+                            <div class="leader-group">
+                                <span class="leader-name">MUSTHOLIH</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_in_repair_wahyu_fresh" class="act-calc-in_repair"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_in_repair_wahyu_r1" class="act-calc-in_repair"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_in_repair_wahyu_r2" class="act-calc-in_repair"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">NUR AHMAD</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_in_repair_khasanul_fresh" class="act-calc-in_repair"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_in_repair_khasanul_r1" class="act-calc-in_repair"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_in_repair_khasanul_r2" class="act-calc-in_repair"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">SUNARNO</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_in_repair_sunarno_fresh" class="act-calc-in_repair"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_in_repair_sunarno_r1" class="act-calc-in_repair"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_in_repair_sunarno_r2" class="act-calc-in_repair"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="absensi-fieldset activity-row-container">
+                        <legend>HASIL REPAIR</legend>
+                        <div class="activity-total-box">
+                            <label for="act_hasil_repair_total">TOTAL</label>
+                            <input type="number" id="act_hasil_repair_total" readonly style="background-color: #333;">
+                        </div>
+                        <div class="leader-groups-wrapper">
+                             <div class="leader-group">
+                                <span class="leader-name">MUSTHOLIH</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_hasil_repair_wahyu_fresh" class="act-calc-hasil_repair"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_hasil_repair_wahyu_r1" class="act-calc-hasil_repair"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_hasil_repair_wahyu_r2" class="act-calc-hasil_repair"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">NUR AHMAD</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_hasil_repair_khasanul_fresh" class="act-calc-hasil_repair"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_hasil_repair_khasanul_r1" class="act-calc-hasil_repair"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_hasil_repair_khasanul_r2" class="act-calc-hasil_repair"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">SUNARNO</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_hasil_repair_sunarno_fresh" class="act-calc-hasil_repair"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_hasil_repair_sunarno_r1" class="act-calc-hasil_repair"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_hasil_repair_sunarno_r2" class="act-calc-hasil_repair"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset class="absensi-fieldset activity-row-container">
+                        <legend>OUT REPAIR</legend>
+                        <div class="activity-total-box">
+                            <label for="act_out_repair_total">TOTAL</label>
+                            <input type="number" id="act_out_repair_total" readonly style="background-color: #333;">
+                        </div>
+                        <div class="leader-groups-wrapper">
+                             <div class="leader-group">
+                                <span class="leader-name">MUSTHOLIH</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_out_repair_wahyu_fresh" class="act-calc-out_repair"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_out_repair_wahyu_r1" class="act-calc-out_repair"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_out_repair_wahyu_r2" class="act-calc-out_repair"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">NUR AHMAD</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_out_repair_khasanul_fresh" class="act-calc-out_repair"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_out_repair_khasanul_r1" class="act-calc-out_repair"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_out_repair_khasanul_r2" class="act-calc-out_repair"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">SUNARNO</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_out_repair_sunarno_fresh" class="act-calc-out_repair"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_out_repair_sunarno_r1" class="act-calc-out_repair"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_out_repair_sunarno_r2" class="act-calc-out_repair"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="absensi-fieldset activity-row-container">
+                        <legend>IN REMOVER</legend>
+                        <div class="activity-total-box">
+                            <label for="act_in_remover_total">TOTAL</label>
+                            <input type="number" id="act_in_remover_total" readonly style="background-color: #333;">
+                        </div>
+                        <div class="leader-groups-wrapper">
+                             <div class="leader-group">
+                                <span class="leader-name">MUSTHOLIH</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_in_remover_wahyu_fresh" class="act-calc-in_remover"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_in_remover_wahyu_r1" class="act-calc-in_remover"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_in_remover_wahyu_r2" class="act-calc-in_remover"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">NUR AHMAD</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_in_remover_khasanul_fresh" class="act-calc-in_remover"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_in_remover_khasanul_r1" class="act-calc-in_remover"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_in_remover_khasanul_r2" class="act-calc-in_remover"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">SUNARNO</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_in_remover_sunarno_fresh" class="act-calc-in_remover"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_in_remover_sunarno_r1" class="act-calc-in_remover"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_in_remover_sunarno_r2" class="act-calc-in_remover"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="absensi-fieldset activity-row-container">
+                        <legend>HASIL REMOVER</legend>
+                        <div class="activity-total-box">
+                            <label for="act_hasil_remover_total">TOTAL</label>
+                            <input type="number" id="act_hasil_remover_total" readonly style="background-color: #333;">
+                        </div>
+                        <div class="leader-groups-wrapper">
+                             <div class="leader-group">
+                                <span class="leader-name">MUSTHOLIH</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_hasil_remover_wahyu_fresh" class="act-calc-hasil_remover"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_hasil_remover_wahyu_r1" class="act-calc-hasil_remover"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_hasil_remover_wahyu_r2" class="act-calc-hasil_remover"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">NUR AHMAD</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_hasil_remover_khasanul_fresh" class="act-calc-hasil_remover"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_hasil_remover_khasanul_r1" class="act-calc-hasil_remover"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_hasil_remover_khasanul_r2" class="act-calc-hasil_remover"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">SUNARNO</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_hasil_remover_sunarno_fresh" class="act-calc-hasil_remover"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_hasil_remover_sunarno_r1" class="act-calc-hasil_remover"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_hasil_remover_sunarno_r2" class="act-calc-hasil_remover"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset class="absensi-fieldset activity-row-container">
+                        <legend>OUT REMOVER</legend>
+                        <div class="activity-total-box">
+                            <label for="act_out_remover_total">TOTAL</label>
+                            <input type="number" id="act_out_remover_total" readonly style="background-color: #333;">
+                        </div>
+                        <div class="leader-groups-wrapper">
+                             <div class="leader-group">
+                                <span class="leader-name">MUSTHOLIH</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_out_remover_wahyu_fresh" class="act-calc-out_remover"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_out_remover_wahyu_r1" class="act-calc-out_remover"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_out_remover_wahyu_r2" class="act-calc-out_remover"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">NUR AHMAD</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_out_remover_khasanul_fresh" class="act-calc-out_remover"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_out_remover_khasanul_r1" class="act-calc-out_remover"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_out_remover_khasanul_r2" class="act-calc-out_remover"></div>
+                            </div>
+                            <div class="leader-group">
+                                <span class="leader-name">SUNARNO</span>
+                                <div class="input-group-row"><label>FRESH</label><input type="number" id="act_out_remover_sunarno_fresh" class="act-calc-out_remover"></div>
+                                <div class="input-group-row"><label>R1</label><input type="number" id="act_out_remover_sunarno_r1" class="act-calc-out_remover"></div>
+                                <div class="input-group-row"><label>R2</label><input type="number" id="act_out_remover_sunarno_r2" class="act-calc-out_remover"></div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+
+                    <h4 class="form-section-title">Hasil Touch Up</h4>
+                    <fieldset class="absensi-fieldset">
+                        <div class="dynamic-list-container" id="touch-up-list"></div>
+                        <button type="button" class="button-add" id="add-touch-up-item-btn">
+                            <span class="material-icons">add_circle</span> Tambah Item Lain
+                        </button>
+                        <div class="list-total-display">TOTAL <span id="touch-up-total">0</span></div>
+                    </fieldset>
+
+                    <h4 class="form-section-title">Catatan</h4>
+                    <div class="form-grid-2">
+                        <div class="input-group"><label for="problem_quality_notes">Problem Quality</label><textarea id="problem_quality_notes" rows="3"></textarea></div>
+                        <div class="input-group"><label for="equipment_notes">Equipment</label><textarea id="equipment_notes" rows="3"></textarea></div>
+                        <div class="input-group"><label for="lorry_notes">Box / Lorry</label><textarea id="lorry_notes" rows="3"></textarea></div>
+                        <div class="input-group"><label for="amplas_notes">Pemakaian Amplas Sanders</label><textarea id="amplas_notes" rows="3"></textarea></div>
+                    </div>
+
+
+                    <div class="form-actions">
+                        <button type="button" class="button-add" id="save-draft-btn">Simpan Draft</button>
+                        <button type="submit" class="button-primary" id="main-submit-btn">Simpan Laporan Final</button>
+                        <button type="button" class="button-danger" id="cancel-edit-btn" style="display: none;">Batal Edit</button>
+                    </div>
+                    <p id="form-message"></p>
+                </form>
+                <br>
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="history-header"><h3>Riwayat Laporan (Selesai)</h3></div>
+                    <div class="table-container">
+                        <table class="history-table" id="repair-history-list">
+                            <thead><tr><th>Tanggal</th><th>Shift</th><th>Total Masuk</th><th>Dibuat</th><th>Aksi</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                        <div class="pagination-controls">
+                            <button id="prev-page-btn" class="button-secondary" disabled>Previous</button>
+                            <span id="page-info">Page 1 of 1</span>
+                            <button id="next-page-btn" class="button-secondary" disabled>Next</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
     <script src="app.js"></script>
+    <script src="repair.js"></script>
 </body>
 </html>

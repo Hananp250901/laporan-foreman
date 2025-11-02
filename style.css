@@ -358,6 +358,7 @@ button {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
+  align-items: stretch; /* <-- PERUBAHAN DI SINI */
 }
 @media (min-width: 768px) {
   .form-grid-3 {
@@ -782,6 +783,19 @@ fieldset.total-fieldset legend {
   color: var(--primary-color); /* Warna biru untuk angka total */
   font-size: 1rem;
 }
+
+/* ===== ATURAN BARU UNTUK WUSTER TOTAL (PERBAIKAN) ===== */
+.total-fieldset {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Paksa tinggi fieldset agar sama */
+}
+.total-fieldset .total-display {
+    margin-top: auto; /* Dorong 'TOTAL' ke bagian paling bawah */
+    padding-top: 1rem; /* Kasih jarak sedikit di atasnya */
+}
+/* ===== AKHIR ATURAN BARU ===== */
+
 
 /* Style untuk header tabel draft */
 .header-draft {
