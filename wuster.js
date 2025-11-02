@@ -354,78 +354,161 @@ calculateAllTotals();
             const { data: report, error } = await _supabase.from('laporan_wuster').select('*').eq('id', reportId).single();
             if (error) throw new Error(`Gagal mengambil data laporan: ${error.message}`);
             
-            const doc = new jsPDF({ format: 'legal' });
+            const doc = new jsPDF({ format: 'legal' }); 
             
-            const tableStyles = {
-                theme: 'grid', styles: { cellWidth: 'wrap', fontSize: 8, cellPadding: 1 }, 
-                headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255], fontSize: 9 } 
+            const boldTotalRow = (data) => {
+                if (data.row.section === 'body' && data.cell.text[0].toLowerCase().includes('total')) {
+                    data.cell.styles.fontStyle = 'bold';
+                    data.cell.styles.fillColor = '#f5f5f5'; 
+                }
             };
-            const colWidth = 90; const fullWidth = 190;
+
+            // --- 1. STYLE FONT DIKECILIN ---
+            const tableStyles = {
+                theme: 'grid', 
+                styles: { 
+                    cellWidth: 'wrap', 
+                    fontSize: 7.5, // <-- DIKECILIN DARI 8
+                    cellPadding: 1,  // <-- DIKECILIN DARI 1.5
+                    valign: 'middle'
+                }, 
+                headStyles: { 
+                    fillColor: [41, 128, 185], 
+                    textColor: [255, 255, 255], 
+                    fontSize: 8, // <-- DIKECILIN DARI 9
+                    fontStyle: 'bold'
+                }
+            };
+            // --- AKHIR PERUBAHAN STYLE ---
+
+            // vvvv PERUBAHAN DI SINI vvvv
+            const colWidth = 92.5; const fullWidth = 190; // <-- DIUBAH DARI 90
+            // ^^^^ PERUBAHAN DI SINI ^^^^
             const marginX = (doc.internal.pageSize.width - fullWidth) / 2;
             const col1X = marginX; const col2X = marginX + colWidth + 5;
-            const marginYSmall = 2; 
+            const marginYSmall = 1; 
 
-            doc.setFontSize(16); doc.text("LAPORAN AKHIR SHIFT", doc.internal.pageSize.width / 2, 15, { align: 'center' });
-            doc.setFontSize(9); 
-            doc.text("HARI", col1X, 25); doc.text(`: ${report.hari}`, col1X + 30, 25);
-            doc.text("TANGGAL", col1X, 29); doc.text(`: ${report.tanggal}`, col1X + 30, 29);
-            doc.text("SHIFT", col1X, 33); doc.text(`: ${report.shift}`, col1X + 30, 33);
-            doc.text("TOTAL MASUK", col1X, 37); doc.text(`: ${report.total_masuk} Orang`, col1X + 30, 37);
-
-            // === AWAL PERUBAHAN ===
-            // Menambahkan Total Tdk Masuk di PDF
-            doc.text("TOTAL TDK MASUK", col1X, 41); doc.text(`: ${report.total_tdk_masuk_org || 0} Orang`, col1X + 30, 41);
-            // === AKHIR PERUBAHAN ===
+            // --- 2. HEADER FONT DIKECILIN ---
+            doc.setFontSize(15); doc.text("LAPORAN AKHIR SHIFT", doc.internal.pageSize.width / 2, 14, { align: 'center' }); // Y dimajuin
+            doc.setFontSize(8); // <-- DIKECILIN DARI 9
+            doc.text("HARI", col1X, 22); doc.text(`: ${report.hari || ''}`, col1X + 30, 22);
+            doc.text("TANGGAL", col1X, 26); doc.text(`: ${report.tanggal || ''}`, col1X + 30, 26);
+            doc.text("SHIFT", col1X, 30); doc.text(`: ${report.shift || ''}`, col1X + 30, 30);
+            doc.text("TOTAL MASUK", col1X, 34); doc.text(`: ${report.total_masuk || 0} Orang`, col1X + 30, 34);
+            doc.text("TOTAL TDK MASUK", col1X, 38); doc.text(`: ${report.total_tdk_masuk_org || 0} Orang`, col1X + 30, 38);
+            // --- AKHIR PERUBAHAN HEADER ---
 
             doc.autoTable({
-                // === AWAL PERUBAHAN ===
-                // Menggeser tabel absensi ke bawah (dari 45 menjadi 49)
-                startY: 49, 
-                // === AKHIR PERUBAHAN ===
+                startY: 41, // <-- 3. TABEL DIMEPETIN KE ATAS
                 head: [['ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
-                body: [['STAFF', report.abs_staff_masuk, report.abs_staff_tdk_masuk || ''], ['WUSTER', report.abs_wuster_masuk, report.abs_wuster_tdk_masuk || ''], ['REPAIR & TOUCH UP', report.abs_repair_masuk, report.abs_repair_tdk_masuk || ''], ['INCOMING, STEP ASSY, BUKA CAP', report.abs_incoming_masuk, report.abs_incoming_tdk_masuk || ''], ['CHROM, VERIFIKASI, AEROX, REMOVER', report.abs_chrome_masuk, report.abs_chrome_tdk_masuk || ''], ['PAINTING 4', report.abs_painting_4_masuk, report.abs_painting_4_tdk_masuk || ''], ['USER & CPC', report.abs_user_cpc_masuk, report.abs_user_cpc_tdk_masuk || ''], ['MAINTENANCE', report.abs_maintenance_masuk, report.abs_maintenance_tdk_masuk || ''],],
-                ...tableStyles, margin: { left: marginX }, tableWidth: fullWidth, columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 25 }, 2: { cellWidth: 105 } }
+                body: [
+                    ['STAFF', report.abs_staff_masuk || 0, report.abs_staff_tdk_masuk || ''], 
+                    ['WUSTER', report.abs_wuster_masuk || 0, report.abs_wuster_tdk_masuk || ''], 
+                    ['REPAIR & TOUCH UP', report.abs_repair_masuk || 0, report.abs_repair_tdk_masuk || ''], 
+                    ['INCOMING, STEP ASSY, BUKA CAP', report.abs_incoming_masuk || 0, report.abs_incoming_tdk_masuk || ''], 
+                    ['CHROM, VERIFIKASI, AEROX, REMOVER', report.abs_chrome_masuk || 0, report.abs_chrome_tdk_masuk || ''], 
+                    ['PAINTING 4', report.abs_painting_4_masuk || 0, report.abs_painting_4_tdk_masuk || ''], 
+                    ['USER & CPC', report.abs_user_cpc_masuk || 0, report.abs_user_cpc_tdk_masuk || ''], 
+                    ['MAINTENANCE', report.abs_maintenance_masuk || 0, report.abs_maintenance_tdk_masuk || '']
+                ],
+                ...tableStyles, 
+                didParseCell: boldTotalRow, 
+                margin: { left: marginX }, 
+                tableWidth: fullWidth, 
+                columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 25 }, 2: { cellWidth: 105 } }
             });
             let startY2Col = doc.autoTable.previous.finalY + marginYSmall;
 
-            function drawSingleTable(title, note, startY, startX, width = colWidth) { doc.autoTable({ startY: startY, head: [[title]], body: [[note || '']], ...tableStyles, margin: { left: startX }, tableWidth: width, columnStyles: { 0: { cellWidth: width - 2 } } }); return doc.autoTable.previous.finalY; }
-            function drawCalcTable(options) { let localTableStyles = JSON.parse(JSON.stringify(tableStyles)); doc.autoTable({ ...options, ...localTableStyles }); return doc.autoTable.previous.finalY; }
+            function drawSingleTable(title, note, startY, startX, width = colWidth) {
+                doc.autoTable({ ...tableStyles, startY: startY, head: [[title]], body: [[note || '']], margin: { left: startX }, tableWidth: width, columnStyles: { 0: { cellWidth: width - 2 } } }); 
+                return doc.autoTable.previous.finalY; 
+            }
+            function drawCalcTable(options) { 
+                doc.autoTable({ ...tableStyles, ...options, didParseCell: boldTotalRow }); 
+                return doc.autoTable.previous.finalY; 
+            }
+            function drawDynamicListTable(title, notesString, startY, startX, width = colWidth) {
+                const items = (notesString || '').split('\n').filter(item => item.trim() !== '').map(item => { const parts = item.split(': '); const name = parts[0] || ''; const qty = parts.length > 1 ? (parts.slice(1).join(': ') || '0') : '0'; return [name, qty.trim()]; });
+                let total = 0;
+                items.forEach(item => { total += parseInt(item[1]) || 0; });
+                items.push(['Total', total.toString()]); 
+                // Perhitungan columnStyles di sini akan otomatis menggunakan colWidth (92.5)
+                // 92.5 - 26 = 66.5. Kita bisa bulatkan.
+                const nameWidth = width - 26.5; // (misal: 92.5 - 26.5 = 66)
+                doc.autoTable({ ...tableStyles, startY: startY, head: [[title, 'QTY']], body: items, margin: { left: startX }, tableWidth: width, columnStyles: { 0: { cellWidth: nameWidth }, 1: { cellWidth: 26, halign: 'right' } }, didParseCell: boldTotalRow });
+                return doc.autoTable.previous.finalY;
+            }
 
+            // --- BAGIAN MENGGAMBAR TABEL (KIRI) ---
             let leftY = startY2Col;
-            leftY = drawSingleTable('Packing Holder', report.packing_holder_notes, leftY, col1X);
-            leftY = drawSingleTable('Pasang Holder', report.pasang_holder_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('Problem / Quality', report.problem_quality_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('Suplay Material', report.suplay_material_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('Packing Box / Lory', report.packing_box_notes, leftY + marginYSmall, col1X);
-            leftY = drawSingleTable('Trouble Mesin', report.trouble_mesin_notes, leftY + marginYSmall, col1X);
+            leftY = drawDynamicListTable('Packing Holder', report.packing_holder_notes || '', leftY, col1X);
+            leftY = drawDynamicListTable('Pasang Holder', report.pasang_holder_notes || '', leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('Problem / Quality', report.problem_quality_notes || '', leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('Suplay Material', report.suplay_material_notes || '', leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('Packing Box / Lory', report.packing_box_notes || '', leftY + marginYSmall, col1X);
+            leftY = drawSingleTable('Trouble Mesin', report.trouble_mesin_notes || '', leftY + marginYSmall, col1X);
 
             const prodTotal = (report.total_prod_fresh || 0) + (report.total_prod_repair || 0) + (report.total_prod_ng || 0);
-            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']], body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 3) { data.cell.styles.fontStyle = 'bold'; } } });
+            // Perhitungan col style: 92.5 - 38 = 54.5
+            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']], body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38 } } });
 
-            let rightY = startY2Col; 
-            rightY = drawSingleTable('Hasil Assy Cup', report.hasil_assy_cup_notes, rightY, col2X);
-            rightY = drawSingleTable('Hasil Touch Up', report.hasil_touch_up_notes, rightY + marginYSmall, col2X);
-            rightY = drawSingleTable('Hasil Buka Cap', report.hasil_buka_cap_notes, rightY + marginYSmall, col2X);
-
-            const wusterTotal = (report.perf_wuster_isi || 0) + (report.perf_wuster_kosong || 0);
-            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']], body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 2) { data.cell.styles.fontStyle = 'bold'; } } });
-
-            
-            // Versi BARU (OK+Repair+Body):
             const checkTotal = (report.total_check_ok || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
+            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38 } } });
             
-            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 38 } }, didParseCell: (data) => { if (data.row.index === 4) { data.cell.styles.fontStyle = 'bold'; } } });
+            // --- KODE "LAIN-LAIN" SUDAH DIPINDAH DARI SINI ---
 
-            let currentY = Math.max(leftY, rightY) + marginYSmall;
-            doc.autoTable({ startY: currentY, head: [['LAIN-LAIN', 'Catatan']], body: [['Lost Time', report.lost_time_notes || ''], ['Hanger', report.hanger_notes || '']], ...tableStyles, margin: { left: marginX }, tableWidth: fullWidth, columnStyles: { 0: { cellWidth: 50, fontStyle: 'bold' }, 1: { cellWidth: 140 } } });
 
-            let finalY = doc.autoTable.previous.finalY + 10;
+            // --- BAGIAN MENGGAMBAR TABEL (KANAN) ---
+            let rightY = startY2Col; 
+            rightY = drawDynamicListTable('Hasil Assy Cup', report.hasil_assy_cup_notes || '', rightY, col2X);
+            rightY = drawDynamicListTable('Hasil Touch Up', report.hasil_touch_up_notes || '', rightY + marginYSmall, col2X);
+            rightY = drawDynamicListTable('Hasil Buka Cap', report.hasil_buka_cap_notes || '', rightY + marginYSmall, col2X);
             
-            const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
-            doc.setFontSize(9);
-            doc.text("Dibuat,", col1X, finalY); doc.text(preparerName, col1X, finalY + 15); doc.text("Foreman", col1X, finalY + 20);
-            doc.text("Disetujui,", doc.internal.pageSize.width / 2, finalY, { align: 'center' }); const chiefName = report.chief_name || '( .......................... )'; doc.text(chiefName, doc.internal.pageSize.width / 2, finalY + 15, { align: 'center' }); doc.text("Chief", doc.internal.pageSize.width / 2, finalY + 20, { align: 'center' });
-            doc.text("Mengetahui,", doc.internal.pageSize.width - marginX, finalY, { align: 'right' }); doc.text("SINGGIH E W", doc.internal.pageSize.width - marginX, finalY + 15, { align: 'right' }); doc.text("Dept Head", doc.internal.pageSize.width - marginX, finalY + 20, { align: 'right' });
+            const wusterTotal = (report.perf_wuster_isi || 0) + (report.perf_wuster_kosong || 0);
+            // Perhitungan col style: 92.5 - 38 = 54.5
+            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']], body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38 } } });
+            
+            // --- KODE "LAIN-LAIN" DIPINDAH KE SINI ---
+            doc.autoTable({ 
+                startY: rightY + marginYSmall, // <-- Menggunakan rightY
+                head: [['LAIN-LAIN', 'Catatan']], 
+                body: [['Lost Time', report.lost_time_notes || ''], ['Hanger', report.hanger_notes || '']], 
+                ...tableStyles, 
+                didParseCell: boldTotalRow,
+                margin: { left: col2X }, // <-- Menggunakan col2X (kanan)
+                tableWidth: colWidth, 
+                columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38 } } // <-- disamakan
+            });
+            rightY = doc.autoTable.previous.finalY; // <-- Menggunakan rightY
+            // --- AKHIR KODE YANG DIPINDAH ---
+
+            
+            // --- BAGIAN FOOTER (TANDA TANGAN) ---
+            let currentY = Math.max(leftY || 0, rightY || 0) + marginYSmall;
+            if (isNaN(currentY)) { currentY = 300; } 
+
+            // --- 4. FOOTER DIMEPRETIN ---
+            let finalY = currentY + 6; // <-- DIKECILIN DARI 8
+            
+            const preparerNameRaw = (currentKaryawan && currentKaryawan.nama_lengkap) || (currentUser && currentUser.email) || 'N/A';
+            const chiefNameRaw = report.chief_name || '( .......................... )';
+
+            const preparerName = String(preparerNameRaw || 'N/A');
+            const chiefName = String(chiefNameRaw || '( .......................... )');
+
+            doc.setFontSize(8); // <-- DIKECILIN DARI 9
+            doc.text("Dibuat,", col1X, finalY); 
+            doc.text(preparerName, col1X, finalY + 10); // <-- 12 -> 10
+            doc.text("Foreman", col1X, finalY + 14); // <-- 17 -> 14
+            
+            // Kode ini (doc.internal.pageSize.width / 2) sekarang sudah benar
+            doc.text("Disetujui,", doc.internal.pageSize.width / 2, finalY, { align: 'center' }); 
+            doc.text(chiefName, doc.internal.pageSize.width / 2, finalY + 10, { align: 'center' }); // <-- 12 -> 10
+            doc.text("Chief", doc.internal.pageSize.width / 2, finalY + 14, { align: 'center' }); // <-- 17 -> 14
+            
+            doc.text("Mengetahui,", doc.internal.pageSize.width - marginX, finalY, { align: 'right' }); 
+            doc.text("SINGGIH E W", doc.internal.pageSize.width - marginX, finalY + 10, { align: 'right' }); // <-- 12 -> 10
+            doc.text("Dept Head", doc.internal.pageSize.width - marginX, finalY + 14, { align: 'right' }); // <-- 17 -> 14
 
             doc.save(`Laporan_Wuster_${report.tanggal}_Shift${report.shift}.pdf`);
         } catch (error) {
@@ -433,8 +516,6 @@ calculateAllTotals();
             console.error('PDF Generation Error:', error);
         }
     }
-
-
     /**
      * FUNGSI BARU: Memuat draft laporan
      */

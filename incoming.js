@@ -34,17 +34,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Variabel List Dinamis BARU ===
     const stepAssyListContainer = document.getElementById('prod-step-assy-list');
     const addStepAssyItemBtn = document.getElementById('add-step-assy-item-btn');
-    const defaultStepAssyItems = ["S/B K41K CW", "SB KPYX LH"];
-    const stepAssyTotalSpan = document.getElementById('prod-step-assy-total');
+    const defaultStepAssyItems = ["S/B K41K LH", "S/B K41K SP", "S/B K41K CW", "S/B KPYX LH", "S/B KPYX SP", "S/B KPYX CW"];
+    const stepAssyTotalSpan = document.getElementById('prod-step-assy-total')
 
     const bukaCapListContainer = document.getElementById('prod-buka-cap-list');
     const addBukaCapItemBtn = document.getElementById('add-buka-cap-item-btn');
-    const defaultBukaCapItems = ["M/C 2DP RH", "2DP LH"];
+    const defaultBukaCapItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS", "M/C K15A", "M/C K2SA", "M/C K3VA FR", "M/C XD 831", "M/C K84A FR"];
     const bukaCapTotalSpan = document.getElementById('prod-buka-cap-total');
 
     const assyCupListContainer = document.getElementById('prod-assy-cup-list');
     const addAssyCupItemBtn = document.getElementById('add-assy-cup-item-btn');
-    const defaultAssyCupItems = ["M/C 200 LH", "K12V CBS"];
+    const defaultAssyCupItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS", "M/C K15A", "M/C K2SA", "M/C K3VA FR", "M/C XD 831", "M/C K84A FR"];
     const assyCupTotalSpan = document.getElementById('prod-assy-cup-total');
     
     /**
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Semua list di halaman ini adalah Angka
         const inputType = "number";
         const inputPlaceholder = "Jumlah";
-        const inputValue = itemValue || 0; 
+        const inputValue = itemValue || " "; 
 
         row.innerHTML = `
             <input type="text" class="${nameClass}" placeholder="Nama Item" value="${itemName}">

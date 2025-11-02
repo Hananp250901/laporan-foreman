@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // ===== FOOTER PDF (Sama seperti wuster) =====
-            currentY = Math.max(doc.autoTable.previous.finalY, leftY) + 15;
+            currentY = Math.max(doc.autoTable.previous.finalY, leftY) + 20;
             const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
             const chiefName = report.chief_name || '( .......................... )'; // Get chief name from report
             

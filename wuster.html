@@ -9,7 +9,72 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        /* --- 1. PERBAIKAN ABSENSI (MOBILE) --- */
+        @media (max-width: 768px) {
+            .absensi-grid-4col {
+                grid-template-columns: 1fr; /* 1 kolom aja */
+                gap: 0.5rem; /* Jarak antar semua item */
+            }
+            
+            .absensi-grid-4col .grid-header {
+                /* Sembunyikan header tabel di mobile */
+                display: none;
+            }
     
+            .absensi-grid-4col > label {
+                /* Label jadi judul di atas */
+                text-align: left;
+                font-weight: bold;
+                font-size: 1em;
+                padding-right: 0;
+                border-bottom: 1px solid #444;
+                padding-bottom: 0.5rem;
+                margin-top: 1rem; /* Kasih jarak antar grup */
+            }
+    
+            .absensi-grid-4col > input {
+                width: 100%;
+            }
+        }
+
+        /* --- 2. PERBAIKAN TINGGI KOTAK (BIAR SAMA) --- */
+        .total-fieldset {
+            display: flex;
+            flex-direction: column; 
+            height: 100%; 
+            box-sizing: border-box; 
+        }
+
+        .total-fieldset .total-display {
+            margin-top: auto; 
+            padding-top: 1rem; 
+        }
+        
+        /* --- 3. PERBAIKAN ISI KOTAK (BIAR RAPIH) --- */
+        .total-row {
+            display: grid;
+            /* Bikin 2 kolom: Label (auto) dan Input (1fr, sisa space) */
+            grid-template-columns: auto 1fr; 
+            gap: 0.5rem 0.75rem; /* Jarak antara label dan input */
+            align-items: center;
+            
+            /* Kasih jarak antar baris (antar .total-row) */
+            margin-bottom: 0.75rem; 
+        }
+
+        .total-row label {
+            text-align: left; /* Rata kiri */
+            font-size: 0.9em;
+            font-weight: bold; /* Bikin tebel biar kebaca */
+        }
+
+        .total-row input {
+            width: 100%; /* Input penuhi kolomnya */
+            padding: 0.5rem; /* Bikin kotaknya lebih tebel */
+            box-sizing: border-box; /* Wajib */
+        }
+    </style>
     </head>
 <body>
 
@@ -73,40 +138,50 @@
                         <div class="absensi-grid-4col">
                             <label></label>
                             <span class="grid-header">Masuk (org)</span>
-                            <span class="grid-header">Tdk Masuk (org)</span> <span class="grid-header">Tdk Masuk (Nama)</span>
+                            <span class="grid-header">Tdk Masuk (org)</span> 
+                            <span class="grid-header">Tdk Masuk (Nama)</span>
 
                             <label for="abs_staff_masuk">STAFF</label>
-                            <input type="number" id="abs_staff_masuk">
-                            <input type="number" id="abs_staff_tdk_masuk_org"> <input type="text" id="abs_staff_tdk_masuk">
+                            <input type="number" id="abs_staff_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_staff_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_staff_tdk_masuk" placeholder="Tdk Masuk (Nama)">
 
                             <label for="abs_wuster_masuk">WUSTER</label>
-                            <input type="number" id="abs_wuster_masuk">
-                            <input type="number" id="abs_wuster_tdk_masuk_org"> <input type="text" id="abs_wuster_tdk_masuk">
+                            <input type="number" id="abs_wuster_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_wuster_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_wuster_tdk_masuk" placeholder="Tdk Masuk (Nama)">
 
                             <label for="abs_repair_masuk">REPAIR & TOUCH UP</label>
-                            <input type="number" id="abs_repair_masuk">
-                            <input type="number" id="abs_repair_tdk_masuk_org"> <input type="text" id="abs_repair_tdk_masuk">
+                            <input type="number" id="abs_repair_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_repair_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_repair_tdk_masuk" placeholder="Tdk Masuk (Nama)">
 
                             <label for="abs_incoming_masuk">INCOMING, STEP ASSY, BUKA CAP</label>
-                            <input type="number" id="abs_incoming_masuk">
-                            <input type="number" id="abs_incoming_tdk_masuk_org"> <input type="text" id="abs_incoming_tdk_masuk">
+                            <input type="number" id="abs_incoming_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_incoming_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_incoming_tdk_masuk" placeholder="Tdk Masuk (Nama)">
 
                             <label for="abs_chrome_masuk">CHROM, VERIFIKASI, AEROX, REMOVER</label>
-                            <input type="number" id="abs_chrome_masuk">
-                            <input type="number" id="abs_chrome_tdk_masuk_org"> <input type="text" id="abs_chrome_tdk_masuk">
+                            <input type="number" id="abs_chrome_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_chrome_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_chrome_tdk_masuk" placeholder="Tdk Masuk (Nama)">
 
                             <label for="abs_painting_4_masuk">PAINTING 4</label>
-                            <input type="number" id="abs_painting_4_masuk">
-                            <input type="number" id="abs_painting_4_tdk_masuk_org"> <input type="text" id="abs_painting_4_tdk_masuk">
+                            <input type="number" id="abs_painting_4_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_painting_4_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_painting_4_tdk_masuk" placeholder="Tdk Masuk (Nama)">
 
                             <label for="abs_user_cpc_masuk">USER & CPC</label>
-                            <input type="number" id="abs_user_cpc_masuk">
-                            <input type="number" id="abs_user_cpc_tdk_masuk_org"> <input type="text" id="abs_user_cpc_tdk_masuk">
+                            <input type="number" id="abs_user_cpc_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_user_cpc_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_user_cpc_tdk_masuk" placeholder="Tdk Masuk (Nama)">
 
                             <label for="abs_maintenance_masuk">MAINTENANCE</label>
-                            <input type="number" id="abs_maintenance_masuk">
-                            <input type="number" id="abs_maintenance_tdk_masuk_org"> <input type="text" id="abs_maintenance_tdk_masuk">
+                            <input type="number" id="abs_maintenance_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_maintenance_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_maintenance_tdk_masuk" placeholder="Tdk Masuk (Nama)">
                         </div>
+                    </fieldset>
                     </fieldset>
                     <h4 class="form-section-title">Detail Laporan Lainnya</h4>
                     <fieldset class="absensi-fieldset"><legend>Packing Holder</legend><div class="dynamic-list-container" id="packing-holder-list"></div><button type="button" class="button-add" id="add-holder-item-btn"><span class="material-icons">add_circle</span> Tambah Item Lain</button><div class="list-total-display">TOTAL <span id="packing-holder-total">0</span></div></fieldset>

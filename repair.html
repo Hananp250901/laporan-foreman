@@ -97,6 +97,10 @@
             width: 100%;
             border: 1px solid #555; /* Tambahkan border agar seragam */
             box-sizing: border-box; /* Pastikan border tidak merusak layout */
+            
+            /* === TAMBAHAN DI SINI === */
+            padding: 0.5rem; /* Samakan padding-nya dgn label */
+            font-size: 1em;  /* Pastikan ukuran font-nya normal */
         }
 
 
@@ -186,14 +190,14 @@
                     <h4 class="form-section-title">Main Power</h4>
                     <fieldset class="absensi-fieldset">
                         <div class="form-grid-3">
-                            <div class="input-group"><label for="mp_masuk_repair">Masuk REPAIR</label><input type="number" id="mp_masuk_repair" class="mp-calc" value="0"></div>
-                            <div class="input-group"><label for="mp_masuk_touchup">Masuk TOUCH UP</label><input type="number" id="mp_masuk_touchup" class="mp-calc" value="0"></div>
+                            <div class="input-group"><label for="mp_masuk_repair">Masuk REPAIR</label><input type="number" id="mp_masuk_repair" class="mp-calc" value=" "></div>
+                            <div class="input-group"><label for="mp_masuk_touchup">Masuk TOUCH UP</label><input type="number" id="mp_masuk_touchup" class="mp-calc" value=" "></div>
                             
                             <div class="input-group"><label for="mp_ijin">Ijin (Nama)</label><input type="text" id="mp_ijin" placeholder="Nama orang..."></div>
                             <div class="input-group"><label for="mp_off">Off (Nama)</label><input type="text" id="mp_off" placeholder="Nama orang..."></div>
                             <div class="input-group"><label for="mp_sakit">Sakit (Nama)</label><input type="text" id="mp_sakit" placeholder="Nama orang..."></div>
 
-                            <div class="input-group"><label for="mp_total">Total (Hanya Masuk)</label><input type="number" id="mp_total" value="0" readonly style="background-color: #333;"></div>
+                            <div class="input-group"><label for="mp_total">Total (Hanya Masuk)</label><input type="number" id="mp_total" value=" " readonly style="background-color: #333;"></div>
                         </div>
                     </fieldset>
 

@@ -1,6 +1,7 @@
 // =================================================================
 // F. LOGIKA HALAMAN CHROM (chrom.html)
 // (DIBUAT SEPERTI incoming.js)
+// VERSI 2 - DENGAN TAMBAHAN PART REMOVER
 // =================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,16 +35,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variabel List Dinamis (B. Line Remover)
     const removerListContainer = document.getElementById('prod-remover-list');
     const addRemoverItemBtn = document.getElementById('add-remover-item-btn');
-    const defaultRemoverItems = ["C/H BXD", "C/C 1DY 2", "HOLDER KYEA"]; // Sesuai contoh gambar
+    const defaultRemoverItems = ["C/H BXD", "C/C 1DY 2", "HOLDER KYEA"]; // Sesuai file Anda
     const removerTotalSpan = document.getElementById('prod-remover-total');
     
     // Variabel List Dinamis (C. Line Touch Up Aerox)
     const touchUpAeroxListContainer = document.getElementById('prod-touch-up-aerox-list');
     const addTouchUpAeroxItemBtn = document.getElementById('add-touch-up-aerox-item-btn');
-    const defaultTouchUpAeroxItems = ["M/C K1ZV ABS", "M/C FR K1SA", "M/C 2DP LH", "M/C 2DP FR"]; // Sesuai contoh gambar
+    const defaultTouchUpAeroxItems = ["M/C K1ZV ABS", "M/C FR K1SA", "M/C 2DP LH", "M/C 2DP FR"]; // Sesuai file Anda
     const touchUpAeroxTotalSpan = document.getElementById('prod-touch-up-aerox-total');
     
     // Variabel Total (Prod. Chrom) - TAMBAHAN
+    // Ini otomatis mendeteksi semua input dgn class 'prod-chrom-calc'
     const prodChromInputs = document.querySelectorAll('.prod-chrom-calc');
     const prodChromTotalInput = document.getElementById('prod_chrom_total');
 
@@ -53,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateProdChromTotal() {
         if (!prodChromTotalInput) return;
         let total = 0;
+        // Tidak perlu diubah, .prod-chrom-calc sudah (3) input
         prodChromInputs.forEach(input => {
             total += parseInt(input.value) || 0;
         });
@@ -64,16 +67,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * FUNGSI: Menambahkan baris item ke list dinamis
-     * (Diambil dari incoming.js)
      */
     function addDynamicRow(container, nameClass, valueClass, itemName = "", itemValue = "") {
         if (!container) return;
         const row = document.createElement('div');
         row.className = 'dynamic-list-row';
 
+        // --- PERBAIKAN DI SINI ---
+        // Pastikan nilainya adalah angka 0 jika kosong, bukan string kosong
+        const finalValue = parseInt(itemValue) || "";
+        // --- AKHIR PERBAIKAN ---
+
         row.innerHTML = `
             <input type="text" class="${nameClass}" placeholder="Nama Item" value="${itemName}">
-            <input type="number" class="${valueClass}" placeholder="Jumlah" value="${itemValue || 0}">
+            <input type="number" class="${valueClass}" placeholder="Jumlah" value="${finalValue}">
             <button type="button" class="button-remove">
                 <span class="material-icons">remove_circle</span>
             </button>
@@ -83,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * FUNGSI: Mereset list dinamis ke item default
-     * (Diambil dari incoming.js)
      */
     function resetDynamicList(container, defaultItems, nameClass, valueClass) {
         if (!container) return;
@@ -93,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * FUNGSI: Mengurai string dari database kembali menjadi baris input
-     * (Diambil dari incoming.js)
      */
     function deserializeDynamicList(container, nameClass, valueClass, notesString, defaultItems) {
         container.innerHTML = ''; // Kosongkan list
@@ -140,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * FUNGSI: Serialisasi data list dinamis (untuk disimpan ke DB)
-     * (Diambil dari incoming.js)
      */
     function serializeDynamicList(container, nameClass, valueClass) {
         if (!container) return ""; 
@@ -162,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * FUNGSI: Menghitung total untuk list dinamis
-     * (Diambil dari incoming.js)
      */
     function calculateDynamicListTotal(listContainer, valueClass, totalSpan) {
         if (!listContainer || !totalSpan) return;
@@ -178,8 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
      * FUNGSI HELPER: Menjalankan semua kalkulasi total dinamis
      */
     function calculateAllDynamicTotals() {
-        calculateDynamicListTotal(removerListContainer, 'remover-item-name', removerTotalSpan);
-        calculateDynamicListTotal(touchUpAeroxListContainer, 'touchup-aerox-item-name', touchUpAeroxTotalSpan);
+        calculateDynamicListTotal(removerListContainer, 'remover-item-value', removerTotalSpan);
+        calculateDynamicListTotal(touchUpAeroxListContainer, 'touchup-aerox-item-value', touchUpAeroxTotalSpan);
     }
     
     /**
@@ -193,7 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const { jsPDF } = window.jspdf;
         try {
-            // GANTI: 'laporan_chrom'
             const { data: report, error } = await _supabase.from('laporan_chrom').select('*').eq('id', reportId).single();
             if (error) throw new Error(`Gagal mengambil data laporan: ${error.message}`);
             
@@ -225,14 +227,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             doc.setFontSize(12); doc.text("1. ABSENSI", marginX, currentY); currentY += 4;
             
-            // PDF Absensi (Disesuaikan dengan data baru)
             const absMasukBody = [
                 ['A. Line Chrom', report.abs_chrom_masuk],
                 ['B. Line Remover', report.abs_remover_masuk],
                 ['C. Line Touch Up', report.abs_touchup_masuk],
                 ['D. Line Verifikasi', report.abs_verifikasi_masuk]
             ];
-            // Hitung total manual untuk PDF
             const totalMasuk = absMasukBody.reduce((acc, row) => acc + (parseInt(row[1]) || 0), 0);
             absMasukBody.push(['TOTAL MASUK', totalMasuk]);
             
@@ -251,20 +251,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 startY: currentY, head: [['ABSENSI (TIDAK MASUK)', 'NAMA']], body: absTdkMasukBody,
                 ...tableStyles, margin: { left: rightColX }, tableWidth: colWidth
             });
-            currentY = doc.autoTable.previous.finalY + 8;
+            currentY = doc.autoTable.previous.finalY + 12;
 
             doc.setFontSize(12); doc.text("2. PRODUKSI", marginX, currentY); currentY += 4;
             let leftY = currentY, rightY = currentY;
 
+            // === PERUBAHAN DI SINI ===
             doc.autoTable({
                 startY: leftY, head: [['A. LINE CHROM', 'TOTAL']],
                 body: [
                     ['Part Machining', report.prod_chrom_machining],
                     ['Part Finishing', report.prod_chrom_finishing],
-                    ['TOTAL PRODUKSI', report.prod_chrom_total], // Ambil dari data
+                    ['Part Remover', report.prod_chrom_remover], // <-- TAMBAHAN
+                    ['TOTAL PRODUKSI', report.prod_chrom_total], 
                 ],
                 ...tableStyles, margin: { left: leftColX }, tableWidth: colWidth, didParseCell: boldTotalStyle
             });
+            // === AKHIR PERUBAHAN ===
+            
             leftY = doc.autoTable.previous.finalY + 8;
             
             doc.autoTable({
@@ -274,7 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             leftY = doc.autoTable.previous.finalY;
 
-            // Kolom Kanan: B. Line Remover (DARI NOTES)
             const removerItems = (report.prod_remover_notes || '').split('\n').filter(item => item.trim() !== '').map(item => { const parts = item.split(': '); return [parts[0] || '', parts[1] || '']; });
             let removerTotal = 0; removerItems.forEach(item => { removerTotal += parseInt(item[1]) || 0; });
             removerItems.push(['TOTAL', removerTotal]);
@@ -285,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             rightY = doc.autoTable.previous.finalY + 8;
 
-            // Kolom Kanan: C. Line Touch Up Aerox (DARI NOTES)
             const touchUpAeroxItems = (report.prod_touchup_notes || '').split('\n').filter(item => item.trim() !== '').map(item => { const parts = item.split(': '); return [parts[0] || '', parts[1] || '']; });
             let touchUpAeroxTotal = 0; touchUpAeroxItems.forEach(item => { touchUpAeroxTotal += parseInt(item[1]) || 0; });
             touchUpAeroxItems.push(['TOTAL', touchUpAeroxTotal]);
@@ -315,14 +317,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * FUNGSI: Memuat draft laporan
-     * (Diambil dari incoming.js dan diganti)
      */
     async function loadChromDrafts() {
         if (!draftListEl) return;
         draftListEl.innerHTML = '<tr><td colspan="4">Memuat draft...</td></tr>';
         
         const { data, error } = await _supabase
-            .from('laporan_chrom') // GANTI: 'laporan_chrom'
+            .from('laporan_chrom') 
             .select('id, tanggal, shift, created_at')
             .eq('status', 'draft') 
             .eq('user_id', currentUser.id) 
@@ -354,7 +355,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.querySelector('.button-delete-draft').addEventListener('click', async (e) => {
                     const idToDelete = e.currentTarget.getAttribute('data-id');
                     if (confirm('Anda yakin ingin menghapus draft ini?')) {
-                        // GANTI: 'laporan_chrom'
                         const { error } = await _supabase.from('laporan_chrom').delete().eq('id', idToDelete);
                         if (error) {
                             alert('Gagal menghapus draft: ' + error.message);
@@ -369,14 +369,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Fungsi: Memuat riwayat laporan
-     * (Diambil dari incoming.js dan diganti)
      */
     async function loadChromHistory() {
         if (!historyListEl) return;
         historyListEl.innerHTML = '<tr><td colspan="5">Memuat riwayat...</td></tr>';
         
         const { count, error: countError } = await _supabase
-            .from('laporan_chrom') // GANTI: 'laporan_chrom'
+            .from('laporan_chrom') 
             .select('*', { count: 'exact', head: true })
             .or('status.eq.published,status.is.null');
             
@@ -389,8 +388,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const from = (currentPage - 1) * itemsPerPage;
         const to = from + itemsPerPage - 1;
 
-        const { data, error } = await _supabase.from('laporan_chrom') // GANTI: 'laporan_chrom'
-            .select('id, tanggal, shift, hari, created_at') // Ambil 'hari'
+        const { data, error } = await _supabase.from('laporan_chrom') 
+            .select('id, tanggal, shift, hari, created_at') 
             .or('status.eq.published,status.is.null') 
             .order('created_at', { ascending: false }).range(from, to);
             
@@ -430,12 +429,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * FUNGSI: Memuat data laporan ke form untuk diedit
-     * (Logika 'incoming.js' DITERAPKAN ke field 'chrom.html')
      */
     async function loadReportForEditing(reportId) {
         formMessageEl.textContent = 'Memuat data laporan...';
         const { data: report, error } = await _supabase
-            .from('laporan_chrom') // GANTI: 'laporan_chrom'
+            .from('laporan_chrom') 
             .select('*')
             .eq('id', reportId)
             .single();
@@ -465,7 +463,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Isi Produksi A (3 fields)
         document.getElementById('prod_chrom_machining').value = report.prod_chrom_machining;
         document.getElementById('prod_chrom_finishing').value = report.prod_chrom_finishing;
-        // Total akan dihitung ulang
+        // === PERUBAHAN DI SINI ===
+        document.getElementById('prod_chrom_remover').value = report.prod_chrom_remover;
+        // === AKHIR PERUBAHAN ===
         
         // Isi Produksi D (Textarea)
         document.getElementById('verifikasi_notes').value = report.verifikasi_notes;
@@ -491,7 +491,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * FUNGSI: Mengosongkan form dan mereset state
-     * (Logika 'incoming.js' DITERAPKAN ke field 'chrom.html')
      */
     function resetFormAndState() {
         chromForm.reset(); 
@@ -523,14 +522,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * FUNGSI: Mengumpulkan semua data form ke 1 objek
-     * (DITULIS ULANG untuk field 'chrom.html')
      */
     function getFormData() {
         return {
             user_id: currentUser.id,
             hari: getStrVal('hari'),
             tanggal: getStrVal('tanggal'),
-            shift: getStrVal('shift'), // Di-cast ke Int di incoming.js, tapi String lebih aman
+            shift: getStrVal('shift'), 
             chief_name: getStrVal('chief_name'),
             
             // Absensi (8 fields)
@@ -543,10 +541,13 @@ document.addEventListener('DOMContentLoaded', () => {
             abs_verifikasi_masuk: getIntVal('abs_verifikasi_masuk'),
             abs_verifikasi_tdk_masuk: getStrVal('abs_verifikasi_tdk_masuk'),
             
-            // Produksi A (3 fields)
+            // Produksi A (4 fields)
             prod_chrom_machining: getIntVal('prod_chrom_machining'),
             prod_chrom_finishing: getIntVal('prod_chrom_finishing'),
-            prod_chrom_total: getIntVal('prod_chrom_total'), // Diambil dari total yg sudah dihitung
+            // === PERUBAHAN DI SINI ===
+            prod_chrom_remover: getIntVal('prod_chrom_remover'),
+            // === AKHIR PERUBAHAN ===
+            prod_chrom_total: getIntVal('prod_chrom_total'), 
             
             // Produksi D (Textarea)
             verifikasi_notes: getStrVal('verifikasi_notes'),
@@ -559,7 +560,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * FUNGSI: Logika submit
-     * (Diambil dari incoming.js dan diganti)
      */
     async function handleFormSubmit(isDraft = false) {
         if (!currentUser) {
@@ -574,14 +574,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentlyEditingId) {
             // MODE UPDATE
             const { error: updateError } = await _supabase
-                .from('laporan_chrom') // GANTI: 'laporan_chrom'
+                .from('laporan_chrom') 
                 .update(laporanData)
                 .eq('id', currentlyEditingId);
             error = updateError;
         } else {
             // MODE INSERT
             const { error: insertError } = await _supabase
-                .from('laporan_chrom') // GANTI: 'laporan_chrom'
+                .from('laporan_chrom') 
                 .insert(laporanData);
             error = insertError;
         }
@@ -619,7 +619,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Fungsi Inisialisasi Halaman
-     * (Diambil dari incoming.js dan diganti)
      */
     (async () => {
         let session;
