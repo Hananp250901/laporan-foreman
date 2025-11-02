@@ -3,37 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Laporan Line Chrom</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
-<body id="dashboard-home"> <div class="dashboard-container">
-        
+<body>
+
+    <div class="dashboard-container">
+
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
                 <h3>Laporan Foreman</h3>
                 <div id="user-info"><h4>Memuat...</h4></div>
-
                 <nav class="sidebar-nav">
                     <ul>
-                        <li>
-                            <a href="dashboard.html"> <span class="material-icons">home</span>
-                                Home
-                            </a>
-                        </li>
-                        <li>
-                            <a href="incoming.html"> <span class="material-icons">inventory_2</span>
-                                Incoming
-                            </a>
-                        </li>
+                        <li><a href="dashboard.html"><span class="material-icons">home</span>Home</a></li>
+                        <li><a href="incoming.html"><span class="material-icons">inventory_2</span>Incoming</a></li>
                         <li><a href="wuster.html"><span class="material-icons">cleaning_services</span>Wuster</a></li>
                         <li><a href="repair.html"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
                         <li><a href="chrom.html" class="active"><span class="material-icons">auto_awesome</span>Chrom</a></li>
                     </ul>
                 </nav>
             </div>
-            
             <div class="sidebar-bottom">
                 <button id="logout-button"><span class="material-icons">logout</span>Logout</button>
             </div>
@@ -44,17 +38,128 @@
         <main class="main-content">
             <header>
                 <button class="menu-toggle" id="menu-toggle"><span class="material-icons">menu</span></button>
-                <h2>Dashboard</h2>
+                <h2>Laporan Internal Painting - Line Chrom</h2>
             </header>
-            
+
             <div class="content-wrapper">
-                <div class="card">
-                    <h2 id="welcome-message">Selamat Datang!</h2> <p>Web line chrom dalam masa pengembangan silahkan hubungi developer atau info Hanan untuk info lebih lanjut.</p>
+
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="history-header" style="background-color: #ffc107; color: #333;">
+                        <h3><span class="material-icons" style="vertical-align: bottom; margin-right: 8px;">edit_note</span> Draft Laporan (Line Chrom)</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="history-table" id="chrom-draft-list">
+                            <thead><tr><th>Tanggal</th><th>Shift</th><th>Terakhir Disimpan</th><th>Aksi</th></tr></thead>
+                            <tbody><tr><td colspan="4">Memuat draft...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <form id="chrom-form" class="card">
+                    <h3 id="form-title">Buat Laporan Baru (Chrom)</h3>
+                    
+                    <div class="form-grid-2">
+                         <div class="input-group"><label for="hari">Hari</label><select id="hari" required><option value="">Pilih Hari...</option><option value="Senin">Senin</option><option value="Selasa">Selasa</option><option value="Rabu">Rabu</option><option value="Kamis">Kamis</option><option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option><option value="Minggu">Minggu</option></select></div>
+                        <div class="input-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div>
+                        <div class="input-group"><label for="shift">Shift</label><select id="shift" required><option value="">Pilih Shift...</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+                        <div class="input-group"><label for="chief_name">Nama Chief</label><select id="chief_name"><option value="">( Kosong )</option><option value="YANTO H">YANTO H</option><option value="SUBAGYO">SUBAGYO</option><option value="SARNO">SARNO</option></select></div>
+                    </div>
+                    
+                    <h4 class="form-section-title">1. Absensi</h4>
+                    <div class="form-grid-4">
+                        <fieldset class="input-group-border">
+                            <legend>A. Line Chrom</legend>
+                            <div class="input-group-row-like"><label for="abs_chrom_masuk">Masuk:</label><input type="number" id="abs_chrom_masuk" value="0"></div>
+                            <div class="input-group-row-like"><label for="abs_chrom_tdk_masuk">Tidak Masuk:</label><input type="text" id="abs_chrom_tdk_masuk" placeholder="Nama orang"></div>
+                        </fieldset>
+                        <fieldset class="input-group-border">
+                            <legend>B. Line Remover</legend>
+                            <div class="input-group-row-like"><label for="abs_remover_masuk">Masuk:</label><input type="number" id="abs_remover_masuk" value="0"></div>
+                            <div class="input-group-row-like"><label for="abs_remover_tdk_masuk">Tidak Masuk:</label><input type="text" id="abs_remover_tdk_masuk" placeholder="Nama orang"></div>
+                        </fieldset>
+                        <fieldset class="input-group-border">
+                            <legend>C. Line Touch Up</legend>
+                            <div class="input-group-row-like"><label for="abs_touchup_masuk">Masuk:</label><input type="number" id="abs_touchup_masuk" value="0"></div>
+                            <div class="input-group-row-like"><label for="abs_touchup_tdk_masuk">Tidak Masuk:</label><input type="text" id="abs_touchup_tdk_masuk" placeholder="Nama orang"></div>
+                        </fieldset>
+                        <fieldset class="input-group-border">
+                            <legend>D. Line Verifikasi</legend>
+                            <div class="input-group-row-like"><label for="abs_verifikasi_masuk">Masuk:</label><input type="number" id="abs_verifikasi_masuk" value="0"></div>
+                            <div class="input-group-row-like"><label for="abs_verifikasi_tdk_masuk">Tidak Masuk:</label><input type="text" id="abs_verifikasi_tdk_masuk" placeholder="Nama orang"></div>
+                        </fieldset>
+                    </div>
+
+                    <h4 class="form-section-title">2. Produksi</h4>
+                    
+                    <fieldset class="input-group-border" style="margin-bottom: 1rem;">
+                        <legend>A. Line Chrom</legend>
+                        <div class="form-grid-3">
+                            <div class="input-group"><label for="prod_chrom_machining">Part Machining</label><input type="number" id="prod_chrom_machining" class="prod-chrom-calc" value="0"></div>
+                            <div class="input-group"><label for="prod_chrom_finishing">Part Finishing</label><input type="number" id="prod_chrom_finishing" class="prod-chrom-calc" value="0"></div>
+                            <div class="input-group"><label for="prod_chrom_total">Total Produksi</label><input type="number" id="prod_chrom_total" value="0" readonly style="background-color: #333;"></div>
+                        </div>
+                    </fieldset>
+
+                    <div class="form-grid-3">
+                        <fieldset class="absensi-fieldset">
+                            <legend>B. Line Remover</legend>
+                            <div class="dynamic-list-container" id="prod-remover-list"></div>
+                            <button type="button" class="button-add" id="add-remover-item-btn">
+                                <span class="material-icons">add_circle</span> Tambah Item
+                            </button>
+                            <div class="list-total-display">TOTAL <span id="prod-remover-total">0</span></div>
+                        </fieldset>
+
+                        <fieldset class="absensi-fieldset">
+                            <legend>C. Line Touch Up Aerox</legend>
+                            <div class="dynamic-list-container" id="prod-touch-up-aerox-list"></div>
+                            <button type="button" class="button-add" id="add-touch-up-aerox-item-btn">
+                                <span class="material-icons">add_circle</span> Tambah Item
+                            </button>
+                            <div class="list-total-display">TOTAL <span id="prod-touch-up-aerox-total">0</span></div>
+                        </fieldset>
+
+                        <fieldset class="absensi-fieldset">
+                            <legend>D. Line Verifikasi</legend>
+                            <div class="input-group">
+                                <label for="verifikasi_notes"></label>
+                                <textarea id="verifikasi_notes" rows="10" placeholder="Contoh:"></textarea>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <br>
+                    <div class="form-actions">
+                        <button type="button" class="button-secondary" id="save-draft-btn">Simpan Draft</button>
+                        <button type="submit" class="button-primary" id="main-submit-btn">Simpan Laporan Final</button>
+                        <button type="button" class="button-danger" id="cancel-edit-btn" style="display: none;">Batal Edit</button>
+                    </div>
+                    <p id="form-message"></p>
+                </form>
+                <br>
+                
+                <div class="card" style="margin-bottom: 2rem;"> 
+                    <div class="history-header"><h3>Riwayat Laporan Chrom (Selesai)</h3></div>
+                    <div class="table-container">
+                        <table class="history-table" id="chrom-history-list">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th><th>Shift</th><th>Hari</th><th>Dibuat</th><th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <div class="pagination-controls">
+                            <button id="prev-page-btn" class="button-secondary" disabled>Previous</button>
+                            <span id="page-info">Page 1 of 1</span>
+                            <button id="next-page-btn" class="button-secondary" disabled>Next</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
     <script src="app.js"></script>
-</body>
+    <script src="chrom.js"></script> </body>
 </html>
