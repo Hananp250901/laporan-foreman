@@ -806,3 +806,40 @@ fieldset.total-fieldset legend {
     vertical-align: bottom;
     margin-right: 8px;
 }
+
+@media (max-width: 768px) {
+  
+  /* Ini untuk memperbaiki grid utama (Hari, Tanggal, Shift, dll) */
+  .form-grid-2,
+  .form-grid-3,
+  .form-grid-4 {
+    /* Ubah dari 2/3/4 kolom menjadi 1 kolom saja */
+    grid-template-columns: 1fr; 
+    gap: 1rem; /* Beri sedikit jarak antar baris */
+  }
+
+  /* Perbaikan agar fieldset jadi 1 kolom di HP */
+  fieldset.input-group-border {
+    grid-template-columns: 1fr;
+  }
+  
+  /* === INI TAMBAHAN PERBAIKANNYA === */
+  fieldset.input-group-border label {
+     text-align: left; /* Paksa label jadi rata kiri di HP */
+  }
+  /* === AKHIR TAMBAHAN === */
+
+  /* Ini untuk memperbaiki fieldset "Masuk" dan "Tidak Masuk" 
+     (Label di atas, input di bawah) */
+  .input-group-row-like {
+    /* Ubah dari samping-sampingan (row) menjadi ke bawah (column) */
+    display: flex;
+    flex-direction: column; 
+    gap: 8px; /* Jarak antar input "Masuk" dan "Tidak Masuk" */
+  }
+
+  /* Ini agar tampilan di HP tidak terlalu mepet ke pinggir */
+  .card, .content-wrapper {
+    padding: 1rem;
+  }
+}
