@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * 1. Mengambil semua data wuster dari database
          */
         async function fetchWusterDataForChart() {
-            // Ambil SEMUA kolom (*) agar tidak error 400
+            // Ambil SEMUA kolom (*). Ini sudah otomatis mengambil 'jam_kerja'
             const { data, error } = await _supabase
                 .from('laporan_wuster')
                 .select('*') 
@@ -235,12 +235,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     dataIsi[index] += item.perf_wuster_isi || 0; 
                     dataKosong[index] += item.perf_wuster_kosong || 0;
                     
-                    // Cek otomatis kolom target
-                    const targetValue = item.target_total || item.target || item.target_harian || 0;
-                    dataTarget[index] += targetValue;
-                    
-                    // *** REVISI ***
-                    // Hitung total BUKAN di loop terpisah
+                    // *** REVISI LOGIKA TARGET ***
+                    // Ambil target berdasarkan 'jam_kerja' dari database
+                    let dailyTarget = 0;
+                    if (item.jam_kerja === '7 Jam') {
+                        dailyTarget = 1680;
+                    } else if (item.jam_kerja === '5 Jam') {
+                        dailyTarget = 1200;
+                    }
+                    // Akumulasi target jika ada >1 laporan/hari (misal BEDA shift)
+                    dataTarget[index] += dailyTarget; 
+
                     dataTotalBar[index] += (item.perf_wuster_isi || 0) + (item.perf_wuster_kosong || 0);
                 }
             });
@@ -293,11 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         type: 'line', // <-- Tipe GARIS
                         label: 'TOTAL HANGER', 
+                        data: dataTotalBar, // Data total hanger (angka)
                         
-                        // *** REVISI KODE ***
-                        // Gunakan array angka sederhana, BUKAN object
-                        data: dataTotalBar, 
-                        // Hapus 'parsing' key
+                        // *** REVISI BARU ***
+                        // Selipkan dataTarget ke dalam dataset ini
+                        dataTarget: dataTarget, 
                         
                         borderColor: selectedColor.total, 
                         backgroundColor: selectedColor.total.replace('rgb', 'rgba').replace(')', ', 0.2)'),
@@ -305,20 +310,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         pointRadius: 1, 
                         tension: 0.1,
                         
-                        // *** REVISI KODE (DATALABELS) ***
+                        // *** REVISI BARU (DATALABELS) ***
                         datalabels: { 
                              display: function(context) {
-                                // 'value' sekarang adalah angka (e.g., 1210)
                                 const value = context.dataset.data[context.dataIndex];
                                 return value > 0;
                             },
                             formatter: function(value, context) {
-                                // 'value' adalah angka total (e.g., 1210)
-                                // 'context.dataIndex' adalah posisinya (e.g., 3 untuk tanggal 4)
                                 const index = context.dataIndex;
-                                
-                                // Ambil target dari array 'dataTarget' yang ada di scope atas
-                                const target = dataTarget[index]; 
+                                // Ambil target dari properti kustom 'dataTarget'
+                                const target = context.dataset.dataTarget[index]; 
                                 
                                 if (target > 0) {
                                     const percent = (value / target) * 100;
@@ -326,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                                 return 'N/A'; // Tampilkan N/A jika tidak ada target
                             },
-                            color: '#111', 
+                            color: '#ffffffff', 
                             anchor: 'end',    
                             align: 'end',     
                             offset: -8,       
@@ -382,11 +383,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                         label += ': ';
                                     }
                                     
-                                    // *** REVISI KODE (TOOLTIP) ***
+                                    // *** REVISI BARU (TOOLTIP) ***
                                     if (context.dataset.type === 'line') {
                                         const total = context.parsed.y;
                                         const index = context.dataIndex;
-                                        const target = chartData.datasets[2].dataTarget[index]; // Ambil dari dataTarget
+                                        
+                                        // Ambil target dari properti kustom 'dataTarget'
+                                        const target = context.dataset.dataTarget[index]; 
                                         
                                         label += total;
                                         
@@ -416,20 +419,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             title: { display: true, text: 'Jumlah Hanger' }
                         }
                     }
-                },
-                // *** REVISI: Tambahkan referensi ke dataTarget di objek chart ***
-                // Ini untuk perbaikan Tooltip
-                // (Walaupun idealnya tooltip formatter mengambil dari scope 'processData')
-                // Mari kita coba tanpa ini dulu, seharusnya 'dataTarget' dari scope 'processData' cukup
+                }
             });
-            
-             // *** REVISI KODE (TOOLTIP) ***
-             // Perbaikan untuk tooltip agar bisa baca 'dataTarget'
-             if (chartInstances[instanceKey] && chartData.datasets[2]) {
-                 // Selipkan array dataTarget ke dalam objek dataset line chart
-                 // agar bisa diakses oleh tooltip callback
-                 chartInstances[instanceKey].config.data.datasets[2].dataTarget = chartData.datasets[2].dataTarget;
-             }
         }
         
         /**
@@ -465,23 +456,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     const chartData = processData(chiefData, daysInMonth, chiefName);
                     
-                    // *** REVISI KODE (TOOLTIP) ***
-                    // Selipkan dataTarget ke dalam objek chartData agar bisa dibaca nanti
-                    if (chartData && chartData.datasets[2]) {
-                        chartData.datasets[2].dataTarget = chartData.datasets.find(d => d.type === 'line').data.map((_, i) => {
-                             // Ini agak rumit, kita ambil dataTarget dari scope processData.
-                             // Seharusnya sudah ter-scope.
-                             // Mari kita sederhanakan:
-                             const dataTarget = new Array(daysInMonth).fill(0);
-                             chiefData.forEach(item => {
-                                 const index = new Date(item.tanggal).getUTCDate() - 1;
-                                 if (index >= 0 && index < daysInMonth) {
-                                     dataTarget[index] += item.target_total || item.target || item.target_harian || 0;
-                                 }
-                             });
-                             return dataTarget;
-                        })[0]; // Ambil array-nya
-                    }
+                    // *** REVISI ***
+                    // Hapus kode injeksi 'dataTarget' yang rumit.
+                    // Sudah tidak diperlukan lagi.
                     
                     renderHybridChart(chartId, chartData, loadingId, chartId);
                 
@@ -507,7 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (welcomeMessageEl && karyawanData && karyawanData.nama_lengkap) {
                 welcomeMessageEl.textContent = `Selamat Datang, ${karyawanData.nama_lengkap}!`;
             } else if (welcomeMessageEl && session.user.email) {
-                // Perbaiki typo 'welcomeMessageL'
                 welcomeMessageEl.textContent = `Selamat Datang, ${session.user.email}!`;
             }
 
@@ -535,6 +511,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // PENANDA VERSI BARU
-    console.log("app.js versi 'PERBAIKAN GARIS' BERHASIL DIMUAT.");
+    console.log("app.js versi 'BACA JAM KERJA' BERHASIL DIMUAT.");
 
 }); // <-- Akhir dari pembungkus DOMContentLoaded
