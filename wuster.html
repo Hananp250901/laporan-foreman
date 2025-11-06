@@ -125,11 +125,13 @@
                 
 
                 <form id="wuster-form" class="card">
-                    <h3 id="form-title">Buat Laporan Baru</h3> <div class="form-grid-3">
-                        <div class="input-group"><label for="hari">Hari</label><select id="hari" required><option value="">Pilih Hari...</option><option value="Senin">Senin</option><option value="Selasa">Selasa</option><option value="Rabu">Rabu</option><option value="Kamis">Kamis</option><option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option><option value="Minggu">Minggu</option></select></div>
+                    <h3 id="form-title">Buat Laporan Baru</h3> 
+                    
+                    <div class="form-grid-3">
                         <div class="input-group"><label for="tanggal">Tanggal</label><input type="date" id="tanggal" required></div>
-                        <div class="input-group"><label for="shift">Shift</label><select id="shift" required><option value="">Pilih Shift...</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+                        <div class="input-group"><label for="shift">Shift</label><select id="shift" required><option value="">Pilih Shift...</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
                         <div class="input-group"><label for="chief_name">Nama Chief</label><select id="chief_name"><option value="">( Kosong )</option><option value="YANTO H">YANTO H</option><option value="SUBAGYO">SUBAGYO</option><option value="SARNO">SARNO</option></select></div>
+                        <div class="input-group"><label for="jam_kerja">Jam Kerja (Target)</label><select id="jam_kerja" required><option value="">Pilih Jam Kerja...</option><option value="7 Jam">7 Jam (Target 1680)</option><option value="5 Jam">5 Jam (Target 1200)</option></select></div>
                         <div class="input-group"><label for="total_masuk">Total Masuk (org)</label><input type="number" id="total_masuk" readonly style="background-color: #333;"></div>
                         <div class="input-group"><label for="total_tdk_masuk_org">Total Tdk Masuk (org)</label><input type="number" id="total_tdk_masuk_org" readonly style="background-color: #333;"></div>
                     </div>

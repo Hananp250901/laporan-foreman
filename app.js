@@ -119,15 +119,20 @@ document.addEventListener('DOMContentLoaded', () => {
          * 1. Mengambil semua data wuster dari database
          */
         async function fetchWusterDataForChart() {
+            // Ambil SEMUA kolom (*) agar tidak error 400
             const { data, error } = await _supabase
                 .from('laporan_wuster')
-                // *** REVISI: TAMBAHKAN 'chief_name' ***
-                .select('tanggal, shift, chief_name, perf_wuster_isi, perf_wuster_kosong')
+                .select('*') 
                 .or('status.eq.published,status.is.null')
                 .order('tanggal', { ascending: true });
 
             if (error) {
                 console.error("Error fetching Wuster data:", error);
+                const loadingEls = document.querySelectorAll('.chart-loading');
+                loadingEls.forEach(el => {
+                    el.textContent = `Error: ${error.message}. Gagal mengambil data.`;
+                    el.style.color = 'red';
+                });
                 return [];
             }
             return data;
@@ -176,17 +181,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /**
          * 3. Memproses data mentah menjadi format Chart.js
-         * (Fungsi ini sekarang lebih generik, tidak peduli shift atau chief)
          */
-        function processData(filteredData, daysInMonth) {
+        function processData(filteredData, daysInMonth, chiefName) {
             
+            // Warna Hijau 'Sarno' sudah diubah
+            const colorMap = {
+                'SUBAGYO': {
+                    isi: 'rgba(255, 206, 86, 0.7)', // Kuning
+                    total: 'rgb(255, 206, 86)'
+                },
+                'YANTO H': {
+                    isi: 'rgba(153, 102, 255, 0.7)', // Ungu
+                    total: 'rgb(153, 102, 255)'
+                },
+                'SARNO': {
+                    isi: 'rgba(75, 192, 75, 0.7)', // Hijau
+                    total: 'rgb(75, 192, 75)'      
+                },
+                'default': {
+                    isi: 'rgba(54, 162, 235, 0.7)', // Biru (Default)
+                    total: 'rgb(54, 162, 235)'
+                }
+            };
+
+            // Pilih warna
+            const normalizedName = chiefName ? chiefName.trim().toUpperCase() : 'default';
+            let selectedColor;
+            
+            if (normalizedName.startsWith('SUBAGYO')) {
+                selectedColor = colorMap['SUBAGYO'];
+            } else if (normalizedName.startsWith('YANTO')) { 
+                selectedColor = colorMap['YANTO H'];
+            } else if (normalizedName.startsWith('SARNO')) {
+                selectedColor = colorMap['SARNO'];
+            } else {
+                selectedColor = colorMap['default'];
+            }
+
+
             const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
             const dataIsi = new Array(daysInMonth).fill(0);
             const dataKosong = new Array(daysInMonth).fill(0);
             const dataTotalBar = new Array(daysInMonth).fill(0);
+            const dataTarget = new Array(daysInMonth).fill(0); 
 
-            // Loop semua data yang sudah difilter (misal, cuma data 'Budi')
+            // Loop semua data yang sudah difilter
             filteredData.forEach(item => {
                 const day = new Date(item.tanggal).getUTCDate(); 
                 const index = day - 1; 
@@ -194,15 +234,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (index >= 0 && index < daysInMonth) {
                     dataIsi[index] += item.perf_wuster_isi || 0; 
                     dataKosong[index] += item.perf_wuster_kosong || 0;
+                    
+                    // Cek otomatis kolom target
+                    const targetValue = item.target_total || item.target || item.target_harian || 0;
+                    dataTarget[index] += targetValue;
+                    
+                    // *** REVISI ***
+                    // Hitung total BUKAN di loop terpisah
+                    dataTotalBar[index] += (item.perf_wuster_isi || 0) + (item.perf_wuster_kosong || 0);
                 }
             });
             
-            // Isi array dataTotalBar
-            for (let i = 0; i < daysInMonth; i++) {
-                dataTotalBar[i] = dataIsi[i] + dataKosong[i];
-            }
-
-            const hasData = dataIsi.some(d => d > 0) || dataKosong.some(d => d > 0);
+            const hasData = dataTotalBar.some(d => d > 0);
             
             if (!hasData) {
                 return null; 
@@ -211,12 +254,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return {
                 labels: labels,
                 datasets: [
+                    // ** DATASET UNTUK BAR HANGER ISI **
                     {
                         type: 'bar',
                         label: 'HANGER ISI', 
                         data: dataIsi, 
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)', // Biru
-                        stack: 'A', // Tumpukan Grup A
+                        backgroundColor: selectedColor.isi,
+                        stack: 'A', 
                         datalabels: {
                             color: '#ffffff',
                             anchor: 'center',  
@@ -227,13 +271,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
                     },
+                    // ** DATASET UNTUK BAR HANGER KOSONG **
                     {
                         type: 'bar',
                         label: 'HANGER KOSONG',
                         data: dataKosong,
-                        backgroundColor: 'rgba(201, 203, 207, 0.7)', // Abu-abu
+                        backgroundColor: 'rgba(201, 203, 207, 0.7)', 
                         borderColor: 'rgb(201, 203, 207)',
-                        stack: 'A', // Tumpukan Grup A
+                        stack: 'A', 
                         datalabels: {
                             color: '#333333',
                             anchor: 'center',
@@ -244,16 +289,52 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
                     },
+                    // ** INI DATASET UNTUK GARIS & PERSENTASE **
                     {
-                        type: 'line', 
+                        type: 'line', // <-- Tipe GARIS
                         label: 'TOTAL HANGER', 
+                        
+                        // *** REVISI KODE ***
+                        // Gunakan array angka sederhana, BUKAN object
                         data: dataTotalBar, 
-                        borderColor: 'rgb(75, 192, 192)', // Hijau/Teal
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        // Hapus 'parsing' key
+                        
+                        borderColor: selectedColor.total, 
+                        backgroundColor: selectedColor.total.replace('rgb', 'rgba').replace(')', ', 0.2)'),
                         borderWidth: 3,
                         pointRadius: 1, 
                         tension: 0.1,
-                        datalabels: { display: false }
+                        
+                        // *** REVISI KODE (DATALABELS) ***
+                        datalabels: { 
+                             display: function(context) {
+                                // 'value' sekarang adalah angka (e.g., 1210)
+                                const value = context.dataset.data[context.dataIndex];
+                                return value > 0;
+                            },
+                            formatter: function(value, context) {
+                                // 'value' adalah angka total (e.g., 1210)
+                                // 'context.dataIndex' adalah posisinya (e.g., 3 untuk tanggal 4)
+                                const index = context.dataIndex;
+                                
+                                // Ambil target dari array 'dataTarget' yang ada di scope atas
+                                const target = dataTarget[index]; 
+                                
+                                if (target > 0) {
+                                    const percent = (value / target) * 100;
+                                    return percent.toFixed(1) + ' %';
+                                }
+                                return 'N/A'; // Tampilkan N/A jika tidak ada target
+                            },
+                            color: '#111', 
+                            anchor: 'end',    
+                            align: 'end',     
+                            offset: -8,       
+                            font: { 
+                                weight: 'bold',
+                                size: 11
+                            }
+                        }
                     }
                 ]
             };
@@ -284,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingMessageEl.style.display = 'none'; 
 
             chartInstances[instanceKey] = new Chart(ctx, {
-                type: 'bar', 
+                type: 'bar', // Tipe utama adalah 'bar'
                 data: chartData,
                 options: {
                     responsive: true,
@@ -294,9 +375,34 @@ document.addEventListener('DOMContentLoaded', () => {
                         tooltip: { 
                             mode: 'index', 
                             intersect: false,
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    
+                                    // *** REVISI KODE (TOOLTIP) ***
+                                    if (context.dataset.type === 'line') {
+                                        const total = context.parsed.y;
+                                        const index = context.dataIndex;
+                                        const target = chartData.datasets[2].dataTarget[index]; // Ambil dari dataTarget
+                                        
+                                        label += total;
+                                        
+                                        if (target > 0) {
+                                            const percent = (total / target) * 100;
+                                            label += ` (${percent.toFixed(1)}%)`;
+                                        }
+                                    } else {
+                                        label += context.formattedValue;
+                                    }
+                                    return label;
+                                }
+                            }
                         },
                         datalabels: {
-                            display: false 
+                            display: false // Matikan datalabels global
                         }
                     },
                     scales: {
@@ -305,17 +411,29 @@ document.addEventListener('DOMContentLoaded', () => {
                             title: { display: true, text: 'Tanggal' }
                         },
                         y: {
-                            stacked: true, // WAJIB TRUE agar bar menumpuk
+                            stacked: true, 
                             beginAtZero: true,
                             title: { display: true, text: 'Jumlah Hanger' }
                         }
                     }
-                }
+                },
+                // *** REVISI: Tambahkan referensi ke dataTarget di objek chart ***
+                // Ini untuk perbaikan Tooltip
+                // (Walaupun idealnya tooltip formatter mengambil dari scope 'processData')
+                // Mari kita coba tanpa ini dulu, seharusnya 'dataTarget' dari scope 'processData' cukup
             });
+            
+             // *** REVISI KODE (TOOLTIP) ***
+             // Perbaikan untuk tooltip agar bisa baca 'dataTarget'
+             if (chartInstances[instanceKey] && chartData.datasets[2]) {
+                 // Selipkan array dataTarget ke dalam objek dataset line chart
+                 // agar bisa diakses oleh tooltip callback
+                 chartInstances[instanceKey].config.data.datasets[2].dataTarget = chartData.datasets[2].dataTarget;
+             }
         }
         
         /**
-         * 5. Fungsi utama untuk mengupdate semua chart (DITULIS ULANG)
+         * 5. Fungsi utama untuk mengupdate semua chart
          */
         function updateAllCharts() {
             const selectedMonth = document.getElementById('month-filter').value;
@@ -331,41 +449,45 @@ document.addEventListener('DOMContentLoaded', () => {
             const [year, month] = selectedMonth.split('-').map(Number);
             const daysInMonth = new Date(year, month, 0).getDate();
 
-            // *** REVISI: CARI NAMA CHIEF DARI DATA ***
-            // 1. Ambil semua nama chief dari data bulan ini
-            // 2. filter(Boolean) untuk hapus nama yg null atau ""
-            // 3. new Set(...) untuk ambil unik-nya saja
-            // 4. ...new Set(...) ubah Set jadi array
-            // 5. .slice(0, 3) ambil 3 nama pertama
             const chiefNames = [...new Set(monthlyData.map(d => d.chief_name).filter(Boolean))].slice(0, 3);
 
-            // Loop 3 kali (untuk 3 slot chart)
             for (let i = 0; i < 3; i++) {
-                const chiefName = chiefNames[i]; // Ambil nama (e.g., 'Budi')
+                const chiefName = chiefNames[i]; 
                 
-                // Siapkan ID elemen HTML
-                const chartId = `chart-${i + 1}`;       // e.g., 'chart-1'
-                const loadingId = `loading-chart-${i + 1}`; // e.g., 'loading-chart-1'
-                const titleId = `title-chart-${i + 1}`;   // e.g., 'title-chart-1'
+                const chartId = `chart-${i + 1}`;       
+                const loadingId = `loading-chart-${i + 1}`; 
+                const titleId = `title-chart-${i + 1}`;   
                 const titleEl = document.getElementById(titleId);
 
                 if (chiefName && titleEl) {
-                    // Jika ada nama chief untuk slot ini
                     titleEl.textContent = `Performa Wuster - ${chiefName}`;
-                    
-                    // Filter data hanya untuk chief ini
                     const chiefData = monthlyData.filter(d => d.chief_name === chiefName);
                     
-                    // Proses data chief
-                    const chartData = processData(chiefData, daysInMonth);
+                    const chartData = processData(chiefData, daysInMonth, chiefName);
                     
-                    // Render grafiknya
+                    // *** REVISI KODE (TOOLTIP) ***
+                    // Selipkan dataTarget ke dalam objek chartData agar bisa dibaca nanti
+                    if (chartData && chartData.datasets[2]) {
+                        chartData.datasets[2].dataTarget = chartData.datasets.find(d => d.type === 'line').data.map((_, i) => {
+                             // Ini agak rumit, kita ambil dataTarget dari scope processData.
+                             // Seharusnya sudah ter-scope.
+                             // Mari kita sederhanakan:
+                             const dataTarget = new Array(daysInMonth).fill(0);
+                             chiefData.forEach(item => {
+                                 const index = new Date(item.tanggal).getUTCDate() - 1;
+                                 if (index >= 0 && index < daysInMonth) {
+                                     dataTarget[index] += item.target_total || item.target || item.target_harian || 0;
+                                 }
+                             });
+                             return dataTarget;
+                        })[0]; // Ambil array-nya
+                    }
+                    
                     renderHybridChart(chartId, chartData, loadingId, chartId);
                 
                 } else if (titleEl) {
-                    // Jika tidak ada nama chief (misal, cuma ada 2 chief)
                     titleEl.textContent = 'Tidak Ada Data';
-                    renderHybridChart(chartId, null, loadingId, chartId); // Tampilkan pesan 'Tidak ada data'
+                    renderHybridChart(chartId, null, loadingId, chartId); 
                 }
             }
         }
@@ -385,27 +507,34 @@ document.addEventListener('DOMContentLoaded', () => {
             if (welcomeMessageEl && karyawanData && karyawanData.nama_lengkap) {
                 welcomeMessageEl.textContent = `Selamat Datang, ${karyawanData.nama_lengkap}!`;
             } else if (welcomeMessageEl && session.user.email) {
+                // Perbaiki typo 'welcomeMessageL'
                 welcomeMessageEl.textContent = `Selamat Datang, ${session.user.email}!`;
             }
 
             try {
                 allWusterData = await fetchWusterDataForChart();
-                populateMonthFilter(allWusterData);
-                updateAllCharts();
+                
+                if (allWusterData.length > 0) {
+                    populateMonthFilter(allWusterData);
+                    updateAllCharts();
 
-                const monthFilterEl = document.getElementById('month-filter');
-                if(monthFilterEl) {
-                    monthFilterEl.onchange = updateAllCharts;
+                    const monthFilterEl = document.getElementById('month-filter');
+                    if(monthFilterEl) {
+                        monthFilterEl.onchange = updateAllCharts;
+                    }
+                } else {
+                    console.warn("Tidak ada data Wuster yang diterima.");
                 }
 
             } catch (error) {
-                 console.error("Gagal memuat data dashboard:", error);
+                 console.error("Gagal total memuat dashboard:", error);
                  document.getElementById('loading-chart-1').textContent = 'Gagal memuat data.';
-                 document.getElementById('loading-chart-2').textContent = 'Gagal memuat data.';
-                 document.getElementById('loading-chart-3').textContent = 'Gagal memuat data.';
             }
 
         })();
     }
+
+    // PENANDA VERSI BARU
+    console.log("app.js versi 'PERBAIKAN GARIS' BERHASIL DIMUAT.");
 
 }); // <-- Akhir dari pembungkus DOMContentLoaded

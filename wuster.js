@@ -2,6 +2,34 @@
 // D. LOGIKA HALAMAN WUSTER (wuster.html)
 // =================================================================
 
+// *** FUNGSI HELPER BARU ***
+// Untuk mengubah string tanggal "YYYY-MM-DD" menjadi nama hari (cth: "Selasa")
+function getDayNameFromDate(dateString) {
+    if (!dateString) return "";
+    try {
+        // Tambahkan 'T12:00:00' untuk menghindari masalah timezone
+        // yang membuat tanggal mundur 1 hari
+        const date = new Date(dateString + 'T12:00:00');
+        return date.toLocaleString('id-ID', { weekday: 'long' });
+    } catch (e) {
+        console.error("Error parsing date:", e);
+        return "";
+    }
+}
+
+// *** FUNGSI HELPER BARU (TAMBAHAN ANDA) ***
+// Untuk mengubah "YYYY-MM-DD" menjadi "DD-MM-YYYY"
+function formatDate_DDMMYYYY(dateString) {
+    if (!dateString || dateString.length < 10) return dateString; // Fallback
+    try {
+        const [year, month, day] = dateString.split('-');
+        return `${day}-${month}-${year}`;
+    } catch (e) {
+        return dateString; // Fallback jika format salah
+    }
+}
+
+
 // Pastikan semua HTML sudah siap sebelum menjalankan kode
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -289,13 +317,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const { jsPDF } = window.jspdf;
         try {
+            // *** REVISI ***: Ambil juga 'jam_kerja'
             const { data: report, error } = await _supabase.from('laporan_wuster').select('*').eq('id', reportId).single();
             if (error) throw new Error(`Gagal mengambil data laporan: ${error.message}`);
             
-            // Kalkulasi Performa
-            let target = 1680; 
-            if (report.hari === 'Sabtu') target = 1200;
-            if (report.hari === 'Minggu') target = 0;
+            // *** REVISI ***
+            // Kalkulasi Performa berdasarkan 'jam_kerja'
+            let target = 0;
+            if (report.jam_kerja === '7 Jam') {
+                target = 1680;
+            } else if (report.jam_kerja === '5 Jam') {
+                target = 1200;
+            }
+            // Jika 'Lainnya' atau null, target tetap 0
+
             const isi = report.perf_wuster_isi || 0;
             const kosong = report.perf_wuster_kosong || 0;
             const total = isi + kosong;
@@ -319,14 +354,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.row.section === 'body' && data.cell.text[0].toLowerCase().includes('total')) {
                     data.cell.styles.fontStyle = 'bold';
                     data.cell.styles.fillColor = '#f5f5f5'; 
-                    // === REVISI: BUAT TOTAL RATA TENGAH JUGA ===
                     if (data.column.index === 1) {
                          data.cell.styles.halign = 'center';
                     }
                 }
             };
 
-            // === REVISI 1: BUAT WARNA TEKS HITAM PEKAT ===
             const tableStyles = {
                 theme: 'grid', 
                 styles: { 
@@ -335,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cellPadding: 1,  
                     valign: 'middle',
                     font: 'PTSans',
-                    textColor: [0, 0, 0] // <-- HITAM PEKAT
+                    textColor: [0, 0, 0] // Hitam Pekat
                 }, 
                 headStyles: { 
                     fillColor: [41, 128, 185], 
@@ -356,14 +389,18 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.setFontSize(15); doc.text("LAPORAN AKHIR SHIFT", doc.internal.pageSize.width / 2, 14, { align: 'center' });
             doc.setFont('PTSans', 'normal');
             doc.setFontSize(8); 
-            doc.setTextColor(0, 0, 0); // <-- HITAM PEKAT UNTUK HEADER
-            doc.text("HARI", col1X, 22); doc.text(`: ${report.hari || ''}`, col1X + 30, 22);
-            doc.text("TANGGAL", col1X, 26); doc.text(`: ${report.tanggal || ''}`, col1X + 30, 26);
-            doc.text("SHIFT", col1X, 30); doc.text(`: ${report.shift || ''}`, col1X + 30, 30);
-            doc.text("TOTAL MASUK", col1X, 34); doc.text(`: ${report.total_masuk || 0} Orang`, col1X + 30, 34);
-            doc.text("TOTAL TDK MASUK", col1X, 38); doc.text(`: ${report.total_tdk_masuk_org || 0} Orang`, col1X + 30, 38);
+            doc.setTextColor(0, 0, 0);
             
-            // --- BLOK PERFORMA ---
+            // *** REVISI ***: Gabungkan Hari dan Tanggal (Format DD-MM-YYYY)
+            const hari = report.hari || getDayNameFromDate(report.tanggal) || '';
+            const tanggalFormatted = formatDate_DDMMYYYY(report.tanggal); // <- PANGGIL FUNGSI BARU
+            doc.text("TANGGAL", col1X, 22); doc.text(`: ${hari}, ${tanggalFormatted}`, col1X + 30, 22);
+            // Hapus baris 'HARI', geser semua ke atas
+            doc.text("SHIFT", col1X, 26); doc.text(`: ${report.shift || ''}`, col1X + 30, 26);
+            doc.text("TOTAL MASUK", col1X, 30); doc.text(`: ${report.total_masuk || 0} Orang`, col1X + 30, 30);
+            doc.text("TOTAL TDK MASUK", col1X, 34); doc.text(`: ${report.total_tdk_masuk_org || 0} Orang`, col1X + 30, 34);
+            
+            // --- BLOK PERFORMA (Geser ke atas) ---
             const labelOffset = col2X + 30; 
             doc.setFont('PTSans', 'normal');
             doc.text("Target Total", col2X, 22); doc.text(`: ${target.toLocaleString('id-ID')} hanger`, labelOffset, 22);
@@ -374,9 +411,9 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.text("Performance", col2X, 38); doc.text(`: ${performance.toFixed(1)} %`, labelOffset, 38);
             doc.setFont('PTSans', 'normal');
 
-            // --- TABEL ABSENSI ---
+            // --- TABEL ABSENSI (Geser Y ke atas) ---
             doc.autoTable({
-                startY: 41, 
+                startY: 41, // Tetap 41 (karena TDK MASUK butuh space)
                 head: [['ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
                 body: [
                     ['STAFF', report.abs_staff_masuk || 0, report.abs_staff_tdk_masuk || ''], 
@@ -392,10 +429,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 didParseCell: boldTotalRow, 
                 margin: { left: marginX }, 
                 tableWidth: fullWidth, 
-                // === REVISI 2: BUAT ANGKA ABSENSI RATA TENGAH ===
                 columnStyles: { 
                     0: { cellWidth: 60 }, 
-                    1: { cellWidth: 25, halign: 'center' }, // <-- RATA TENGAH
+                    1: { cellWidth: 25, halign: 'center' }, 
                     2: { cellWidth: 105 } 
                 }
             });
@@ -422,10 +458,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: items, 
                     margin: { left: startX }, 
                     tableWidth: width, 
-                    // === REVISI 3: BUAT ANGKA QTY RATA TENGAH ===
                     columnStyles: { 
                         0: { cellWidth: nameWidth }, 
-                        1: { cellWidth: 26, halign: 'center' } // <-- RATA TENGAH
+                        1: { cellWidth: 26, halign: 'center' } 
                     }, 
                     didParseCell: boldTotalRow 
                 });
@@ -442,12 +477,10 @@ document.addEventListener('DOMContentLoaded', () => {
             leftY = drawSingleTable('Trouble Mesin', report.trouble_mesin_notes || '', leftY + marginYSmall, col1X);
 
             const prodTotal = (report.total_prod_fresh || 0) + (report.total_prod_repair || 0) + (report.total_prod_ng || 0);
-            // === REVISI 4: BUAT ANGKA TOTAL RATA TENGAH ===
-            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']], body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } }); // <-- RATA TENGAH
+            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']], body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } }); 
 
             const checkTotal = (report.total_check_ok || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
-            // === REVISI 4: BUAT ANGKA TOTAL RATA TENGAH ===
-            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } }); // <-- RATA TENGAH
+            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } }); 
             
             // --- BAGIAN MENGGAMBAR TABEL (KANAN) ---
             let rightY = startY2Col; 
@@ -456,10 +489,8 @@ document.addEventListener('DOMContentLoaded', () => {
             rightY = drawDynamicListTable('Hasil Buka Cap', report.hasil_buka_cap_notes || '', rightY + marginYSmall, col2X);
             
             const wusterTotal = (report.perf_wuster_isi || 0) + (report.perf_wuster_kosong || 0);
-            // === REVISI 4: BUAT ANGKA TOTAL RATA TENGAH ===
-            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']], body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } }); // <-- RATA TENGAH
+            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']], body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } }); 
             
-            // === REVISI 4: BUAT ANGKA TOTAL RATA TENGAH ===
             doc.autoTable({ 
                 startY: rightY + marginYSmall, 
                 head: [['LAIN-LAIN', 'Catatan']], 
@@ -468,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 didParseCell: boldTotalRow,
                 margin: { left: col2X }, 
                 tableWidth: colWidth, 
-                columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } // <-- RATA TENGAH
+                columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } 
             });
             rightY = doc.autoTable.previous.finalY; 
             
@@ -484,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             doc.setFont('PTSans', 'normal');
             doc.setFontSize(8);
-            doc.setTextColor(0, 0, 0); // <-- HITAM PEKAT UNTUK FOOTER
+            doc.setTextColor(0, 0, 0); 
             doc.text("Dibuat,", col1X, finalY); 
             doc.text(preparerName, col1X, finalY + 10); 
             doc.text("Foreman", col1X, finalY + 14); 
@@ -494,6 +525,18 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.text("Mengetahui,", doc.internal.pageSize.width - marginX, finalY, { align: 'right' }); 
             doc.text("SINGGIH E W", doc.internal.pageSize.width - marginX, finalY + 10, { align: 'right' }); 
             doc.text("Dept Head", doc.internal.pageSize.width - marginX, finalY + 14, { align: 'right' }); 
+
+
+            // *** TAMBAHAN BINGKAI ***
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+            const margin = 8; // Margin 8mm
+            
+            doc.setLineWidth(0.5); // Ketebalan garis 0.5mm
+            doc.setDrawColor(0, 0, 0); // Warna hitam
+            doc.rect(margin, margin, pageWidth - (margin * 2), pageHeight - (margin * 2));
+            // *** AKHIR TAMBAHAN BINGKAI ***
+
 
             doc.save(`Laporan_Wuster_${report.tanggal}_Shift${report.shift}.pdf`);
         } catch (error) {
@@ -632,10 +675,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Isi semua field
-        document.getElementById('hari').value = report.hari;
+        // *** REVISI ***: 'hari' tidak di-load, 'jam_kerja' di-load
+        // document.getElementById('hari').value = report.hari; // <- HAPUS
         document.getElementById('tanggal').value = report.tanggal;
         document.getElementById('shift').value = report.shift;
         document.getElementById('chief_name').value = report.chief_name;
+        document.getElementById('jam_kerja').value = report.jam_kerja; // <- TAMBAH
         document.getElementById('total_masuk').value = report.total_masuk;
         document.getElementById('total_tdk_masuk_org').value = report.total_tdk_masuk_org; 
         document.getElementById('abs_staff_masuk').value = report.abs_staff_masuk;
@@ -714,12 +759,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Hitung ulang semua total (jadi 0)
     calculateAllTotals();
-        // Kembalikan teks tombol dan judul
-        formTitleEl.textContent = 'Buat Laporan Baru';
-        mainSubmitBtn.textContent = 'Simpan Laporan Final';
-        saveDraftBtn.textContent = 'Simpan Draft';
-        cancelEditBtn.style.display = 'none'; 
-        formMessageEl.textContent = '';
+        
+    // *** REVISI ***
+    // 'jam_kerja' direset, 'hari' tidak ada
+    document.getElementById('jam_kerja').value = ""; // <- TAMBAH
+        
+    // Kembalikan teks tombol dan judul
+    formTitleEl.textContent = 'Buat Laporan Baru';
+    mainSubmitBtn.textContent = 'Simpan Laporan Final';
+    saveDraftBtn.textContent = 'Simpan Draft';
+    cancelEditBtn.style.display = 'none'; 
+    formMessageEl.textContent = '';
     }
 
     // Event listener untuk tombol "Batal Edit"
@@ -730,10 +780,16 @@ document.addEventListener('DOMContentLoaded', () => {
      * FUNGSI BARU: Mengumpulkan semua data form ke 1 objek
      */
     function getFormData() {
+        // *** REVISI ***: Ambil tanggal, hitung hari, ambil jam_kerja
+        const tanggalValue = document.getElementById('tanggal').value;
+        const hariValue = getDayNameFromDate(tanggalValue); // <- Otomatis hitung hari
+        const jamKerjaValue = document.getElementById('jam_kerja').value; // <- Ambil jam kerja
+        
         return {
             user_id: currentUser.id,
-            hari: document.getElementById('hari').value,
-            tanggal: document.getElementById('tanggal').value,
+            hari: hariValue, // <- Simpan hari yang dihitung
+            tanggal: tanggalValue,
+            jam_kerja: jamKerjaValue, // <- Simpan jam kerja
             shift: parseInt(document.getElementById('shift').value),
             chief_name: document.getElementById('chief_name').value,
             total_masuk: parseInt(document.getElementById('total_masuk').value),
@@ -795,6 +851,13 @@ document.addEventListener('DOMContentLoaded', () => {
         formMessageEl.textContent = 'Menyimpan...';
 
         const laporanData = getFormData();
+        
+        // Validasi
+        if (!laporanData.tanggal || !laporanData.shift || !laporanData.jam_kerja) {
+            formMessageEl.textContent = 'Error: Tanggal, Shift, dan Jam Kerja wajib diisi.';
+            return;
+        }
+        
         laporanData.status = isDraft ? 'draft' : 'published'; 
 
         let error;
@@ -842,7 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // (Event listener pagination tidak berubah)
     prevButton.addEventListener('click', () => { if (currentPage > 1) { currentPage--; loadWusterHistory(); } });
-    nextButton.addEventListener('click', () => { const totalPages = Math.ceil(totalReports / itemsPerPage); if (currentPage < totalPages) { currentPage++; loadWusterHistory(); } });
+    nextButton.addEventListener('click', () => { const totalPages = Math.ceil(totalReports / itemsPerPage); if (currentPage < totalPages) { currentPage++; loadWWusterHistory(); } });
 
     /**
      * Fungsi Inisialisasi Halaman
