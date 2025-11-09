@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Produksi Harian - Painting</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --border-color: #bdc3c7;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .header h2 {
+            color: var(--secondary-color);
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        
+        .header h3 {
+            color: var(--accent-color);
+            font-size: 18px;
+            font-weight: normal;
+        }
+        
+        .form-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: var(--light-color);
+        }
+        
+        .section-title {
+            font-size: 18px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus, 
+        .form-group select:focus, 
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 11px;
+        }
+        
+        table th, table td {
+            border: 1px solid var(--border-color);
+            padding: 6px 8px;
+            text-align: center;
+        }
+        
+        table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+        
+        table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #219653;
+        }
+        
+        .table-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-size: 11px;
+            padding: 4px;
+        }
+        
+        .table-input:focus {
+            outline: none;
+            background-color: #fff;
+            border: 1px solid var(--secondary-color);
+        }
+        
+        .table-input[type="number"] {
+            min-width: 50px;
+        }
+        .table-input[type="text"] {
+            min-width: 100px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .summary-item label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .form-group {
+                min-width: 100%;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            table {
+                font-size: 9px;
+            }
+            
+            table th, table td {
+                padding: 3px 4px;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>DEPARTEMENT</h1>
+            <h2>PAINTING PRODUCTION DAILY CONTROL</h2>
+            <h3>LOGS TIME & PERFORMANCE MONITORING (OTRAPER)</h3>
+        </div>
+        
+        <form id="production-report-form">
+            <div class="form-section">
+                <h3 class="section-title">Informasi Umum</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tanggal">Tanggal</label>
+                        <input type="date" id="tanggal" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="jam-kerja">Jam Kerja</label>
+                        <select id="jam-kerja" required>
+                            <option value="">Pilih Jam Kerja</option>
+                            <option value="7">7 Jam Kerja (8 slots)</option>
+                            <option value="5">5 Jam Kerja (5 slots)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="shift">Shift</label>
+                        <select id="shift" required>
+                            <option value="">Pilih Shift</option>
+                            <option value="1">Shift 1</option>
+                            <option value="2">Shift 2</option>
+                            <option value="3">Shift 3</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="c-t">C/T</label>
+                        <input type="text" id="c-t" value="0.27">
+                    </div>
+                    <div class="form-group">
+                        <label for="efisiensi">Efisiensi</label>
+                        <input type="text" id="efisiensi" value="100%">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3 class="section-title">Monitoring Produksi</h3>
+                
+                <div class="table-responsive">
+                    <table id="production-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="3">NO</th>
+                                <th rowspan="3">Hourly</th>
+                                <th rowspan="3">Start</th>
+                                <th rowspan="3">End</th>
+                                <th colspan="2">Hange Number</th>
+                                <th colspan="8">Quantity Hanger</th>
+                                <th rowspan="3">TROUBLE REASON</th>
+                            </tr>
+                            <tr>
+                                <th rowspan="2">Start</th>
+                                <th rowspan="2">Finish</th>
+                                <th colspan="2">GAP</th>
+                                <th colspan="2">FILLED</th>
+                                <th colspan="2">EMPETT</th>
+                                <th colspan="2">LOSS</th>
+                            </tr>
+                            <tr>
+                                <th>GAP</th>
+                                <th>ACC. GAP</th>
+                                <th>FILLED</th>
+                                <th>ACC. FILLED</th>
+                                <th>EMPETT</th>
+                                <th>ACC. EMPETY</th>
+                                <th>LOSS</th>
+                                <th>ACC. LOSS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3 class="section-title">Komentar & Catatan</h3>
+                <div class="comment-section">
+                    <div class="form-group">
+                        <label for="comment">Comment</label>
+                        <textarea id="comment" placeholder="Masukkan komentar atau catatan tambahan"></textarea>
+                    </div>
+                </div>
+                
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <label for="logs-time">Logs Time</label>
+                        <input type="text" id="logs-time" value="8">
+                    </div>
+                    <div class="summary-item">
+                        <label for="ir-mt">IR/Mt</label>
+                        <input type="text" id="ir-mt">
+                    </div>
+                    <div class="summary-item">
+                        <label for="hanger">Hanger</label>
+                        <input type="text" id="hanger">
+                    </div>
+                    <div class="summary-item">
+                        <label for="tgrn">TGRN</label>
+                        <input type="text" id="tgrn" value="90.0 UNS">
+                    </div>
+                    <div class="summary-item">
+                        <label for="calcium">Calcium</label>
+                        <input type="text" id="calcium">
+                    </div>
+                    <div class="summary-item">
+                        <label for="mags-trg">8 - Mags-Trg</label>
+                        <input type="text" id="mags-trg">
+                    </div>
+                    <div class="summary-item">
+                        <label for="valstar">Valstar</label>
+                        <input type="text" id="valstar">
+                    </div>
+                    <div class="summary-item">
+                        <label for="hanger-isi">Hanger ISI</label>
+                        <input type="text" id="hanger-isi" value="3">
+                    </div>
+                    <div class="summary-item">
+                        <label for="fres">FRes</label>
+                        <input type="text" id="fres">
+                    </div>
+                    <div class="summary-item">
+                        <label for="hanger-nosun">Hanger Nosun</label>
+                        <input type="text" id="hanger-nosun" value="3">
+                    </div>
+                    <div class="summary-item">
+                        <label for="remp">REMP</label>
+                        <input type="text" id="remp">
+                    </div>
+                    <div class="summary-item">
+                        <label for="total">TOTAL</label>
+                        <input type="text" id="total" value="2">
+                    </div>
+                    <div class="summary-item">
+                        <label for="ivs">IVs</label>
+                        <input type="text" id="ivs">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" id="btn-save" class="btn-primary">Simpan Data</button>
+                <button type="button" id="btn-generate-pdf" class="btn-success">Generate PDF (Landscape)</button>
+                <button type="reset" class="btn-secondary">Reset Form</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="hanger-script.js" defer></script>
+</body>
+</html>

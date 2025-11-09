@@ -223,7 +223,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const dataIsi = new Array(daysInMonth).fill(0);
             const dataKosong = new Array(daysInMonth).fill(0);
-            const dataTotalBar = new Array(daysInMonth).fill(0);
+            // <<< PERUBAHAN 1: Inisialisasi data GARIS dengan 'null' bukan '0'
+            const dataTotalBar = new Array(daysInMonth).fill(null); 
             const dataTarget = new Array(daysInMonth).fill(0); 
 
             // Loop semua data yang sudah difilter
@@ -232,6 +233,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const index = day - 1; 
 
                 if (index >= 0 && index < daysInMonth) {
+                    
+                    // <<< PERUBAHAN 2: Jika hari ini 'null', ubah ke 0 dulu sebelum ditambah
+                    if (dataTotalBar[index] === null) {
+                        dataTotalBar[index] = 0;
+                    }
+                    
                     dataIsi[index] += item.perf_wuster_isi || 0; 
                     dataKosong[index] += item.perf_wuster_kosong || 0;
                     
@@ -250,7 +257,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             
-            const hasData = dataTotalBar.some(d => d > 0);
+            // <<< PERUBAHAN: Modifikasi pengecekan data
+            // Cek jika dataTotalBar memiliki nilai selain null
+            const hasData = dataTotalBar.some(d => d !== null); 
             
             if (!hasData) {
                 return null; 
@@ -310,11 +319,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         pointRadius: 1, 
                         tension: 0.1,
                         
+                        // <<< PERUBAHAN 3: Tambahkan 'spanGaps: true'
+                        // Ini akan membuat garis melompati nilai 'null'
+                        spanGaps: true, 
+                        
                         // *** REVISI BARU (DATALABELS) ***
                         datalabels: { 
                              display: function(context) {
+                                // <<< PERUBAHAN: Cek 'value > 0' (value null akan false)
                                 const value = context.dataset.data[context.dataIndex];
-                                return value > 0;
+                                return value > 0; 
                             },
                             formatter: function(value, context) {
                                 const index = context.dataIndex;
@@ -385,6 +399,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                     
                                     // *** REVISI BARU (TOOLTIP) ***
                                     if (context.dataset.type === 'line') {
+                                        // <<< PERUBAHAN: Cek jika value bukan null
+                                        if (context.parsed.y === null) {
+                                            return null; // Jangan tampilkan tooltip untuk data null
+                                        }
+                                        
                                         const total = context.parsed.y;
                                         const index = context.dataIndex;
                                         
@@ -398,6 +417,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                             label += ` (${percent.toFixed(1)}%)`;
                                         }
                                     } else {
+                                        // <<< PERUBAHAN: Cek jika value bukan 0 untuk bar
+                                        if (context.parsed.y === 0) {
+                                            return null; // Sembunyikan tooltip untuk bar 0
+                                        }
                                         label += context.formattedValue;
                                     }
                                     return label;
