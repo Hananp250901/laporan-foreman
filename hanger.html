@@ -154,7 +154,6 @@
         .btn-success { background-color: var(--success-color); color: white; }
         .btn-success:hover { background-color: #219653; }
         
-        /* TOMBOL BARU UNTUK DRAFT */
         .btn-draft { background-color: var(--draft-color); color: #333; }
         .btn-draft:hover { background-color: #e6b800; }
         
@@ -192,7 +191,6 @@
         .signature-col p { margin: 0; padding: 0; font-weight: 600; }
         .signature-col .name { margin-top: 60px; font-weight: bold; text-decoration: underline; }
         
-        /* --- STYLE BARU UNTUK RIWAYAT & DRAFT --- */
         .history-actions {
             display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;
         }
@@ -208,12 +206,10 @@
         .btn-delete-draft { background-color: var(--accent-color); }
         .btn-delete-draft:hover { background-color: #a93226; }
 
-        /* Style untuk tabel draft */
         #hanger-draft-table th {
              background-color: var(--draft-color);
              color: #333;
         }
-         /* --- AKHIR STYLE BARU --- */
 
         @media (max-width: 768px) {
             .form-row { flex-direction: column; }
@@ -233,8 +229,9 @@
         <a href="dashboard.html" class="btn-back">&larr; Kembali ke Dashboard</a>
 
         <div class="header">
+            <h1>DEPARTEMENT</h1>
             <h2>PAINTING PRODUCTION DAILY CONTROL</h2>
-            <h3>LOSS TIME & PERFORMANCE MONITORING (OTR&PER)</h3>
+            <h3>LOGS TIME & PERFORMANCE MONITORING (OTRAPER)</h3>
         </div>
 
         <div class="form-section" style="margin-bottom: 2rem; background-color: #fff;">
@@ -256,6 +253,7 @@
                 </table>
             </div>
         </div>
+        
         <form id="production-report-form">
             <h3 class="section-title" id="form-title" style="font-size: 20px; text-align: center;">Buat Laporan Baru</h3>
 
@@ -270,8 +268,8 @@
                         <label for="jam-kerja">Jam Kerja</label>
                         <select id="jam-kerja" required>
                             <option value="">Pilih Jam Kerja</option>
-                            <option value="7">7 Jam Kerja (8 slots)</option>
-                            <option value="5">5 Jam Kerja (5 slots)</option>
+                            <option value="7">7 Jam Kerja</option>
+                            <option value="5">5 Jam Kerja</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -302,7 +300,11 @@
                         <label for="efisiensi">Efisiensi</label>
                         <input type="text" id="efisiensi" value="100%">
                     </div>
-                </div>
+                    <div class="form-group">
+                        <label for="target-per-jam">Target per Jam</label>
+                        <input type="number" id="target-per-jam" value="224">
+                    </div>
+                     </div>
             </div>
             
             <div class="form-section">
@@ -350,11 +352,11 @@
                     <div class="summary-box">
                         <div class="summary-item">
                             <label for="loss-time-menit">Loss Time (Menit)</label>
-                            <input type="number" id="loss-time-menit">
+                            <input type="number" id="loss-time-menit" value="0">
                         </div>
                         <div class="summary-item">
                             <label for="loss-time-hanger">Loss Time (Hanger)</label>
-                            <input type="number" id="loss-time-hanger">
+                            <input type="number" id="loss-time-hanger" value="0">
                         </div>
                          <div class="summary-item">
                             <label for="hanger-isi">Hanger ISI</label>
@@ -417,8 +419,7 @@
                     </div>
                 </div>
             </div>
-
-            <div class_id="form-message" style="text-align: center; margin: 10px 0; font-weight: bold;"></div>
+            
             <p id="form-message" style="text-align: center; margin: 10px 0; font-weight: bold;"></p>
             <div class="button-group">
                 <button type="button" id="btn-save-draft" class="btn-draft">Simpan Draft</button>
@@ -438,9 +439,11 @@
                             <th>Jam Kerja</th>
                             <th>Total Hanger</th>
                             <th>Dibuat</th>
-                            <th>Aksi</th> </tr>
+                            <th>Aksi</th>
+                        </tr>
                     </thead>
-                    <tbody id="hanger-history-tbody"> <tr><td colspan="6">Memuat riwayat...</td></tr>
+                    <tbody id="hanger-history-tbody">
+                        <tr><td colspan="6">Memuat riwayat...</td></tr>
                     </tbody>
                 </table>
             </div>

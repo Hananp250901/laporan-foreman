@@ -13,10 +13,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // --- Variabel Global ---
     let loggedInUserName = "[Nama Login]"; 
-    let currentUser = null; // <- BARU
-    let currentlyEditingId = null; // <- BARU
+    let currentUser = null; 
+    let currentlyEditingId = null; 
 
-    // --- Definisi Slot Waktu & Target ---
+    // --- Definisi Slot Waktu (Target di-HAPUS) ---
     const timeSlots = {
         '7': {
             '1': ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00'],
@@ -29,26 +29,20 @@ document.addEventListener('DOMContentLoaded', function() {
             '3': ['18:00-19:00', '19:00-20:00', '20:00-21:00', '21:00-22:00', '22:00-23:00']
         }
     };
-    const targetValues = {
-        '7': [
-            { start: 0, end: 224 }, { start: 224, end: 448 }, { start: 448, end: 672 },
-            { start: 672, end: 896 }, { start: 896, end: 1120 }, { start: 1120, end: 1344 },
-            { start: 1344, end: 1568 }, { start: 1568, end: 1792 }
-        ],
-        '5': [
-            { start: 0, end: 224 }, { start: 224, end: 448 }, { start: 448, end: 672 },
-            { start: 672, end: 896 }, { start: 896, end: 1120 }
-        ]
-    };
+    
+    // 'targetValues' object dihapus
     
     // --- Ambil elemen UI ---
-    const productionReportForm = document.getElementById('production-report-form'); // <- BARU
+    const productionReportForm = document.getElementById('production-report-form');
     const jamKerjaEl = document.getElementById('jam-kerja');
     const shiftEl = document.getElementById('shift');
     const chiefNameEl = document.getElementById('chief-name');
     const productionTable = document.getElementById('production-table').getElementsByTagName('tbody')[0];
     
-    // Tombol Form (BARU)
+    // Input Target BARU
+    const targetPerJamEl = document.getElementById('target-per-jam');
+
+    // Tombol Form
     const saveFinalButton = document.getElementById('btn-save-final');
     const saveDraftButton = document.getElementById('btn-save-draft');
     const cancelEditButton = document.getElementById('btn-cancel-edit');
@@ -64,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const nextButton = document.getElementById('next-page-btn');
     const pageInfo = document.getElementById('page-info');
 
-    // Draft (BARU)
+    // Draft
     const draftTbody = document.getElementById('hanger-draft-tbody');
 
     // =============================================
@@ -87,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return; 
         }
 
-        currentUser = session.user; // <- SIMPAN USER
+        currentUser = session.user; 
 
         try {
             const { data: karyawanData, error } = await _supabase
@@ -123,9 +117,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
-            const filled = parseFloat(row.querySelector('[data-col="filled"]').value) || '';
-            const empty = parseFloat(row.querySelector('[data-col="empty"]').value) || '';
-            const loss = parseFloat(row.querySelector('[data-col="loss"]').value) || '';
+            const filled = parseFloat(row.querySelector('[data-col="filled"]').value) || 0;
+            const empty = parseFloat(row.querySelector('[data-col="empty"]').value) || 0;
+            const loss = parseFloat(row.querySelector('[data-col="loss"]').value) || 0;
             
             const gap = filled + empty;
             const accGap = gap + prevAccGap;
@@ -159,22 +153,65 @@ document.addEventListener('DOMContentLoaded', function() {
         if (readOnly) input.readOnly = true;
         cell.appendChild(input);
     }
+    
+    /**
+     * FUNGSI BARU: Mengupdate kolom Start & End saat Target per Jam diubah
+     */
+    function updateStartEndColumns() {
+        const hourlyTarget = parseFloat(targetPerJamEl.value) || 0;
+        const rows = productionTable.getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const startInput = row.querySelector('[data-col="target-start"]');
+            const endInput = row.querySelector('[data-col="target-end"]');
+            
+            if (startInput && endInput) {
+                startInput.value = i * hourlyTarget;
+                endInput.value = (i + 1) * hourlyTarget;
+            }
+        }
+    }
 
     /**
-     * Mengisi ulang seluruh tabel produksi
+     * Mengisi ulang seluruh tabel produksi (LOGIKA DIPERBARUI)
      */
-    function populateProductionTable(slots, targets) {
+    function populateProductionTable(slots) { // Argumen targets dihapus
         productionTable.innerHTML = '';
+        const hourlyTarget = parseFloat(targetPerJamEl.value) || 0; // Ambil target dari input
+        
         slots.forEach((slot, index) => {
             const row = productionTable.insertRow();
             row.id = `row-${index}`;
-            const target = targets[index] || { start: '', end: '' };
             
-            let cell = row.insertCell(); cell.textContent = index + 1;
-            cell = row.insertCell(); cell.textContent = slot;
-            cell = row.insertCell(); cell.textContent = target.start;
-            cell = row.insertCell(); cell.textContent = target.end;
+            // Hitung start/end dinamis
+            const startValue = index * hourlyTarget;
+            const endValue = (index + 1) * hourlyTarget;
             
+            let cell = row.insertCell(); cell.textContent = index + 1; // NO
+            cell = row.insertCell(); cell.textContent = slot; // Hourly
+            
+            // Buat sel Start (Input Readonly)
+            const startCell = row.insertCell();
+            const startInput = document.createElement('input');
+            startInput.type = 'number';
+            startInput.value = startValue;
+            startInput.className = 'table-input';
+            startInput.setAttribute('data-col', 'target-start');
+            startInput.readOnly = true;
+            startCell.appendChild(startInput);
+
+            // Buat sel End (Input Readonly)
+            const endCell = row.insertCell();
+            const endInput = document.createElement('input');
+            endInput.type = 'number';
+            endInput.value = endValue;
+            endInput.className = 'table-input';
+            endInput.setAttribute('data-col', 'target-end');
+            endInput.readOnly = true;
+            endCell.appendChild(endInput);
+            
+            // Buat sisa sel seperti biasa
             createInputCell(row, 'gap', true);
             createInputCell(row, 'acc-gap', true);
             createInputCell(row, 'filled', false);
@@ -185,23 +222,26 @@ document.addEventListener('DOMContentLoaded', function() {
             createInputCell(row, 'acc-loss', true);
             createInputCell(row, 'trouble', false, 'text');
         });
-        calculateTable();
+        calculateTable(); // Hitung ulang gap, acc, dll.
     }
 
     /**
-     * Fungsi utama yang dipanggil saat dropdown berubah
+     * Fungsi utama yang dipanggil saat dropdown berubah (LOGIKA DIPERBARUI)
      */
     function updateTableLogic() {
         const jamKerja = jamKerjaEl.value;
         const shift = shiftEl.value;
         const slotsToUse = timeSlots[jamKerja]?.[shift] || [];
-        const targetsToUse = targetValues[jamKerja] || [];
-        populateProductionTable(slotsToUse, targetsToUse);
+        // const targetsToUse = targetValues[jamKerja] || []; // <-- BARIS INI HAPUS
+        populateProductionTable(slotsToUse); // <-- Argumen targetsToUse dihapus
     }
     
     // --- Event Listener untuk Dropdown ---
     jamKerjaEl.addEventListener('change', updateTableLogic);
     shiftEl.addEventListener('change', updateTableLogic);
+    
+    // --- Event Listener BARU for Target per Jam ---
+    targetPerJamEl.addEventListener('input', updateStartEndColumns);
     
     // --- Event Listener untuk TTD Chief ---
     chiefNameEl.addEventListener('change', function() {
@@ -255,16 +295,12 @@ document.addEventListener('DOMContentLoaded', function() {
         productionReportForm.reset(); 
         currentlyEditingId = null; 
 
-        // Set tanggal hari ini lagi
         document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+        targetPerJamEl.value = '224'; // Reset target ke default
         
-        // Kosongkan tabel
         productionTable.innerHTML = ''; 
-        
-        // Reset kalkulasi summary
         calculateSummary(); 
         
-        // Kembalikan teks tombol dan judul
         formTitleEl.textContent = 'Buat Laporan Baru';
         saveFinalButton.textContent = 'Simpan Laporan Final';
         saveDraftButton.textContent = 'Simpan Draft';
@@ -299,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
             draftTbody.innerHTML = '';
             data.forEach(laporan => {
                 const row = document.createElement('tr');
-                let jamKerjaText = laporan.jam_kerja === '7' ? '7 Jam' : (laporan.jam_kerja === '5' ? '5 Jam' : laporan.jam_kerja);
+                let jamKerjaText = laporan.jam_kerja === '7' ? '7 Jam Kerja' : (laporan.jam_kerja === '5' ? '5 Jam Kerja' : laporan.jam_kerja);
                 row.innerHTML = `
                     <td>${laporan.tanggal || 'N/A'}</td>
                     <td>${laporan.shift || 'N/A'}</td>
@@ -312,24 +348,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 draftTbody.appendChild(row);
                 
-                // Listener untuk tombol Lanjutkan (Edit)
                 row.querySelector('.btn-edit').addEventListener('click', (e) => {
                     loadReportForEditing(e.currentTarget.getAttribute('data-id'));
                 });
                 
-                // Listener untuk tombol Hapus Draft
                 row.querySelector('.btn-delete-draft').addEventListener('click', async (e) => {
                     const idToDelete = e.currentTarget.getAttribute('data-id');
                     if (confirm('Anda yakin ingin menghapus draft ini?')) {
-                        // Hapus detail dulu
                         const { error: detailErr } = await _supabase.from('laporan_produksi_detail').delete().eq('laporan_id', idToDelete);
-                         // Hapus main report
                         const { error: mainErr } = await _supabase.from('laporan_produksi_harian').delete().eq('id', idToDelete);
                         
                         if (mainErr || detailErr) {
                             alert('Gagal menghapus draft: ' + (mainErr?.message || detailErr?.message));
                         } else {
-                            await loadDrafts(); // Muat ulang list draft
+                            await loadDrafts(); 
                         }
                     }
                 });
@@ -338,12 +370,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * FUNGSI BARU: Memuat data laporan ke form untuk diedit
+     * FUNGSI BARU: Memuat data laporan ke form untuk diedit (LOGIKA DIPERBARUI)
      */
     async function loadReportForEditing(reportId) {
         formMessageEl.textContent = 'Memuat data laporan...';
         
-        // 1. Ambil data utama
         const { data: mainReport, error: mainError } = await _supabase
             .from('laporan_produksi_harian')
             .select('*')
@@ -355,7 +386,6 @@ document.addEventListener('DOMContentLoaded', function() {
             formMessageEl.textContent = ''; return;
         }
 
-        // 2. Ambil data detail
         const { data: detailData, error: detailError } = await _supabase
             .from('laporan_produksi_detail')
             .select('*')
@@ -383,10 +413,15 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('ng').value = mainReport.ng;
         document.getElementById('catatan-lain').value = mainReport.catatan_lain;
 
-        // 5. Buat ulang tabel produksi
+        // 5. Buat ulang tabel produksi (DIPERBARUI)
+        
+        // Ambil target per jam dari baris PERTAMA detail
+        const hourlyTarget = detailData[0]?.target_end || 224; // Default 224 jika tidak ada data
+        targetPerJamEl.value = hourlyTarget; // Set input Target per Jam
+        
         jamKerjaEl.value = mainReport.jam_kerja;
         shiftEl.value = mainReport.shift;
-        updateTableLogic(); // Ini akan membuat baris-baris tabel
+        updateTableLogic(); // Ini akan membuat barIS tabel dgn target yg BENAR
 
         // 6. Isi nilai-nilai di tabel produksi
         detailData.forEach(detailRow => {
@@ -423,8 +458,8 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function getMainFormData(isDraft = false) {
         return {
-            user_id: currentUser.id, // <- BARU
-            status: isDraft ? 'draft' : 'published', // <- BARU
+            user_id: currentUser.id, 
+            status: isDraft ? 'draft' : 'published', 
             tanggal: document.getElementById('tanggal').value,
             jam_kerja: document.getElementById('jam-kerja').value,
             shift: document.getElementById('shift').value,
@@ -445,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * FUNGSI BARU: Mengumpulkan data detail dari tabel
+     * FUNGSI BARU: Mengumpulkan data detail dari tabel (LOGIKA DIPERBARUI)
      */
     function getDetailTableData(mainReportId) {
         const detailData = [];
@@ -454,11 +489,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const row = rows[i];
             const cells = row.getElementsByTagName('td');
             const rowData = {
-                laporan_id: mainReportId, // ID dari main report
+                laporan_id: mainReportId,
                 no_urut: parseInt(cells[0].textContent),
                 hourly: cells[1].textContent,
-                target_start: parseInt(cells[2].textContent),
-                target_end: parseInt(cells[3].textContent),
+                // Ambil nilai dari INPUT, bukan text
+                target_start: parseFloat(row.querySelector('[data-col="target-start"]').value) || 0,
+                target_end: parseFloat(row.querySelector('[data-col="target-end"]').value) || 0,
+                
                 gap: parseFloat(row.querySelector('[data-col="gap"]').value) || 0,
                 acc_gap: parseFloat(row.querySelector('[data-col="acc-gap"]').value) || 0,
                 filled: parseFloat(row.querySelector('[data-col="filled"]').value) || 0,
@@ -484,7 +521,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const mainData = getMainFormData(isDraft);
         
-        // Validasi
         if (!mainData.tanggal || !mainData.jam_kerja || !mainData.shift || !mainData.chief_name) {
             formMessageEl.textContent = 'Error: Tanggal, Jam Kerja, Shift, dan Chief tidak boleh kosong.';
             return;
@@ -497,22 +533,18 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             if (currentlyEditingId) {
                 // --- MODE UPDATE ---
-                
-                // 1. Update data utama
                 const { error: mainError } = await _supabase
                     .from('laporan_produksi_harian')
                     .update(mainData)
                     .eq('id', currentlyEditingId);
                 if (mainError) throw mainError;
 
-                // 2. Hapus detail lama
                 const { error: deleteError } = await _supabase
                     .from('laporan_produksi_detail')
                     .delete()
                     .eq('laporan_id', currentlyEditingId);
                 if (deleteError) throw deleteError;
 
-                // 3. Insert detail baru
                 const detailData = getDetailTableData(currentlyEditingId);
                 if (detailData.length > 0) {
                     const { error: detailError } = await _supabase
@@ -523,8 +555,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
             } else {
                 // --- MODE INSERT BARU ---
-                
-                // 1. Insert data utama
                 const { data: mainReport, error: mainError } = await _supabase
                     .from('laporan_produksi_harian')
                     .insert(mainData)
@@ -532,7 +562,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     .single();
                 if (mainError) throw mainError;
 
-                // 2. Insert data detail
                 const newReportId = mainReport.id;
                 const detailData = getDetailTableData(newReportId);
                 if (detailData.length > 0) {
@@ -540,7 +569,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         .from('laporan_produksi_detail')
                         .insert(detailData);
                     
-                    // Jika gagal simpan detail, hapus data utama (rollback manual)
                     if (detailError) {
                         await _supabase.from('laporan_produksi_harian').delete().eq('id', newReportId);
                         throw detailError;
@@ -571,7 +599,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!historyTbody) return;
         historyTbody.innerHTML = '<tr><td colspan="6">Memuat riwayat...</td></tr>';
         
-        // Filter hanya yang 'published' atau yang 'status' nya null (data lama)
         const { count, error: countError } = await _supabase
             .from('laporan_produksi_harian')
             .select('*', { count: 'exact', head: true })
@@ -587,11 +614,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const from = (currentPage - 1) * itemsPerPage;
         const to = from + itemsPerPage - 1;
 
-        // Fetch paginated data
         const { data, error } = await _supabase
             .from('laporan_produksi_harian')
             .select('id, tanggal, shift, jam_kerja, total_hanger, created_at')
-            .or('status.eq.published,status.is.null') // Filter
+            .or('status.eq.published,status.is.null') 
             .order('created_at', { ascending: false })
             .range(from, to);
             
@@ -606,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function() {
             historyTbody.innerHTML = '';
             data.forEach(laporan => {
                 const row = document.createElement('tr');
-                let jamKerjaText = laporan.jam_kerja === '7' ? '7 Jam' : (laporan.jam_kerja === '5' ? '5 Jam' : laporan.jam_kerja);
+                let jamKerjaText = laporan.jam_kerja === '7' ? '7 Jam Kerja' : (laporan.jam_kerja === '5' ? '5 Jam Kerja' : laporan.jam_kerja);
                 
                 row.innerHTML = `
                     <td>${laporan.tanggal}</td>
@@ -621,19 +647,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 historyTbody.appendChild(row);
                 
-                // Add event listener untuk tombol PDF
                 row.querySelector('.btn-pdf').addEventListener('click', (e) => {
                     generatePDF(e.currentTarget.getAttribute('data-id'));
                 });
                 
-                // Add event listener untuk tombol Edit (BARU)
                 row.querySelector('.btn-edit').addEventListener('click', (e) => {
                     loadReportForEditing(e.currentTarget.getAttribute('data-id'));
                 });
             });
         }
         
-        // Update pagination UI
         if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
         if (prevButton) prevButton.disabled = (currentPage === 1);
         if (nextButton) nextButton.disabled = (currentPage === totalPages) || (totalReports === 0);
@@ -650,7 +673,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // =============================================
-    // FUNGSI GENERATE PDF (BUG DIPERBAIKI)
+    // FUNGSI GENERATE PDF (Sudah rapi)
     // =============================================
     async function generatePDF(reportId) {
         if (!window.jspdf) {
@@ -692,38 +715,30 @@ document.addEventListener('DOMContentLoaded', function() {
             doc.setFontSize(12); doc.setFont(undefined, 'bold');
             doc.text('PAINTING PRODUCTION DAILY CONTROL', pageWidth / 2, 18, { align: 'center' }); 
             doc.setFontSize(10);
-            doc.text('LOSS TIME & PERFORMANCE MONITORING (OTR&PER)', pageWidth / 2, 24, { align: 'center' }); 
+            doc.text('LOGS TIME & PERFORMANCE MONITORING (OTRAPER)', pageWidth / 2, 24, { align: 'center' }); 
             
-            // --- Info Laporan (DIPERBAIKI) ---
-            
-            // PERBAIKAN 1: Format Tanggal (Selasa, 09-11-2025)
-            const dateObj = new Date(mainReport.tanggal + 'T12:00:00'); // Tambah jam 12 siang biar aman dari timezone
+            // --- Info Laporan ---
+            const dateObj = new Date(mainReport.tanggal + 'T12:00:00');
             const dayName = dateObj.toLocaleString('id-ID', { weekday: 'long' });
             const [year, month, day] = mainReport.tanggal.split('-');
             const ddmmyyyy = `${day}-${month}-${year}`;
             const formattedDate = `${dayName}, ${ddmmyyyy}`;
 
-            // PERBAIKAN 2: Format Jam Kerja (Hilangkan slots)
-            let jamKerjaText = mainReport.jam_kerja === '7' ? '7 Jam Kerja (8 slots)' : (mainReport.jam_kerja === '5' ? '5 Jam Kerja (5 slots)' : mainReport.jam_kerja);
-            jamKerjaText = jamKerjaText.replace(' (8 slots)', '').replace(' (5 slots)', ''); // Jadi "7 Jam Kerja"
+            let jamKerjaText = mainReport.jam_kerja === '7' ? '7 Jam Kerja' : (mainReport.jam_kerja === '5' ? '5 Jam Kerja' : mainReport.jam_kerja);
 
             doc.setFontSize(10); doc.setFont(undefined, 'normal');
             
-            // PERBAIKAN 3: Alignment (Dirapikan jadi 4 kolom)
             let infoY = 34; 
-            const col1 = 20;
-            const col2 = 85;  // <-- Posisi X dirapikan
-            const col3 = 155; // <-- Posisi X dirapikan
-            const col4 = 210; // <-- Posisi X dirapikan
+            const col1 = 20; const col2 = 85; const col3 = 155; const col4 = 210;
             
-            doc.text(`Tanggal: ${formattedDate}`, col1, infoY); // <-- Pakai formattedDate
-            doc.text(`Jam Kerja: ${jamKerjaText}`, col2, infoY); // <-- Pakai jamKerjaText
+            doc.text(`Tanggal: ${formattedDate}`, col1, infoY);
+            doc.text(`Jam Kerja: ${jamKerjaText}`, col2, infoY);
             doc.text(`Shift: ${mainReport.shift}`, col3, infoY);
             doc.text(`Chief: ${mainReport.chief_name}`, col4, infoY);
             
             infoY += 6; 
             doc.text(`C/T: ${mainReport.ct}`, col1, infoY);
-            doc.text(`Efisiensi: ${mainReport.efisiensi}`, col2, infoY); // <-- Lurus dengan Jam Kerja
+            doc.text(`Efisiensi: ${mainReport.efisiensi}`, col2, infoY);
 
             // --- TABEL PRODUKSI ---
             const tableColumn = [
@@ -749,17 +764,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     head: [tableColumn],
                     body: tableRows,
                     theme: 'grid',
-                    styles: { fontSize: 7, cellPadding: 1, minCellHeight: 6, halign: 'center', valign: 'middle' }, 
+                    // --- PERBAIKAN: TINGGI BARIS DITAMBAH ---
+                    styles: { fontSize: 7, cellPadding: 1, minCellHeight: 8, halign: 'center', valign: 'middle' }, // <-- minCellHeight diubah ke 8
                     headStyles: { fillColor: [44, 62, 80], fontSize: 7, cellPadding: 1, halign: 'center' }, 
                     margin: { left: 10, right: 10 },
+                    // --- PERBAIKAN: LEBAR KOLOM DIKURANGI ---
                     columnStyles: {
-                        0: { cellWidth: 8, halign: 'center' }, 1: { cellWidth: 22, halign: 'center' },
-                        2: { cellWidth: 17, halign: 'center' }, 3: { cellWidth: 17, halign: 'center' },
-                        4: { cellWidth: 17, halign: 'center' }, 5: { cellWidth: 17, halign: 'center' },
-                        6: { cellWidth: 17, halign: 'center' }, 7: { cellWidth: 17, halign: 'center' },
-                        8: { cellWidth: 17, halign: 'center' }, 9: { cellWidth: 17, halign: 'center' },
-                        10: { cellWidth: 17, halign: 'center' }, 11: { cellWidth: 17, halign: 'center' },
-                        12: { cellWidth: 'auto', halign: 'left' }
+                        0: { cellWidth: 8, halign: 'center' },  // NO
+                        1: { cellWidth: 22, halign: 'center' }, // Hourly
+                        2: { cellWidth: 16, halign: 'center' }, // Start <-- 16
+                        3: { cellWidth: 16, halign: 'center' }, // End <-- 16
+                        4: { cellWidth: 16, halign: 'center' }, // GAP <-- 16
+                        5: { cellWidth: 16, halign: 'center' }, // ACC. GAP <-- 16
+                        6: { cellWidth: 16, halign: 'center' }, // FILLED <-- 16
+                        7: { cellWidth: 16, halign: 'center' }, // ACC. FILLED <-- 16
+                        8: { cellWidth: 16, halign: 'center' }, // EMPTY <-- 16
+                        9: { cellWidth: 16, halign: 'center' }, // ACC. EMPTY <-- 16
+                        10: { cellWidth: 16, halign: 'center' }, // LOSS <-- 16
+                        11: { cellWidth: 16, halign: 'center' }, // ACC. LOSS <-- 16
+                        12: { cellWidth: 'auto', halign: 'left' } // TROUBLE REASON (Otomatis)
                     }
                 });
             }
@@ -857,7 +880,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // PANGGIL FUNGSI SAAT HALAMAN DIMUAT
     // =============================================
     
-    // Event Listener Form (BARU)
+    // Event Listener Form
     productionReportForm.onsubmit = async (event) => {
         event.preventDefault();
         await handleFormSubmit(false); // Submit FINAL
@@ -869,7 +892,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     cancelEditButton.addEventListener('click', resetFormAndState);
 
-    // Inisialisasi Halaman (BARU)
+    // Inisialisasi Halaman
     (async () => {
         await loadAndSetUserData(); // 1. Login & ambil data user
         resetFormAndState();      // 2. Siapkan form
