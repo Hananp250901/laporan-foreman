@@ -715,7 +715,7 @@ document.addEventListener('DOMContentLoaded', function() {
             doc.setFontSize(12); doc.setFont(undefined, 'bold');
             doc.text('PAINTING PRODUCTION DAILY CONTROL', pageWidth / 2, 18, { align: 'center' }); 
             doc.setFontSize(10);
-            doc.text('LOGS TIME & PERFORMANCE MONITORING (OTRAPER)', pageWidth / 2, 24, { align: 'center' }); 
+            doc.text('LOSS TIME & PERFORMANCE MONITORING (OTR&PER)', pageWidth / 2, 24, { align: 'center' }); 
             
             // --- Info Laporan ---
             const dateObj = new Date(mainReport.tanggal + 'T12:00:00');
