@@ -182,9 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
         /**
          * 3. Memproses data mentah menjadi format Chart.js
          */
-        function processData(filteredData, daysInMonth, chiefName) {
+        function processData(filteredData, chiefName) {
             
-            // Warna Hijau 'Sarno' sudah diubah
             const colorMap = {
                 'SUBAGYO': {
                     isi: 'rgba(255, 206, 86, 0.7)', // Kuning
@@ -204,7 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            // Pilih warna
             const normalizedName = chiefName ? chiefName.trim().toUpperCase() : 'default';
             let selectedColor;
             
@@ -218,52 +216,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 selectedColor = colorMap['default'];
             }
 
+            // 1. Buat Map untuk mengagregasi data per hari
+            const dailyData = new Map();
 
-            const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
-            const dataIsi = new Array(daysInMonth).fill(0);
-            const dataKosong = new Array(daysInMonth).fill(0);
-            // <<< PERUBAHAN 1: Inisialisasi data GARIS dengan 'null' bukan '0'
-            const dataTotalBar = new Array(daysInMonth).fill(null); 
-            const dataTarget = new Array(daysInMonth).fill(0); 
-
-            // Loop semua data yang sudah difilter
             filteredData.forEach(item => {
                 const day = new Date(item.tanggal).getUTCDate(); 
-                const index = day - 1; 
 
-                if (index >= 0 && index < daysInMonth) {
-                    
-                    // <<< PERUBAHAN 2: Jika hari ini 'null', ubah ke 0 dulu sebelum ditambah
-                    if (dataTotalBar[index] === null) {
-                        dataTotalBar[index] = 0;
-                    }
-                    
-                    dataIsi[index] += item.perf_wuster_isi || 0; 
-                    dataKosong[index] += item.perf_wuster_kosong || 0;
-                    
-                    // *** REVISI LOGIKA TARGET ***
-                    // Ambil target berdasarkan 'jam_kerja' dari database
-                    let dailyTarget = 0;
-                    if (item.jam_kerja === '7 Jam') {
-                        dailyTarget = 1680;
-                    } else if (item.jam_kerja === '5 Jam') {
-                        dailyTarget = 1200;
-                    }
-                    // Akumulasi target jika ada >1 laporan/hari (misal BEDA shift)
-                    dataTarget[index] += dailyTarget; 
-
-                    dataTotalBar[index] += (item.perf_wuster_isi || 0) + (item.perf_wuster_kosong || 0);
+                if (!dailyData.has(day)) {
+                    dailyData.set(day, {
+                        isi: 0,
+                        kosong: 0,
+                        total: 0,
+                        target: 0
+                    });
                 }
+
+                const data = dailyData.get(day);
+                
+                data.isi += item.perf_wuster_isi || 0;
+                data.kosong += item.perf_wuster_kosong || 0;
+                data.total += (item.perf_wuster_isi || 0) + (item.perf_wuster_kosong || 0);
+                
+                let dailyTarget = 0;
+                if (item.jam_kerja === '7 Jam') {
+                    dailyTarget = 1680;
+                } else if (item.jam_kerja === '5 Jam') {
+                    dailyTarget = 1200;
+                }
+                data.target += dailyTarget;
             });
-            
-            // <<< PERUBAHAN: Modifikasi pengecekan data
-            // Cek jika dataTotalBar memiliki nilai selain null
-            const hasData = dataTotalBar.some(d => d !== null); 
-            
-            if (!hasData) {
-                return null; 
+
+            if (dailyData.size === 0) {
+                return null; // Tidak ada data, hentikan
             }
+
+            // 2. Ubah Map menjadi array-array untuk Chart.js
+            const sortedDays = [...dailyData.keys()].sort((a, b) => a - b);
+            
+            const labels = [];
+            const dataIsi = [];
+            const dataKosong = [];
+            const dataTotalBar = [];
+            const dataTarget = [];
+
+            sortedDays.forEach(day => {
+                const data = dailyData.get(day);
+                labels.push(day); 
+                dataIsi.push(data.isi);
+                dataKosong.push(data.kosong);
+                dataTotalBar.push(data.total);
+                dataTarget.push(data.target);
+            });
+
 
             return {
                 labels: labels,
@@ -274,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: 'HANGER ISI', 
                         data: dataIsi, 
                         backgroundColor: selectedColor.isi,
-                        stack: 'A', 
+                        stack: 'A', // Tumpukan A
                         datalabels: {
                             color: '#ffffff',
                             anchor: 'center',  
@@ -292,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         data: dataKosong,
                         backgroundColor: 'rgba(201, 203, 207, 0.7)', 
                         borderColor: 'rgb(201, 203, 207)',
-                        stack: 'A', 
+                        stack: 'A', // Tumpukan A
                         datalabels: {
                             color: '#333333',
                             anchor: 'center',
@@ -305,41 +309,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     // ** INI DATASET UNTUK GARIS & PERSENTASE **
                     {
-                        type: 'line', // <-- Tipe GARIS
+                        type: 'line',
                         label: 'TOTAL HANGER', 
-                        data: dataTotalBar, // Data total hanger (angka)
-                        
-                        // *** REVISI BARU ***
-                        // Selipkan dataTarget ke dalam dataset ini
-                        dataTarget: dataTarget, 
-                        
+                        data: dataTotalBar,
+                        dataTarget: dataTarget, // Selipkan data target
                         borderColor: selectedColor.total, 
                         backgroundColor: selectedColor.total.replace('rgb', 'rgba').replace(')', ', 0.2)'),
                         borderWidth: 3,
                         pointRadius: 1, 
                         tension: 0.1,
-                        
-                        // <<< PERUBAHAN 3: Tambahkan 'spanGaps: true'
-                        // Ini akan membuat garis melompati nilai 'null'
-                        spanGaps: true, 
-                        
-                        // *** REVISI BARU (DATALABELS) ***
                         datalabels: { 
                              display: function(context) {
-                                // <<< PERUBAHAN: Cek 'value > 0' (value null akan false)
                                 const value = context.dataset.data[context.dataIndex];
                                 return value > 0; 
                             },
                             formatter: function(value, context) {
                                 const index = context.dataIndex;
-                                // Ambil target dari properti kustom 'dataTarget'
                                 const target = context.dataset.dataTarget[index]; 
-                                
                                 if (target > 0) {
                                     const percent = (value / target) * 100;
                                     return percent.toFixed(1) + ' %';
                                 }
-                                return 'N/A'; // Tampilkan N/A jika tidak ada target
+                                return 'N/A';
                             },
                             color: '#ffffffff', 
                             anchor: 'end',    
@@ -350,6 +341,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                 size: 11
                             }
                         }
+                    },
+                    // ** DATASET GARIS TARGET BARU **
+                    {
+                        type: 'line',
+                        label: 'TARGET',
+                        data: dataTarget,
+                        borderColor: 'rgba(255, 99, 132, 0.8)', // Merah
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderWidth: 2,
+                        borderDash: [5, 5], // Garis putus-putus
+                        pointRadius: 0, 
+                        tension: 0.1,
+                        datalabels: {
+                            display: false 
+                        }
                     }
                 ]
             };
@@ -357,6 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /**
          * 4. Merender satu chart ke canvas
+         * *** FUNGSI INI YANG DIPERBAIKI ***
          */
         function renderHybridChart(canvasId, chartData, loadingId, instanceKey) {
             const ctx = document.getElementById(canvasId)?.getContext('2d');
@@ -397,29 +404,26 @@ document.addEventListener('DOMContentLoaded', () => {
                                         label += ': ';
                                     }
                                     
-                                    // *** REVISI BARU (TOOLTIP) ***
                                     if (context.dataset.type === 'line') {
-                                        // <<< PERUBAHAN: Cek jika value bukan null
-                                        if (context.parsed.y === null) {
-                                            return null; // Jangan tampilkan tooltip untuk data null
+                                        if (context.parsed.y === null || context.parsed.y === 0) {
+                                            return null; 
                                         }
                                         
                                         const total = context.parsed.y;
-                                        const index = context.dataIndex;
-                                        
-                                        // Ambil target dari properti kustom 'dataTarget'
-                                        const target = context.dataset.dataTarget[index]; 
-                                        
                                         label += total;
-                                        
-                                        if (target > 0) {
-                                            const percent = (total / target) * 100;
-                                            label += ` (${percent.toFixed(1)}%)`;
+
+                                        if (context.dataset.dataTarget) {
+                                            const index = context.dataIndex;
+                                            const target = context.dataset.dataTarget[index]; 
+                                            
+                                            if (target > 0) {
+                                                const percent = (total / target) * 100;
+                                                label += ` (${percent.toFixed(1)}%)`;
+                                            }
                                         }
-                                    } else {
-                                        // <<< PERUBAHAN: Cek jika value bukan 0 untuk bar
+                                    } else { 
                                         if (context.parsed.y === 0) {
-                                            return null; // Sembunyikan tooltip untuk bar 0
+                                            return null; 
                                         }
                                         label += context.formattedValue;
                                     }
@@ -433,14 +437,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     scales: {
                         x: {
-                            stacked: true, 
+                            stacked: true, // Tumpuk di sumbu X (untuk bar)
                             title: { display: true, text: 'Tanggal' }
                         },
-                        y: {
-                            stacked: true, 
+                        // === AWAL PERBAIKAN ===
+                        y: { 
+                            // stacked: true, <-- BARIS INI DIHAPUS
                             beginAtZero: true,
                             title: { display: true, text: 'Jumlah Hanger' }
                         }
+                        // === AKHIR PERBAIKAN ===
                     }
                 }
             });
@@ -460,9 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.tanggal && item.tanggal.startsWith(selectedMonth)
             );
 
-            const [year, month] = selectedMonth.split('-').map(Number);
-            const daysInMonth = new Date(year, month, 0).getDate();
-
             const chiefNames = [...new Set(monthlyData.map(d => d.chief_name).filter(Boolean))].slice(0, 3);
 
             for (let i = 0; i < 3; i++) {
@@ -477,11 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     titleEl.textContent = `Performa Wuster - ${chiefName}`;
                     const chiefData = monthlyData.filter(d => d.chief_name === chiefName);
                     
-                    const chartData = processData(chiefData, daysInMonth, chiefName);
-                    
-                    // *** REVISI ***
-                    // Hapus kode injeksi 'dataTarget' yang rumit.
-                    // Sudah tidak diperlukan lagi.
+                    // Argumen daysInMonth dihapus
+                    const chartData = processData(chiefData, chiefName);
                     
                     renderHybridChart(chartId, chartData, loadingId, chartId);
                 
@@ -534,6 +534,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // PENANDA VERSI BARU
-    console.log("app.js versi 'BACA JAM KERJA' BERHASIL DIMUAT.");
+    console.log("app.js versi 'FIX STACKED LINE' BERHASIL DIMUAT.");
 
 }); // <-- Akhir dari pembungkus DOMContentLoaded
