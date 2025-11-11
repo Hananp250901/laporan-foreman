@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variabel List Dinamis (Hasil Touch Up)
     const touchUpListContainer = document.getElementById('touch-up-list');
     const addTouchUpItemBtn = document.getElementById('add-touch-up-item-btn');
-    const defaultTouchUpItems = ["C/C 1DY 1", "C/E 9307", "C/H BKW"];
+    const defaultTouchUpItems = ["C/C 1DY 1", "C/C 1DY 2", "C/C 5WX", "C/E 9307 FRESH", "C/E 9307 A/MCH"];
     const touchUpTotalSpan = document.getElementById('touch-up-total');
     
     // Variabel Total (Main Power)
@@ -410,13 +410,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // ===== FOOTER PDF (Sama seperti wuster) =====
             currentY = Math.max(doc.autoTable.previous.finalY, leftY) + 20;
+            
+            // === AWAL MODIFIKASI ===
             const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
-            const chiefName = report.chief_name || '( .......................... )'; // Get chief name from report
+            const preparerJabatan = (currentKaryawan && currentKaryawan.jabatan) || '( Jabatan )'; // <- BARIS BARU
+            const chiefName = report.chief_name || '( .......................... )'; 
+            // === AKHIR MODIFIKASI ===
             
             doc.setFontSize(9);
             doc.text("Dibuat,", marginX, currentY); 
             doc.text(preparerName, marginX, currentY + 15); 
-            doc.text("Foreman", marginX, currentY + 20);
+            doc.text(preparerJabatan, marginX, currentY + 20); // <- INI YANG DIGANTI
             
             doc.text("Disetujui,", doc.internal.pageSize.width / 2, currentY, { align: 'center' }); 
             doc.text(chiefName, doc.internal.pageSize.width / 2, currentY + 15, { align: 'center' }); 

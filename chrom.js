@@ -300,12 +300,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Footer
             currentY = Math.max(leftY, rightY) + 15;
+            
+            // === AWAL MODIFIKASI ===
             const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
+            const preparerJabatan = (currentKaryawan && currentKaryawan.jabatan) || '( Jabatan )'; // <- BARIS BARU
             const chiefName = report.chief_name || '( .......................... )';
+            // === AKHIR MODIFIKASI ===
+            
             doc.setFontSize(9);
-            doc.text("Dibuat,", marginX, currentY); doc.text(preparerName, marginX, currentY + 15); doc.text("Foreman", marginX, currentY + 20);
-            doc.text("Disetujui,", doc.internal.pageSize.width / 2, currentY, { align: 'center' }); doc.text(chiefName, doc.internal.pageSize.width / 2, currentY + 15, { align: 'center' }); doc.text("Chief", doc.internal.pageSize.width / 2, currentY + 20, { align: 'center' });
-            doc.text("Mengetahui,", doc.internal.pageSize.width - marginX, currentY, { align: 'right' }); doc.text("SINGGIH E W", doc.internal.pageSize.width - marginX, currentY + 15, { align: 'right' }); doc.text("Dept Head", doc.internal.pageSize.width - marginX, currentY + 20, { align: 'right' });
+            doc.text("Dibuat,", marginX, currentY); 
+            doc.text(preparerName, marginX, currentY + 15); 
+            doc.text(preparerJabatan, marginX, currentY + 20); // <- INI YANG DIGANTI
+            
+            doc.text("Disetujui,", doc.internal.pageSize.width / 2, currentY, { align: 'center' }); 
+            doc.text(chiefName, doc.internal.pageSize.width / 2, currentY + 15, { align: 'center' }); 
+            doc.text("Chief", doc.internal.pageSize.width / 2, currentY + 20, { align: 'center' });
+            
+            doc.text("Mengetahui,", doc.internal.pageSize.width - marginX, currentY, { align: 'right' }); 
+            doc.text("SINGGIH E W", doc.internal.pageSize.width - marginX, currentY + 15, { align: 'right' }); 
+            doc.text("Dept Head", doc.internal.pageSize.width - marginX, currentY + 20, { align: 'right' });
 
             doc.save(`Laporan_Chrom_${report.tanggal}.pdf`);
         } catch (error) {
@@ -313,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('PDF Generation Error:', error);
         }
     }
-
 
     /**
      * FUNGSI: Memuat draft laporan

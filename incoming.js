@@ -261,11 +261,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // Footer
             let finalY = doc.autoTable.previous.finalY + 20; 
             if (finalY > 300) { doc.addPage(); finalY = 20; } 
+            
+            // === AWAL MODIFIKASI ===
             const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
+            const preparerJabatan = (currentKaryawan && currentKaryawan.jabatan) || '( Jabatan )'; // <- BARIS BARU
+            // === AKHIR MODIFIKASI ===
+            
             doc.setFontSize(10);
-            doc.text("Dibuat,", 20, finalY); doc.text(preparerName, 20, finalY + 20); doc.text("Foreman", 20, finalY + 25);
-            doc.text("Disetujui,", 105, finalY, { align: 'center' }); const chiefName = report.chief_name || '( .......................... )'; doc.text(chiefName, 105, finalY + 20, { align: 'center' }); doc.text("Chief", 105, finalY + 25, { align: 'center' });
-            doc.text("Mengetahui,", 190, finalY, { align: 'right' }); doc.text("SINGGIH E W", 190, finalY + 20, { align: 'right' }); doc.text("Dept Head", 190, finalY + 25, { align: 'right' });
+            doc.text("Dibuat,", 20, finalY); 
+            doc.text(preparerName, 20, finalY + 20); 
+            doc.text(preparerJabatan, 20, finalY + 25); // <- INI YANG DIGANTI
+            
+            doc.text("Disetujui,", 105, finalY, { align: 'center' }); 
+            const chiefName = report.chief_name || '( .......................... )'; 
+            doc.text(chiefName, 105, finalY + 20, { align: 'center' }); 
+            doc.text("Chief", 105, finalY + 25, { align: 'center' });
+            
+            doc.text("Mengetahui,", 190, finalY, { align: 'right' }); 
+            doc.text("SINGGIH E W", 190, finalY + 20, { align: 'right' }); 
+            doc.text("Dept Head", 190, finalY + 25, { align: 'right' });
 
             doc.save(`Laporan_Incoming_${report.tanggal}_Shift${report.shift}.pdf`);
         } catch (error) {

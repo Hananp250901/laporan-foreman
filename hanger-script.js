@@ -13,8 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // --- Variabel Global ---
     let loggedInUserName = "[Nama Login]"; 
+    let loggedInUserJabatan = "[Jabatan]";
     let currentUser = null; 
-    let currentlyEditingId = null; 
+    let currentlyEditingId = null;
 
     // --- Definisi Slot Waktu (Target di-HAPUS) ---
     const timeSlots = {
@@ -84,24 +85,29 @@ document.addEventListener('DOMContentLoaded', function() {
         currentUser = session.user; 
 
         try {
+            // === AWAL MODIFIKASI ===
             const { data: karyawanData, error } = await _supabase
                 .from('karyawan')
-                .select('nama_lengkap')
+                .select('nama_lengkap, jabatan') // <-- 'jabatan' DITAMBAHKAN
                 .eq('user_id', session.user.id)
                 .single();
             
             const sigUserNameEl = document.getElementById('sig-user-name');
             if (karyawanData) {
                 loggedInUserName = karyawanData.nama_lengkap;
+                loggedInUserJabatan = karyawanData.jabatan || '( Jabatan )'; // <-- BARIS BARU
                 if (sigUserNameEl) sigUserNameEl.textContent = loggedInUserName;
             } else {
                 console.warn('Tidak dapat menemukan data karyawan. Menggunakan email.', error);
                 loggedInUserName = session.user.email;
+                loggedInUserJabatan = '( Jabatan )'; // <-- BARIS BARU (FALLBACK)
                 if (sigUserNameEl) sigUserNameEl.textContent = loggedInUserName;
             }
+            // === AKHIR MODIFIKASI ===
         } catch (error) {
             console.error("Error mengambil data karyawan:", error.message);
             loggedInUserName = session.user.email;
+            loggedInUserJabatan = '( Jabatan )'; // <-- BARIS BARU (FALLBACK)
             const sigUserNameEl = document.getElementById('sig-user-name');
             if (sigUserNameEl) sigUserNameEl.textContent = loggedInUserName;
         }
@@ -841,12 +847,14 @@ document.addEventListener('DOMContentLoaded', function() {
             doc.setFontSize(9);
             const sigCol1 = 45, sigCol2 = 145, sigCol3 = 245;
 
+            // === AWAL MODIFIKASI ===
             doc.setFont(undefined, 'normal');
             doc.text('Dibuat,', sigCol1, sigY, { align: 'center' });
             doc.setFont(undefined, 'bold');
             doc.text(loggedInUserName, sigCol1, sigY + 12, { align: 'center' }); 
             doc.setFont(undefined, 'normal');
-            doc.text('Subforeman', sigCol1, sigY + 16, { align: 'center' }); 
+            doc.text(loggedInUserJabatan, sigCol1, sigY + 16, { align: 'center' }); // <-- INI YANG DIGANTI
+            // === AKHIR MODIFIKASI ===
             
             doc.text('Disetujui,', sigCol2, sigY, { align: 'center' });
             doc.setFont(undefined, 'bold');

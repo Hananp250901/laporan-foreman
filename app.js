@@ -20,7 +20,7 @@ async function loadSharedDashboardData(currentUser) {
     const userInfoEl = document.getElementById('user-info');
     if (!userInfoEl) return null;
     const { data: karyawanData, error } = await _supabase
-        .from('karyawan').select('nama_lengkap, nik').eq('user_id', currentUser.id).single();
+        .from('karyawan').select('nama_lengkap, nik, jabatan').eq('user_id', currentUser.id).single();
     if (karyawanData) {
         userInfoEl.innerHTML = `<h4>${karyawanData.nama_lengkap}</h4><p>NIK: ${karyawanData.nik}</p>`;
         return karyawanData;

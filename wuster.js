@@ -508,17 +508,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isNaN(currentY)) { currentY = 300; } 
             let finalY = currentY + 6; 
             
+            // === AWAL MODIFIKASI ===
             const preparerNameRaw = (currentKaryawan && currentKaryawan.nama_lengkap) || (currentUser && currentUser.email) || 'N/A';
+            const preparerJabatanRaw = (currentKaryawan && currentKaryawan.jabatan) || '( Jabatan )'; // <- BARIS BARU
             const chiefNameRaw = report.chief_name || '( .......................... )';
             const preparerName = String(preparerNameRaw || 'N/A');
+            const preparerJabatan = String(preparerJabatanRaw || '( Jabatan )'); // <- BARIS BARU
             const chiefName = String(chiefNameRaw || '( .......................... )');
+            // === AKHIR MODIFIKASI ===
 
             doc.setFont('PTSans', 'normal');
             doc.setFontSize(8);
             doc.setTextColor(0, 0, 0); 
             doc.text("Dibuat,", col1X, finalY); 
             doc.text(preparerName, col1X, finalY + 10); 
-            doc.text("Foreman", col1X, finalY + 14); 
+            doc.text(preparerJabatan, col1X, finalY + 14); // <- INI YANG DIGANTI
             doc.text("Disetujui,", doc.internal.pageSize.width / 2, finalY, { align: 'center' }); 
             doc.text(chiefName, doc.internal.pageSize.width / 2, finalY + 10, { align: 'center' }); 
             doc.text("Chief", doc.internal.pageSize.width / 2, finalY + 14, { align: 'center' }); 
