@@ -1,5 +1,6 @@
 // =================================================================
 // E. LOGIKA HALAMAN REPAIR (repair.html)
+// (MODIFIKASI: Ditambah border PDF, list 'Hasil Assy Cup' & 'Verifikasi Notes')
 // =================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,15 +36,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const addTouchUpItemBtn = document.getElementById('add-touch-up-item-btn');
     const defaultTouchUpItems = ["C/C 1DY 1", "C/C 1DY 2", "C/C 5WX", "C/E 9307 FRESH", "C/E 9307 A/MCH"];
     const touchUpTotalSpan = document.getElementById('touch-up-total');
+
+    // === TAMBAHAN BARU: Variabel List Dinamis (Hasil Assy Cup) ===
+    const assyCupListContainer = document.getElementById('assy-cup-list');
+    const addAssyCupItemBtn = document.getElementById('add-assy-cup-item-btn');
+    const defaultAssyCupItems = ["MC 2DP FR", "MC 2DP RR", "MC K1ZV ABS", "MC K1ZV CBS", "MC K15A", "MC K2SA", "MC K3VA", "MC XD 831"];
+    const assyCupTotalSpan = document.getElementById('assy-cup-total');
+    // === AKHIR TAMBAHAN ===
     
     // Variabel Total (Main Power)
-    const mpInputs = document.querySelectorAll('.mp-calc'); // Sekarang HANYA 2 input (Masuk Repair & Touch Up)
+    const mpInputs = document.querySelectorAll('.mp-calc'); 
     const mpTotalInput = document.getElementById('mp_total');
 
 
     /**
      * FUNGSI: Menghitung total Main Power
-     * (Hanya menjumlahkan field dgn class 'mp-calc')
      */
     function updateMainPowerTotal() {
         if (!mpTotalInput) return;
@@ -123,13 +130,15 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * FUNGSI: Mengurai string dari database kembali menjadi baris input
      */
-    function deserializeDynamicList(container, nameClass, valueClass, notesString) {
+    function deserializeDynamicList(container, nameClass, valueClass, notesString, defaultItems) { // Terima defaultItems
         container.innerHTML = ''; // Kosongkan list
         if (!notesString || notesString.trim() === '') {
             // Jika tidak ada notes, reset ke default
-            if (container === touchUpListContainer) {
-                resetDynamicList(container, defaultTouchUpItems, nameClass, valueClass);
+            // === MODIFIKASI: Gunakan defaultItems yang dikirim ===
+            if (defaultItems) {
+                resetDynamicList(container, defaultItems, nameClass, valueClass);
             }
+            // === AKHIR MODIFIKASI ===
             return;
         }
         
@@ -148,6 +157,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event listener untuk tombol "Tambah Item"
     if (addTouchUpItemBtn) addTouchUpItemBtn.addEventListener('click', () => addDynamicRow(touchUpListContainer, 'touchup-item-name', 'touchup-item-value'));
+    // === TAMBAHAN BARU ===
+    if (addAssyCupItemBtn) addAssyCupItemBtn.addEventListener('click', () => addDynamicRow(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value'));
+    // === AKHIR TAMBAHAN ===
 
     // Event listener untuk tombol "Hapus" (Delegasi)
     repairForm.addEventListener('click', (e) => {
@@ -161,9 +173,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event listener untuk perubahan input di list dinamis
     repairForm.addEventListener('input', (e) => {
-        if (e.target.classList.contains('touchup-item-value')) {
+        // === MODIFIKASI: Tambah pengecekan untuk assy-cup-item-value ===
+        if (e.target.classList.contains('touchup-item-value') || 
+            e.target.classList.contains('assy-cup-item-value')) {
             calculateAllTotals(); // Hitung ulang total
         }
+        // === AKHIR MODIFIKASI ===
     });
 
     /**
@@ -206,6 +221,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculateAllTotals() {
         updateMainPowerTotal();
         calculateDynamicListTotal(touchUpListContainer, 'touchup-item-value', touchUpTotalSpan);
+        // === TAMBAHAN BARU ===
+        calculateDynamicListTotal(assyCupListContainer, 'assy-cup-item-name', assyCupTotalSpan);
+        // === AKHIR TAMBAHAN ===
         
         // Hitung ulang total untuk semua baris Activity
         const rowSuffixes = ['in_repair', 'hasil_repair', 'out_repair', 'in_remover', 'hasil_remover', 'out_remover'];
@@ -214,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
 
     /**
-     * FUNGSI PDF (Diperbarui)
+     * FUNGSI PDF (Diperbarui dengan Border Pinggir)
      */
     async function generatePDF(reportId) {
         alert('Membuat PDF... Mohon tunggu.');
@@ -229,6 +247,14 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const doc = new jsPDF({ format: 'a4' }); // Ukuran A4
             
+            // === TAMBAHAN BARU: Border Hitam Pinggir (A4) ===
+            const pageWidth = doc.internal.pageSize.getWidth(); // A4 width
+            const pageHeight = doc.internal.pageSize.getHeight(); // A4 height
+            const margin = 10; // Margin 10mm
+            doc.setDrawColor(0, 0, 0); // Warna border hitam
+            doc.rect(margin, margin, pageWidth - (margin * 2), pageHeight - (margin * 2)); // Gambar kotak
+            // === AKHIR TAMBAHAN ===
+
             const tableStyles = {
                 theme: 'grid', 
                 styles: { cellWidth: 'wrap', fontSize: 8, cellPadding: 1 }, 
@@ -237,12 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     textColor: [255, 255, 255], 
                     fontSize: 9, 
                     fontStyle: 'bold',
-                    lineColor: [0, 0, 0], // Tambah garis hitam
-                    lineWidth: 0.1       // Tambah tebal garis
+                    lineColor: [0, 0, 0], 
+                    lineWidth: 0.1       
                 } 
             };
 
-            const marginX = 15;
+            const marginX = 15; // Margin konten (biar ada jarak dari border)
             const fullWidth = doc.internal.pageSize.width - (marginX * 2);
             let currentY = 15;
 
@@ -253,11 +279,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             doc.setFontSize(9); 
             doc.text("HARI", marginX, currentY); doc.text(`: ${report.hari || ''}`, marginX + 30, currentY);
-            currentY += 5; // Pindah baris
+            currentY += 5; 
             doc.text("TANGGAL", marginX, currentY); doc.text(`: ${report.tanggal || ''}`, marginX + 30, currentY);
-            currentY += 5; // Pindah baris
+            currentY += 5; 
             doc.text("SHIFT", marginX, currentY); doc.text(`: ${report.shift || ''}`, marginX + 30, currentY);
-            currentY += 8; // Jarak sebelum tabel
+            currentY += 8; 
 
 
             // --- Tabel Main Power ---
@@ -267,17 +293,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: [
                     ['Masuk: REPAIR', report.mp_masuk_repair],
                     ['Masuk: TOUCH UP', report.mp_masuk_touchup],
-                    ['Ijin', report.mp_ijin || ''], // Tampilkan teks
-                    ['Off', report.mp_off || ''], // Tampilkan teks
-                    ['Sakit', report.mp_sakit || ''], // Tampilkan teks
-                    ['Total (Masuk)', report.mp_total], // Ini adalah total dari mp_total (hanya 2 field masuk)
+                    ['Ijin', report.mp_ijin || ''], 
+                    ['Off', report.mp_off || ''], 
+                    ['Sakit', report.mp_sakit || ''], 
+                    ['Total (Masuk)', report.mp_total], 
                 ],
                 ...tableStyles,
                 margin: { left: marginX },
-                tableWidth: 80, // Lebar tabel lebih kecil
+                tableWidth: 80, 
                 didParseCell: (data) => {
-                    if (data.row.index === 5) { data.cell.styles.fontStyle = 'bold'; } // Total Bold
-                    if (data.column.index === 0) { data.cell.styles.fontStyle = 'bold'; } // Kolom pertama Bold
+                    if (data.row.index === 5) { data.cell.styles.fontStyle = 'bold'; } 
+                    if (data.column.index === 0) { data.cell.styles.fontStyle = 'bold'; } 
                 }
             });
             currentY = doc.autoTable.previous.finalY + 8;
@@ -287,26 +313,21 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.text("ACTIVITY", marginX, currentY);
             currentY += 4;
             
-            // ===== PERUBAHAN HEADER ACTIVITY (Center Align) =====
             const activityHeaders = [
-                // Baris 1: Judul Leader (11 columns total)
                 [
-                    { content: 'KETERANGAN', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }, // Col 1
-                    { content: 'TOTAL', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },      // Col 2
-                    { content: 'MUSTHOLIH', colSpan: 3, styles: { halign: 'center' } },   // Cols 3,4,5
-                    { content: 'NUR AHMAD', colSpan: 3, styles: { halign: 'center' } },   // Cols 6,7,8
-                    { content: 'SUNARNO', colSpan: 3, styles: { halign: 'center' } }    // Cols 9,10,11
+                    { content: 'KETERANGAN', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }, 
+                    { content: 'TOTAL', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },      
+                    { content: 'MUSTHOLIH', colSpan: 3, styles: { halign: 'center' } },   
+                    { content: 'NUR AHMAD', colSpan: 3, styles: { halign: 'center' } },   
+                    { content: 'SUNARNO', colSpan: 3, styles: { halign: 'center' } }    
                 ],
-                // Baris 2: Sub-judul (9 columns total, skipping the first 2)
                 [
-                    // Map each string to an object with content and style
                     ...['FRESH', 'R1', 'R2', 'FRESH', 'R1', 'R2', 'FRESH', 'R1', 'R2'].map(text => ({
                         content: text,
-                        styles: { halign: 'center' } // Rata tengah
+                        styles: { halign: 'center' } 
                     }))
                 ]
             ];
-            // ===== AKHIR PERUBAHAN HEADER ACTIVITY =====
             
             const activityBody = [
                 ['IN REPAIR', report.act_in_repair_total, report.act_in_repair_wahyu_fresh, report.act_in_repair_wahyu_r1, report.act_in_repair_wahyu_r2, report.act_in_repair_khasanul_fresh, report.act_in_repair_khasanul_r1, report.act_in_repair_khasanul_r2, report.act_in_repair_sunarno_fresh, report.act_in_repair_sunarno_r1, report.act_in_repair_sunarno_r2],
@@ -324,21 +345,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...tableStyles,
                 margin: { left: marginX },
                 tableWidth: fullWidth,
-                // ===== PERUBAHAN STYLE KOLOM (Center Align) =====
                 columnStyles: { 
-                    0: { cellWidth: 35, fontStyle: 'bold' }, // Keterangan
-                    1: { cellWidth: 15, halign: 'center' }, // Total (center)
-                    2: { halign: 'center' }, // Mustholih-Fresh
-                    3: { halign: 'center' }, // Mustholih-R1
-                    4: { halign: 'center' }, // Mustholih-R2
-                    5: { halign: 'center' }, // Nur Ahmad-Fresh
-                    6: { halign: 'center' }, // Nur Ahmad-R1
-                    7: { halign: 'center' }, // Nur Ahmad-R2
-                    8: { halign: 'center' }, // Sunarno-Fresh
-                    9: { halign: 'center' }, // Sunarno-R1
-                    10: { halign: 'center' } // Sunarno-R2
+                    0: { cellWidth: 35, fontStyle: 'bold' }, 
+                    1: { cellWidth: 15, halign: 'center' }, 
+                    2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'center' },
+                    5: { halign: 'center' }, 6: { halign: 'center' }, 7: { halign: 'center' },
+                    8: { halign: 'center' }, 9: { halign: 'center' }, 10: { halign: 'center' } 
                 }
-                // ===== AKHIR PERUBAHAN STYLE KOLOM =====
             });
             currentY = doc.autoTable.previous.finalY + 8;
 
@@ -381,6 +394,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: [[report.amplas_notes || '']],
                 ...tableStyles, margin: { left: leftColX }, tableWidth: colWidth
             });
+            leftY = doc.autoTable.previous.finalY + 2; // Kasih jarak
+            
+            // Verifikasi (Kiri)
+            doc.autoTable({
+                startY: leftY,
+                head: [['VERIFIKASI']],
+                body: [[report.verifikasi_notes || '']],
+                ...tableStyles, margin: { left: leftColX }, tableWidth: colWidth
+            });
+            
+            leftY = doc.autoTable.previous.finalY; // Simpan Y terakhir kolom kiri
 
             // --- Kolom Kanan: Hasil Touch Up ---
             const touchUpItems = (report.hasil_touch_up_notes || '').split('\n')
@@ -392,43 +416,79 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let touchUpTotal = 0;
             touchUpItems.forEach(item => { touchUpTotal += parseInt(item[1]) || 0; });
-            touchUpItems.push(['TOTAL', touchUpTotal]); // Tambah baris total
+            touchUpItems.push(['TOTAL', touchUpTotal]); 
 
             doc.autoTable({
                 startY: rightY,
-                head: [['HASIL TOUCH UP (PART NAME)', 'QTY']],
+                head: [['HASIL TOUCH UP', 'QTY']],
                 body: touchUpItems,
                 ...tableStyles,
                 margin: { left: rightColX }, 
                 tableWidth: colWidth,
                 didParseCell: (data) => {
-                    if (data.row.index === (touchUpItems.length - 1)) { // Baris total
+                    if (data.row.index === (touchUpItems.length - 1)) { 
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            });
+            rightY = doc.autoTable.previous.finalY + 2; 
+
+            // Hasil Assy Cup (di bawah Touch Up)
+            const assyCupItems = (report.hasil_assy_cup_notes || '').split('\n')
+                .filter(item => item.trim() !== '')
+                .map(item => {
+                    const parts = item.split(': ');
+                    return [parts[0] || '', parts[1] || ''];
+                });
+            
+            let assyCupTotal = 0;
+            assyCupItems.forEach(item => { assyCupTotal += parseInt(item[1]) || 0; });
+            assyCupItems.push(['TOTAL', assyCupTotal]);
+
+            doc.autoTable({
+                startY: rightY, 
+                head: [['BANTUAN OPERATOR REPAIR', 'QTY']],
+                body: assyCupItems,
+                ...tableStyles,
+                margin: { left: rightColX }, 
+                tableWidth: colWidth,
+                didParseCell: (data) => {
+                    if (data.row.index === (assyCupItems.length - 1)) { 
                         data.cell.styles.fontStyle = 'bold';
                     }
                 }
             });
 
-            // ===== FOOTER PDF (Sama seperti wuster) =====
-            currentY = Math.max(doc.autoTable.previous.finalY, leftY) + 20;
+
+            // ===== FOOTER PDF =====
+            // Gunakan margin 15mm dari pinggir border, bukan pinggir kertas
+            const footerMarginX = 15; 
+            currentY = Math.max(doc.autoTable.previous.finalY, leftY) + 20; 
             
-            // === AWAL MODIFIKASI ===
+            // Cek jika footer keluar halaman
+            if (currentY > pageHeight - 40) { // Cek 40mm dari bawah
+                 doc.addPage();
+                 // Gambar border lagi di halaman baru
+                 doc.rect(margin, margin, pageWidth - (margin * 2), pageHeight - (margin * 2));
+                 currentY = 30; // Mulai Y baru di halaman baru
+            }
+            
             const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
-            const preparerJabatan = (currentKaryawan && currentKaryawan.jabatan) || '( Jabatan )'; // <- BARIS BARU
+            const preparerJabatan = (currentKaryawan && currentKaryawan.jabatan) || '( Jabatan )'; 
             const chiefName = report.chief_name || '( .......................... )'; 
-            // === AKHIR MODIFIKASI ===
             
             doc.setFontSize(9);
-            doc.text("Dibuat,", marginX, currentY); 
-            doc.text(preparerName, marginX, currentY + 15); 
-            doc.text(preparerJabatan, marginX, currentY + 20); // <- INI YANG DIGANTI
+            doc.text("Dibuat,", footerMarginX, currentY); 
+            doc.text(preparerName, footerMarginX, currentY + 15); 
+            doc.text(preparerJabatan, footerMarginX, currentY + 20); 
             
             doc.text("Disetujui,", doc.internal.pageSize.width / 2, currentY, { align: 'center' }); 
             doc.text(chiefName, doc.internal.pageSize.width / 2, currentY + 15, { align: 'center' }); 
             doc.text("Chief", doc.internal.pageSize.width / 2, currentY + 20, { align: 'center' });
             
-            doc.text("Mengetahui,", doc.internal.pageSize.width - marginX, currentY, { align: 'right' }); 
-            doc.text("SINGGIH E W", doc.internal.pageSize.width - marginX, currentY + 15, { align: 'right' }); 
-            doc.text("Dept Head", doc.internal.pageSize.width - marginX, currentY + 20, { align: 'right' });
+            doc.text("Mengetahui,", doc.internal.pageSize.width - footerMarginX, currentY, { align: 'right' }); 
+            doc.text("SINGGIH E W", doc.internal.pageSize.width - footerMarginX, currentY + 15, { align: 'right' }); 
+            doc.text("Dept Head", doc.internal.pageSize.width - footerMarginX, currentY + 20, { align: 'right' });
             // ===== AKHIR FOOTER PDF =====
 
             doc.save(`Laporan_Repair_${report.tanggal}.pdf`);
@@ -448,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const { data, error } = await _supabase
             .from('laporan_repair')
-            .select('id, tanggal, shift, created_at') // Tambah shift
+            .select('id, tanggal, shift, created_at') 
             .eq('status', 'draft')
             .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false });
@@ -514,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const to = from + itemsPerPage - 1;
 
         const { data, error } = await _supabase.from('laporan_repair')
-            .select('id, tanggal, shift, mp_total, created_at') // Tambah shift
+            .select('id, tanggal, shift, mp_total, created_at') 
             .or('status.eq.published,status.is.null')
             .order('created_at', { ascending: false }).range(from, to);
             
@@ -579,10 +639,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('mp_ijin').value = report.mp_ijin;
         document.getElementById('mp_off').value = report.mp_off;
         document.getElementById('mp_sakit').value = report.mp_sakit;
-        // mp_total akan dihitung oleh calculateAllTotals()
 
         // Isi Activity Grid (Row 1: IN REPAIR)
-        // ID input tetap 'wahyu' dan 'khasanul'
         document.getElementById('act_in_repair_total').value = report.act_in_repair_total;
         document.getElementById('act_in_repair_wahyu_fresh').value = report.act_in_repair_wahyu_fresh;
         document.getElementById('act_in_repair_wahyu_r1').value = report.act_in_repair_wahyu_r1;
@@ -660,9 +718,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('equipment_notes').value = report.equipment_notes;
         document.getElementById('lorry_notes').value = report.lorry_notes;
         document.getElementById('amplas_notes').value = report.amplas_notes;
+        document.getElementById('verifikasi_notes').value = report.verifikasi_notes; // <-- BARIS BARU
 
         // Isi dynamic list
-        deserializeDynamicList(touchUpListContainer, 'touchup-item-name', 'touchup-item-value', report.hasil_touch_up_notes);
+        deserializeDynamicList(touchUpListContainer, 'touchup-item-name', 'touchup-item-value', report.hasil_touch_up_notes, defaultTouchUpItems);
+        deserializeDynamicList(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value', report.hasil_assy_cup_notes, defaultAssyCupItems);
 
         // Hitung ulang semua total
         calculateAllTotals();
@@ -687,6 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset list dinamis ke default
         resetDynamicList(touchUpListContainer, defaultTouchUpItems, 'touchup-item-name', 'touchup-item-value');
+        resetDynamicList(assyCupListContainer, defaultAssyCupItems, 'assy-cup-item-name', 'assy-cup-item-value');
 
         // Hitung ulang semua total (jadi 0)
         calculateAllTotals();
@@ -719,10 +780,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Main Power
             mp_masuk_repair: getIntVal('mp_masuk_repair'),
             mp_masuk_touchup: getIntVal('mp_masuk_touchup'),
-            mp_ijin: document.getElementById('mp_ijin').value, // Ambil sebagai Teks
-            mp_off: document.getElementById('mp_off').value, // Ambil sebagai Teks
-            mp_sakit: document.getElementById('mp_sakit').value, // Ambil sebagai Teks
-            mp_total: getIntVal('mp_total'), // Ini adalah total dari 2 field 'masuk'
+            mp_ijin: document.getElementById('mp_ijin').value, 
+            mp_off: document.getElementById('mp_off').value, 
+            mp_sakit: document.getElementById('mp_sakit').value, 
+            mp_total: getIntVal('mp_total'), 
 
             // Activity: IN REPAIR
             act_in_repair_total: getIntVal('act_in_repair_total'),
@@ -801,9 +862,12 @@ document.addEventListener('DOMContentLoaded', () => {
             equipment_notes: document.getElementById('equipment_notes').value,
             lorry_notes: document.getElementById('lorry_notes').value,
             amplas_notes: document.getElementById('amplas_notes').value,
-            
+            verifikasi_notes: document.getElementById('verifikasi_notes').value, // <-- BARIS BARU
+
             // Hasil Touch Up
-            hasil_touch_up_notes: serializeDynamicList(touchUpListContainer, 'touchup-item-name', 'touchup-item-value')
+            hasil_touch_up_notes: serializeDynamicList(touchUpListContainer, 'touchup-item-name', 'touchup-item-value'),
+            // Hasil Assy Cup
+            hasil_assy_cup_notes: serializeDynamicList(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value')
         };
     }
 
@@ -851,12 +915,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener "Simpan Laporan Final"
     repairForm.onsubmit = async (event) => {
         event.preventDefault();
-        await handleFormSubmit(false); // false = bukan draft
+        await handleFormSubmit(false); 
     };
 
     // Event listener "Simpan Draft"
     saveDraftBtn.addEventListener('click', async () => {
-        await handleFormSubmit(true); // true = draft
+        await handleFormSubmit(true); 
     });
 
 
@@ -871,14 +935,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Cek sesi dan data user
         let session;
         try {
-            session = await getActiveUserSession(); // dari app.js
+            session = await getActiveUserSession(); 
             if (!session) {
                 alert('Anda harus login terlebih dahulu!');
                 window.location.href = 'index.html';
                 return;
             }
             currentUser = session.user;
-            currentKaryawan = await loadSharedDashboardData(currentUser); // dari app.js
+            currentKaryawan = await loadSharedDashboardData(currentUser); 
         } catch (error) {
             console.error("Error saat inisialisasi user:", error);
             alert('Gagal memuat data user. Cek koneksi dan coba lagi.');
