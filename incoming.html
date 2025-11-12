@@ -9,7 +9,53 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
+    
+    <style>
+        /* --- 1. PERBAIKAN ABSENSI (MOBILE) --- */
+        @media (max-width: 768px) {
+            .absensi-grid-4col {
+                grid-template-columns: 1fr; /* 1 kolom aja */
+                gap: 0.5rem; /* Jarak antar semua item */
+            }
+            
+            .absensi-grid-4col .grid-header {
+                /* Sembunyikan header tabel di mobile */
+                display: none;
+            }
+    
+            .absensi-grid-4col > label {
+                /* Label jadi judul di atas */
+                text-align: left;
+                font-weight: bold;
+                font-size: 1em;
+                padding-right: 0;
+                border-bottom: 1px solid #444;
+                padding-bottom: 0.5rem;
+                margin-top: 1rem; /* Kasih jarak antar grup */
+            }
+    
+            .absensi-grid-4col > input {
+                width: 100%;
+            }
+        }
+
+        /* --- TAMBAHAN CSS UNTUK LINE CHROM --- */
+        .form-grid-4-simple {
+            display: grid;
+            grid-template-columns: auto 1fr auto 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid-4-simple {
+                grid-template-columns: auto 1fr;
+            }
+        }
+        /* --- AKHIR TAMBAHAN CSS --- */
+
+    </style>
+    </head>
 <body>
 
     <div class="dashboard-container">
@@ -65,23 +111,80 @@
                         <div class="input-group"><label for="chief_name">Nama Chief</label><select id="chief_name"><option value="">( Kosong )</option><option value="YANTO H">YANTO H</option><option value="SUBAGYO">SUBAGYO</option><option value="SARNO">SARNO</option></select></div>
                     </div>
                     
-                    <h4 class="form-section-title">1. Absensi</h4>
-                    <div class="form-grid-3">
-                        <fieldset class="input-group-border"><legend>A. Line Incoming</legend><label>Masuk:</label><input type="number" id="absensi_incoming_masuk" value=" "><label>Tidak Masuk:</label><input type="text" id="absensi_incoming_tdk_masuk" placeholder="Nama orang"></fieldset>
-                        <fieldset class="input-group-border"><legend>B. Line Step Assy</legend><label>Masuk:</label><input type="number" id="absensi_step_assy_masuk" value=" "><label>Tidak Masuk:</label><input type="text" id="absensi_step_assy_tdk_masuk" placeholder="Nama orang"></fieldset>
-                        <fieldset class="input-group-border"><legend>C. Line Buka Cap</legend><label>Masuk:</label><input type="number" id="absensi_buka_cap_masuk" value=" "><label>Tidak Masuk:</label><input type="text" id="absensi_buka_cap_tdk_masuk" placeholder="Nama orang"></fieldset>
-                    </div>
+                    <h4 class="form-section-title">Absensi</h4>
+                    <fieldset class="absensi-fieldset">
+                        <div class="absensi-grid-4col">
+                            <label></label>
+                            <span class="grid-header">Masuk (org)</span>
+                            <span class="grid-header">Tdk Masuk (org)</span> 
+                            <span class="grid-header">Tdk Masuk (Nama)</span>
+
+                            <label for="abs_incoming_masuk">A. LINE INCOMING</label>
+                            <input type="number" id="abs_incoming_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_incoming_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_incoming_tdk_masuk_nama" placeholder="Tdk Masuk (Nama)">
+
+                            <label for="abs_step_assy_masuk">B. LINE STEP ASSY</label>
+                            <input type="number" id="abs_step_assy_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_step_assy_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_step_assy_tdk_masuk_nama" placeholder="Tdk Masuk (Nama)">
+
+                            <label for="abs_buka_cap_masuk">C. LINE BUKA CAP</label>
+                            <input type="number" id="abs_buka_cap_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_buka_cap_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_buka_cap_tdk_masuk_nama" placeholder="Tdk Masuk (Nama)">
+
+                            <label for="abs_chrom_masuk">D. CHROM</label>
+                            <input type="number" id="abs_chrom_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_chrom_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_chrom_tdk_masuk_nama" placeholder="Tdk Masuk (Nama)">
+
+                            <label for="abs_remover_masuk">E. REMOVER</label>
+                            <input type="number" id="abs_remover_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_remover_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_remover_tdk_masuk_nama" placeholder="Tdk Masuk (Nama)">
+
+                            <label for="abs_touch_up_aerox_masuk">F. TOUCH UP AEROX</label>
+                            <input type="number" id="abs_touch_up_aerox_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_touch_up_aerox_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_touch_up_aerox_tdk_masuk_nama" placeholder="Tdk Masuk (Nama)">
+
+                            <label for="abs_verifikasi_masuk">G. VERIFIKASI</label>
+                            <input type="number" id="abs_verifikasi_masuk" placeholder="Masuk (org)">
+                            <input type="number" id="abs_verifikasi_tdk_masuk_org" placeholder="Tdk Masuk (org)"> 
+                            <input type="text" id="abs_verifikasi_tdk_masuk_nama" placeholder="Tdk Masuk (Nama)">
+                        </div>
+                    </fieldset>
                     
-                    <h4 class="form-section-title">2. Produksi Line Incoming</h4>
+                    <h4 class="form-section-title">Line Incoming</h4>
                     <div class="form-grid-2">
                         <fieldset class="input-group-border"><legend>Produksi</legend><label>In Wuster:</label><input type="text" id="prod_wuster" placeholder="cth: 56"><label>In Chrom:</label><input type="text" id="prod_chrom" placeholder="cth: 12"></fieldset>
                         <fieldset class="input-group-border"><legend>Quality</legend><label>Item:</label><input type="text" id="quality_item" placeholder="cth: COVER ELEMENT 1DY"><label>Cek:</label><input type="text" id="quality_cek" placeholder="cth: 80"><label>NG (Ket.):</label><input type="text" id="quality_ng" placeholder="cth: 68 (Kerut, Kasar)"><label>Balik Material:</label><input type="text" id="quality_balik_material" placeholder="cth: 68"></fieldset>
                     </div>
 
-                    <h4 class="form-section-title">3 & 4. Produksi (Step Assy & Buka Cap)</h4>
-                    <div class="form-grid-3">
+                    <h4 class="form-section-title">Line Chrom</h4>
+                    <fieldset class="input-group-border">
+                        <legend>Line Chrom</legend>
+                        <div class="form-grid-2">
+                            <label for="prod_chrom_machining">Part Machining</label>
+                            <input type="number" id="prod_chrom_machining" class="prod-chrom-calc" placeholder="Jumlah">
+                            
+                            <label for="prod_chrom_finishing">Part Finishing</label>
+                            <input type="number" id="prod_chrom_finishing" class="prod-chrom-calc" placeholder="Jumlah">
+                            
+                            <label for="prod_chrom_remover">Part Remover</label>
+                            <input type="number" id="prod_chrom_remover" class="prod-chrom-calc" placeholder="Jumlah">
+                            
+                            <label for="prod_chrom_total" style="font-weight: bold;">Total Produksi</label>
+                            <input type="number" id="prod_chrom_total" style="font-weight: bold;" readonly>
+                        </div>
+                    </fieldset>
+                    <br>
+
+                    <h4 class="form-section-title">Produksi</h4>
+                    <div class="form-grid-2">
                         <fieldset class="absensi-fieldset">
-                            <legend>Produksi Line Step Assy</legend>
+                            <legend>Line Step Assy</legend>
                             <div class="dynamic-list-container" id="prod-step-assy-list"></div>
                             <button type="button" class="button-add" id="add-step-assy-item-btn">
                                 <span class="material-icons">add_circle</span> Tambah Item Lain
@@ -90,7 +193,7 @@
                         </fieldset>
 
                         <fieldset class="absensi-fieldset">
-                            <legend>Produksi Line Buka Cap</legend>
+                            <legend>Line Buka Cap</legend>
                             <div class="dynamic-list-container" id="prod-buka-cap-list"></div>
                             <button type="button" class="button-add" id="add-buka-cap-item-btn">
                                 <span class="material-icons">add_circle</span> Tambah Item Lain
@@ -99,16 +202,31 @@
                         </fieldset>
 
                         <fieldset class="absensi-fieldset">
-                            <legend>Produksi Assy Cup</legend>
-                            <div class="dynamic-list-container" id="prod-assy-cup-list"></div>
-                            <button type="button" class="button-add" id="add-assy-cup-item-btn">
+                            <legend>B. Line Remover</legend>
+                            <div class="dynamic-list-container" id="prod-remover-list"></div>
+                            <button type="button" class="button-add" id="add-remover-item-btn">
                                 <span class="material-icons">add_circle</span> Tambah Item Lain
                             </button>
-                             <div class="list-total-display">TOTAL <span id="prod-assy-cup-total">0</span></div>
+                            <div class="list-total-display">TOTAL <span id="prod-remover-total">0</span></div>
                         </fieldset>
+                        <fieldset class="absensi-fieldset">
+                            <legend>C. Line Touch Up Aerox</legend>
+                            <div class="dynamic-list-container" id="prod-touch-up-aerox-list"></div>
+                            <button type="button" class="button-add" id="add-touch-up-aerox-item-btn">
+                                <span class="material-icons">add_circle</span> Tambah Item Lain
+                            </button>
+                             <div class="list-total-display">TOTAL <span id="prod-touch-up-aerox-total">0</span></div>
+                        </fieldset>
+                        </div>
+
+                    <h4 class="form-section-title">Check</h4>
+                    <div class="input-group"><label for="check_thickness_notes">Catatan Check Thickness / check adhesive ( delivery / assy)</label><textarea id="check_thickness_notes" rows="3" placeholder="cth: CH BKW TOTAL CEK: 82, OK: 80, NG: 2 "></textarea></div>
+
+                    <h4 class="form-section-title">Line Verifikasi</h4>
+                    <div class="input-group">
+                        <label for="verifikasi_notes">Catatan Verifikasi</label>
+                        <textarea id="verifikasi_notes" rows="4" placeholder="Contoh: Hasil Repair..."></textarea>
                     </div>
-                    <h4 class="form-section-title">Check Thickness</h4>
-                    <div class="input-group"><label for="check_thickness_notes">Catatan Check Thickness</label><textarea id="check_thickness_notes" rows="3" placeholder="cth: CH BKW TOTAL CEK: 82, OK: 80, NG: 2 "></textarea></div>
                     <br>
                     <div class="form-actions">
                         <button type="button" class="button-secondary" id="save-draft-btn">Simpan Draft</button>

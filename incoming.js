@@ -1,17 +1,16 @@
 // =================================================================
 // C. LOGIKA HALAMAN INCOMING (incoming.html)
+// (VERSI MODIFIKASI: Layout PDF diubah, Remover & Touch Up pindah ke KIRI)
 // =================================================================
 
-// Pastikan semua HTML sudah siap sebelum menjalankan kode
 document.addEventListener('DOMContentLoaded', () => {
 
     const incomingForm = document.getElementById('incoming-form');
-    // Jika tidak ada form, hentikan script
     if (!incomingForm) return; 
 
     let currentUser = null;
     let currentKaryawan = null;
-    let currentlyEditingId = null; // State untuk Edit/Draft
+    let currentlyEditingId = null; 
 
     const historyListEl = document.getElementById('incoming-history-list')?.getElementsByTagName('tbody')[0];
     const draftListEl = document.getElementById('incoming-draft-list')?.getElementsByTagName('tbody')[0];
@@ -31,7 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextButton = document.getElementById('next-page-btn');
     const pageInfo = document.getElementById('page-info');
 
-    // === Variabel List Dinamis BARU ===
+    // === Variabel Line Chrom ===
+    const prodChromInputs = document.querySelectorAll('.prod-chrom-calc');
+    const prodChromTotalInput = document.getElementById('prod_chrom_total');
+
+    // === Variabel List Dinamis ===
     const stepAssyListContainer = document.getElementById('prod-step-assy-list');
     const addStepAssyItemBtn = document.getElementById('add-step-assy-item-btn');
     const defaultStepAssyItems = ["S/B K41K LH", "S/B K41K SP", "S/B K41K CW", "S/B KPYX LH", "S/B KPYX SP", "S/B KPYX CW"];
@@ -42,11 +45,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultBukaCapItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS", "M/C K15A", "M/C K2SA", "M/C K3VA FR", "M/C XD 831", "M/C K84A FR"];
     const bukaCapTotalSpan = document.getElementById('prod-buka-cap-total');
 
-    const assyCupListContainer = document.getElementById('prod-assy-cup-list');
-    const addAssyCupItemBtn = document.getElementById('add-assy-cup-item-btn');
-    const defaultAssyCupItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS", "M/C K15A", "M/C K2SA", "M/C K3VA FR", "M/C XD 831", "M/C K84A FR"];
-    const assyCupTotalSpan = document.getElementById('prod-assy-cup-total');
+    // === Variabel Line Remover ===
+    const removerListContainer = document.getElementById('prod-remover-list');
+    const addRemoverItemBtn = document.getElementById('add-remover-item-btn');
+    const defaultRemoverItems = ["C/H BXD", "C/C 1DY 2", "HOLDER KYEA"];
+    const removerTotalSpan = document.getElementById('prod-remover-total');
     
+    // === Variabel Touch Up Aerox ===
+    const touchUpAeroxListContainer = document.getElementById('prod-touch-up-aerox-list');
+    const addTouchUpAeroxItemBtn = document.getElementById('add-touch-up-aerox-item-btn');
+    const defaultTouchUpAeroxItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS", "M/C K15A", "M/C K2SA", "M/C K3VA FR", "M/C XD 831", "M/C K84A FR"];
+    const touchUpAeroxTotalSpan = document.getElementById('prod-touch-up-aerox-total');
+    
+    /**
+     * FUNGSI: Menghitung total Produksi Chrom (A)
+     */
+    function updateProdChromTotal() {
+        if (!prodChromTotalInput) return;
+        let total = 0;
+        prodChromInputs.forEach(input => {
+            total += parseInt(input.value) || 0;
+        });
+        prodChromTotalInput.value = total;
+    }
+    // Tambahkan event listener ke setiap input Prod Chrom
+    prodChromInputs.forEach(input => input.addEventListener('input', updateProdChromTotal));
+
     /**
      * FUNGSI: Menambahkan baris item ke list dinamis
      */
@@ -55,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = document.createElement('div');
         row.className = 'dynamic-list-row';
 
-        // Semua list di halaman ini adalah Angka
         const inputType = "number";
         const inputPlaceholder = "Jumlah";
         const inputValue = itemValue || " "; 
@@ -83,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * FUNGSI: Mengurai string dari database kembali menjadi baris input
      */
     function deserializeDynamicList(container, nameClass, valueClass, notesString, defaultItems) {
-        container.innerHTML = ''; // Kosongkan list
+        container.innerHTML = ''; 
         if (!notesString || notesString.trim() === '') {
             resetDynamicList(container, defaultItems, nameClass, valueClass);
             return;
@@ -105,15 +128,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener untuk tombol "Tambah Item"
     if (addStepAssyItemBtn) addStepAssyItemBtn.addEventListener('click', () => addDynamicRow(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value'));
     if (addBukaCapItemBtn) addBukaCapItemBtn.addEventListener('click', () => addDynamicRow(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value'));
-    if (addAssyCupItemBtn) addAssyCupItemBtn.addEventListener('click', () => addDynamicRow(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value'));
+    if (addRemoverItemBtn) addRemoverItemBtn.addEventListener('click', () => addDynamicRow(removerListContainer, 'remover-item-name', 'remover-item-value')); 
+    if (addTouchUpAeroxItemBtn) addTouchUpAeroxItemBtn.addEventListener('click', () => addDynamicRow(touchUpAeroxListContainer, 'touchup-aerox-item-name', 'touchup-aerox-item-value')); 
 
     // Event listener untuk tombol "Hapus" (Delegasi)
     incomingForm.addEventListener('click', (e) => {
         if (e.target.closest('.button-remove')) {
             const row = e.target.closest('.dynamic-list-row');
             if (!row) return;
-            row.remove(); // Hapus baris
-            calculateAllDynamicTotals(); // Hitung ulang total
+            row.remove(); 
+            calculateAllDynamicTotals(); 
         }
     });
 
@@ -122,8 +146,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetClass = e.target.classList;
         if (targetClass.contains('step-assy-item-value') ||
             targetClass.contains('buka-cap-item-value') ||
-            targetClass.contains('assy-cup-item-value')) {
-            calculateAllDynamicTotals(); // Hitung ulang total
+            targetClass.contains('remover-item-value') || 
+            targetClass.contains('touchup-aerox-item-value')) { 
+            calculateAllDynamicTotals(); 
         }
     });
 
@@ -167,12 +192,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculateAllDynamicTotals() {
         calculateDynamicListTotal(stepAssyListContainer, 'step-assy-item-value', stepAssyTotalSpan);
         calculateDynamicListTotal(bukaCapListContainer, 'buka-cap-item-value', bukaCapTotalSpan);
-        calculateDynamicListTotal(assyCupListContainer, 'assy-cup-item-value', assyCupTotalSpan);
+        calculateDynamicListTotal(removerListContainer, 'remover-item-value', removerTotalSpan); 
+        calculateDynamicListTotal(touchUpAeroxListContainer, 'touchup-aerox-item-value', touchUpAeroxTotalSpan); 
     }
 
     
     /**
-     * FUNGSI PDF (DIMODIFIKASI)
+     * FUNGSI PDF (DIMODIFIKASI UNTUK LAYOUT BARU)
      */
     async function generatePDF(reportId) {
         alert('Membuat PDF... Mohon tunggu.');
@@ -183,23 +209,91 @@ document.addEventListener('DOMContentLoaded', () => {
         const { jsPDF } = window.jspdf;
 
         /**
-         * FUNGSI HELPER PDF BARU: Menghitung total dari string notes
+         * FUNGSI HELPER PDF (KANAN): 
+         * Mengubah string notes (cth: "Item A: 10\nItem B: 20") 
+         * menjadi baris-baris autoTable (3 kolom) lengkap dengan rowSpan dan TOTAL.
          */
-        function addTotalToNotes(notesString) {
-            if (!notesString || notesString.trim() === '') return '(Kosong)';
+        function parseNotesToRows(groupName, notesString) {
+            const parsedRows = []; 
+            const itemRows = [];   
             let sum = 0;
-            const lines = notesString.split('\n');
+            
+            const lines = notesString ? notesString.split('\n').filter(l => l.trim() !== '') : [];
+
+            if (lines.length === 0) {
+                parsedRows.push([
+                    { content: groupName, styles: { fontStyle: 'bold', valign: 'top' } },
+                    '(Kosong)',
+                    ''
+                ]);
+                return parsedRows;
+            }
             
             lines.forEach(line => {
                 const parts = line.split(': ');
-                if (parts.length >= 2) {
-                    // Ambil bagian terakhir (angkanya) dan ubah jadi integer
-                    sum += parseInt(parts[parts.length - 1]) || 0;
-                }
+                const name = parts[0] || '';
+                const value = parts.slice(1).join(': ') || ''; 
+                const quantity = parseInt(value) || 0;
+                sum += quantity;
+                itemRows.push([name, value]); 
             });
+
+            itemRows.push([
+                { content: 'TOTAL', styles: { fontStyle: 'bold', halign: 'right' } },
+                { content: sum.toString(), styles: { fontStyle: 'bold', halign: 'center' } } 
+            ]);
+
+            parsedRows.push([
+                { 
+                    content: groupName, 
+                    rowSpan: itemRows.length, 
+                    styles: { fontStyle: 'bold', valign: 'top' } 
+                },
+                ...itemRows[0] 
+            ]);
             
-            // Kembalikan string asli DITAMBAH baris TOTAL
-            return `${notesString}\n\nTOTAL: ${sum}`;
+            parsedRows.push(...itemRows.slice(1));
+            
+            return parsedRows;
+        }
+
+        /**
+         * FUNGSI HELPER PDF (KIRI): 
+         * Mengubah string notes menjadi baris-baris sederhana [Item, Jumlah]
+         * untuk tabel KIRI (2 kolom).
+         */
+        function parseNotesToSimpleRows(title, notesString) {
+            const rows = [];
+            let sum = 0;
+            
+            rows.push([{ 
+                content: title, 
+                styles: { fontStyle: 'bold', fillColor: [230, 230, 230] }, 
+                colSpan: 2 
+            }]);
+            
+            const lines = notesString ? notesString.split('\n').filter(l => l.trim() !== '') : [];
+
+            if (lines.length === 0) {
+                rows.push(['(Kosong)', '']);
+                return rows;
+            }
+
+            lines.forEach(line => {
+                const parts = line.split(': ');
+                const name = '   ' + (parts[0] || ''); 
+                const value = parts.slice(1).join(': ') || ''; 
+                const quantity = parseInt(value) || 0;
+                sum += quantity;
+                rows.push([name, { content: value, styles: { halign: 'center' } }]); 
+            });
+
+            rows.push([
+                { content: 'TOTAL', styles: { fontStyle: 'bold' } },
+                { content: sum.toString(), styles: { fontStyle: 'bold', halign: 'center' } }
+            ]);
+            
+            return rows;
         }
         // --- Akhir fungsi helper ---
 
@@ -208,7 +302,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 .from('laporan_incoming').select('*').eq('id', reportId).single();
             if (error) throw new Error(`Gagal mengambil data laporan: ${error.message}`);
             
-            const doc = new jsPDF({ format: 'legal' });
+            const doc = new jsPDF({ format: 'legal' }); 
+
+            // === TAMBAHAN BARU: Border Hitam Pinggir ===
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 10; // Margin 10mm
+            doc.setDrawColor(0, 0, 0); // Warna border hitam
+            doc.rect(margin, margin, pageWidth - (margin * 2), pageHeight - (margin * 2)); // Gambar kotak
+            // === AKHIR TAMBAHAN ===
 
             // Judul
             doc.setFontSize(16); doc.text("LAPORAN INTERNAL PAINTING", 105, 15, { align: 'center' });
@@ -220,57 +322,156 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.text("TANGGAL", 20, 40); doc.text(`: ${report.tanggal}`, 50, 40);
             doc.text("SHIFT", 20, 45); doc.text(`: ${report.shift}`, 50, 45);
             
-            const tableStyles = { theme: 'grid', styles: { cellWidth: 'wrap', fontSize: 9 }, headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255], fontSize: 10 } };
-
-            // Tabel 1: Absensi
+            // Style Tabel (Rapat)
+            const tableStyles = { 
+                theme: 'grid', 
+                styles: { 
+                    cellWidth: 'wrap', 
+                    fontSize: 8, 
+                    cellPadding: 1.2 
+                }, 
+                headStyles: { 
+                    fillColor: [22, 160, 133], 
+                    textColor: [255, 255, 255], 
+                    fontSize: 9, 
+                    cellPadding: 1.2 
+                } 
+            };
+            
+            // Tabel 1: Absensi (Full Width)
             doc.autoTable({
-                startY: 50, head: [['1. ABSENSI', 'Masuk (org)', 'Tidak Masuk (Nama)']],
+                startY: 50, 
+                head: [['1. ABSENSI', 'Masuk (org)', 'Tdk Masuk (org)', 'Tidak Masuk (Nama)']],
                 body: [
-                    ['A. Line Incoming', report.absensi_incoming_masuk, report.absensi_incoming_tdk_masuk || ''],
-                    ['B. Line Step Assy', report.absensi_step_assy_masuk, report.absensi_step_assy_tdk_masuk || ''],
-                    ['C. Line Buka Cap', report.absensi_buka_cap_masuk, report.absensi_buka_cap_tdk_masuk || ''],
-                ], ...tableStyles
-            });
-
-            // Tabel 2: Produksi Line Incoming
-            doc.autoTable({
-                startY: doc.autoTable.previous.finalY + 7, head: [['2. PRODUKSI LINE INCOMING', 'Jumlah/Catatan']], 
-                body: [
-                    ['In Wuster', report.prod_wuster || ''], ['In Chrom', report.prod_chrom || ''],
-                    ['Quality Item', report.quality_item || ''], ['Quality Cek', report.quality_cek || ''],
-                    ['Quality NG (Ket.)', report.quality_ng || ''], ['Balik Material', report.quality_balik_material || ''],
-                ], ...tableStyles
-            });
-
-            // Tabel 3 & 4 Gabungan (DIMODIFIKASI)
-            doc.autoTable({
-                startY: doc.autoTable.previous.finalY + 7,
-                head: [['3 & 4. PRODUKSI & CHECK THICKNESS', 'Catatan']],
-                body: [
-                    // === PERUBAHAN DI SINI ===
-                    ['Prod. Line Step Assy', addTotalToNotes(report.prod_step_assy_notes)],
-                    ['Prod. Line Buka Cap', addTotalToNotes(report.prod_buka_cap_notes)],
-                    ['Prod. Assy Cup', addTotalToNotes(report.prod_assy_cup_notes)],
-                    // === AKHIR PERUBAHAN ===
-                    ['Check Thickness', report.check_thickness_notes || '']
-                ],
+                    ['A. Line Incoming', report.absensi_incoming_masuk || 0, report.absensi_incoming_tdk_masuk_org || 0, report.absensi_incoming_tdk_masuk_nama || ''],
+                    ['B. Line Step Assy', report.absensi_step_assy_masuk || 0, report.absensi_step_assy_tdk_masuk_org || 0, report.absensi_step_assy_tdk_masuk_nama || ''],
+                    ['C. Line Buka Cap', report.absensi_buka_cap_masuk || 0, report.absensi_buka_cap_tdk_masuk_org || 0, report.absensi_buka_cap_tdk_masuk_nama || ''],
+                    ['D. Chrom', report.absensi_chrom_masuk || 0, report.absensi_chrom_tdk_masuk_org || 0, report.absensi_chrom_tdk_masuk_nama || ''],
+                    ['E. Remover', report.absensi_remover_masuk || 0, report.absensi_remover_tdk_masuk_org || 0, report.absensi_remover_tdk_masuk_nama || ''],
+                    ['F. Touch Up Aerox', report.absensi_touch_up_aerox_masuk || 0, report.absensi_touch_up_aerox_tdk_masuk_org || 0, report.absensi_touch_up_aerox_tdk_masuk_nama || ''],
+                    ['G. Verifikasi', report.absensi_verifikasi_masuk || 0, report.absensi_verifikasi_tdk_masuk_org || 0, report.absensi_verifikasi_tdk_masuk_nama || ''],
+                ], 
                 ...tableStyles,
-                columnStyles: { 0: { cellWidth: 60, fontStyle: 'bold' }, 1: { cellWidth: 130 } }
+                columnStyles: { 
+                    0: { cellWidth: 50 }, 
+                    1: { cellWidth: 25, halign: 'center' }, 
+                    2: { cellWidth: 30, halign: 'center' },
+                    3: { cellWidth: 85 }
+                }
             });
+            
+            // ===========================================
+            //         MODIFIKASI LAYOUT 2 KOLOM
+            // ===========================================
+            
+            let table2StartY = doc.autoTable.previous.finalY + 5;
+            
+            // const pageWidth = doc.internal.pageSize.getWidth(); // Sudah ada di atas
+            const pageMargin = 10;
+            const usableWidth = pageWidth - (pageMargin * 2);
+            const tableWidth = (usableWidth / 2) - 2;
+            const gap = 4;
+            
+            const table2MarginRight = pageWidth - pageMargin - tableWidth;
+            const table3MarginLeft = pageMargin + tableWidth + gap;
+
+            // =======================================================
+            // KOLOM KIRI (Tabel 2)
+            // =======================================================
+            
+            // 1. Bangun body untuk Tabel 2 (Kiri)
+            let table2Body = [
+                ['In Wuster', report.prod_wuster || ''], 
+                ['In Chrom', report.prod_chrom || ''],
+                ['Quality Item', report.quality_item || ''], 
+                ['Quality Cek', report.quality_cek || ''],
+                ['Quality NG (Ket.)', report.quality_ng || ''], 
+                ['Balik Material', report.quality_balik_material || ''],
+                // Data Chrom
+                [{ content: 'Produksi Line Chrom:', styles: { fontStyle: 'bold', fillColor: [230, 230, 230] }, colSpan: 2 }],
+                ['   Part Machining', { content: report.prod_chrom_machining || 0, styles: { halign: 'center' } }],
+                ['   Part Finishing', { content: report.prod_chrom_finishing || 0, styles: { halign: 'center' } }],
+                ['   Part Remover', { content: report.prod_chrom_remover || 0, styles: { halign: 'center' } }],
+                ['   TOTAL Produksi', { content: report.prod_chrom_total || 0, styles: { fontStyle: 'bold', halign: 'center' } }],
+            ];
+            
+            // Ambil data Remover & Touch Up
+            const removerSimpleRows = parseNotesToSimpleRows('Line Remover', report.prod_remover_notes);
+            table2Body.push(...removerSimpleRows);
+            
+            const touchUpSimpleRows = parseNotesToSimpleRows('Line Touch Up Aerox', report.prod_touchup_notes);
+            table2Body.push(...touchUpSimpleRows);
+
+            // 2. Gambar Tabel Kiri
+            doc.autoTable({
+                startY: table2StartY, 
+                head: [['2. PRODUKSI LINE INCOMING', 'Jumlah/Catatan']], 
+                body: table2Body, 
+                ...tableStyles,
+                margin: { right: table2MarginRight } 
+            });
+            
+            let table2FinalY = doc.autoTable.previous.finalY;
+
+            // =======================================================
+            // KOLOM KANAN (Tabel 3 & 4)
+            // =======================================================
+            
+            // 1. Bangun body untuk Tabel 3 (Kanan)
+            let table3Body = [];
+            
+            const stepAssyRows = parseNotesToRows('Line Step Assy', report.prod_step_assy_notes);
+            table3Body.push(...stepAssyRows);
+
+            const bukaCapRows = parseNotesToRows('Line Buka Cap', report.prod_buka_cap_notes);
+            table3Body.push(...bukaCapRows);
+            
+            // Data Check Thickness & Verifikasi
+            table3Body.push([
+                { content: 'Check Thickness', styles: { fontStyle: 'bold', valign: 'top' } },
+                { content: report.check_thickness_notes || '(Kosong)', colSpan: 2 } 
+            ]);
+            table3Body.push([
+                { content: 'Line Verifikasi', styles: { fontStyle: 'bold', valign: 'top' } },
+                { content: report.verifikasi_notes || '(Kosong)', colSpan: 2 } 
+            ]);
+
+            // 2. Gambar Tabel Kanan
+            doc.autoTable({
+                startY: table2StartY, 
+                head: [['PRODUKSI', 'Item', 'Jumlah']], 
+                body: table3Body, 
+                ...tableStyles,
+                margin: { left: table3MarginLeft }, 
+                
+                columnStyles: { 
+                    0: { cellWidth: 35, fontStyle: 'bold' },     
+                    1: { cellWidth: tableWidth - 35 - 20 }, 
+                    2: { cellWidth: 20, halign: 'center' }   
+                } 
+            });
+            
+            let table3FinalY = doc.autoTable.previous.finalY;
+            
+            // ===========================================
+            //         AKHIR MODIFIKASI LAYOUT
+            // ===========================================
             
             // Footer
-            let finalY = doc.autoTable.previous.finalY + 20; 
-            if (finalY > 300) { doc.addPage(); finalY = 20; } 
+            let finalY = Math.max(table2FinalY, table3FinalY) + 20; 
             
-            // === AWAL MODIFIKASI ===
+            if (finalY > 300) { 
+                doc.addPage(); 
+                finalY = 20; 
+            } 
+            
             const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
-            const preparerJabatan = (currentKaryawan && currentKaryawan.jabatan) || '( Jabatan )'; // <- BARIS BARU
-            // === AKHIR MODIFIKASI ===
+            const preparerJabatan = (currentKaryawan && currentKaryawan.jabatan) || '( Jabatan )'; 
             
             doc.setFontSize(10);
             doc.text("Dibuat,", 20, finalY); 
             doc.text(preparerName, 20, finalY + 20); 
-            doc.text(preparerJabatan, 20, finalY + 25); // <- INI YANG DIGANTI
+            doc.text(preparerJabatan, 20, finalY + 25); 
             
             doc.text("Disetujui,", 105, finalY, { align: 'center' }); 
             const chiefName = report.chief_name || '( .......................... )'; 
@@ -288,16 +489,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     /**
-     * FUNGSI BARU: Memuat draft laporan
+     * FUNGSI: Memuat draft laporan
      */
     async function loadIncomingDrafts() {
         if (!draftListEl) return;
         draftListEl.innerHTML = '<tr><td colspan="4">Memuat draft...</td></tr>';
         
         const { data, error } = await _supabase
-            .from('laporan_incoming') // Ganti ke tabel incoming
+            .from('laporan_incoming') 
             .select('id, tanggal, shift, created_at')
             .eq('status', 'draft') 
             .eq('user_id', currentUser.id) 
@@ -342,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Fungsi: Memuat riwayat laporan (UPGRADED dengan Paginasi & Edit)
+     * Fungsi: Memuat riwayat laporan
      */
     async function loadIncomingHistory() {
         if (!historyListEl) return;
@@ -363,7 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const to = from + itemsPerPage - 1;
 
         const { data, error } = await _supabase.from('laporan_incoming')
-            .select('id, tanggal, shift, hari, created_at') // Ambil 'hari'
+            .select('id, tanggal, shift, hari, created_at') 
             .or('status.eq.published,status.is.null') 
             .order('created_at', { ascending: false }).range(from, to);
             
@@ -376,7 +576,6 @@ document.addEventListener('DOMContentLoaded', () => {
             historyListEl.innerHTML = '';
             data.forEach(laporan => {
                 const row = document.createElement('tr');
-                // Sesuaikan kolom tabel
                 row.innerHTML = `
                     <td>${laporan.tanggal}</td>
                     <td>${laporan.shift}</td>
@@ -403,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * FUNGSI BARU: Memuat data laporan ke form untuk diedit
+     * FUNGSI: Memuat data laporan ke form untuk diedit
      */
     async function loadReportForEditing(reportId) {
         formMessageEl.textContent = 'Memuat data laporan...';
@@ -419,36 +618,65 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Isi semua field
+        // Header
         document.getElementById('hari').value = report.hari;
         document.getElementById('tanggal').value = report.tanggal;
         document.getElementById('shift').value = report.shift;
         document.getElementById('chief_name').value = report.chief_name;
         
-        document.getElementById('absensi_incoming_masuk').value = report.absensi_incoming_masuk;
-        document.getElementById('absensi_incoming_tdk_masuk').value = report.absensi_incoming_tdk_masuk;
-        document.getElementById('absensi_step_assy_masuk').value = report.absensi_step_assy_masuk;
-        document.getElementById('absensi_step_assy_tdk_masuk').value = report.absensi_step_assy_tdk_masuk;
-        document.getElementById('absensi_buka_cap_masuk').value = report.absensi_buka_cap_masuk;
-        document.getElementById('absensi_buka_cap_tdk_masuk').value = report.absensi_buka_cap_tdk_masuk;
+        // Absensi
+        document.getElementById('abs_incoming_masuk').value = report.absensi_incoming_masuk;
+        document.getElementById('abs_incoming_tdk_masuk_org').value = report.absensi_incoming_tdk_masuk_org;
+        document.getElementById('abs_incoming_tdk_masuk_nama').value = report.absensi_incoming_tdk_masuk_nama;
+        document.getElementById('abs_step_assy_masuk').value = report.absensi_step_assy_masuk;
+        document.getElementById('abs_step_assy_tdk_masuk_org').value = report.absensi_step_assy_tdk_masuk_org;
+        document.getElementById('abs_step_assy_tdk_masuk_nama').value = report.absensi_step_assy_tdk_masuk_nama;
+        document.getElementById('abs_buka_cap_masuk').value = report.absensi_buka_cap_masuk;
+        document.getElementById('abs_buka_cap_tdk_masuk_org').value = report.absensi_buka_cap_tdk_masuk_org;
+        document.getElementById('abs_buka_cap_tdk_masuk_nama').value = report.absensi_buka_cap_tdk_masuk_nama;
+        document.getElementById('abs_chrom_masuk').value = report.absensi_chrom_masuk;
+        document.getElementById('abs_chrom_tdk_masuk_org').value = report.absensi_chrom_tdk_masuk_org;
+        document.getElementById('abs_chrom_tdk_masuk_nama').value = report.absensi_chrom_tdk_masuk_nama;
+        document.getElementById('abs_remover_masuk').value = report.absensi_remover_masuk;
+        document.getElementById('abs_remover_tdk_masuk_org').value = report.absensi_remover_tdk_masuk_org;
+        document.getElementById('abs_remover_tdk_masuk_nama').value = report.absensi_remover_tdk_masuk_nama;
+        document.getElementById('abs_touch_up_aerox_masuk').value = report.absensi_touch_up_aerox_masuk;
+        document.getElementById('abs_touch_up_aerox_tdk_masuk_org').value = report.absensi_touch_up_aerox_tdk_masuk_org;
+        document.getElementById('abs_touch_up_aerox_tdk_masuk_nama').value = report.absensi_touch_up_aerox_tdk_masuk_nama;
+        document.getElementById('abs_verifikasi_masuk').value = report.absensi_verifikasi_masuk;
+        document.getElementById('abs_verifikasi_tdk_masuk_org').value = report.absensi_verifikasi_tdk_masuk_org;
+        document.getElementById('abs_verifikasi_tdk_masuk_nama').value = report.absensi_verifikasi_tdk_masuk_nama;
         
+        // Produksi Incoming
         document.getElementById('prod_wuster').value = report.prod_wuster;
         document.getElementById('prod_chrom').value = report.prod_chrom;
         
+        // Produksi Line Chrom
+        if (document.getElementById('prod_chrom_machining')) { 
+            document.getElementById('prod_chrom_machining').value = report.prod_chrom_machining;
+            document.getElementById('prod_chrom_finishing').value = report.prod_chrom_finishing;
+            document.getElementById('prod_chrom_remover').value = report.prod_chrom_remover;
+        }
+        
+        // Quality
         document.getElementById('quality_item').value = report.quality_item;
         document.getElementById('quality_cek').value = report.quality_cek;
         document.getElementById('quality_ng').value = report.quality_ng;
         document.getElementById('quality_balik_material').value = report.quality_balik_material;
         
+        // Textareas
         document.getElementById('check_thickness_notes').value = report.check_thickness_notes;
+        document.getElementById('verifikasi_notes').value = report.verifikasi_notes; 
 
         // Isi dynamic lists
         deserializeDynamicList(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value', report.prod_step_assy_notes, defaultStepAssyItems);
         deserializeDynamicList(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value', report.prod_buka_cap_notes, defaultBukaCapItems);
-        deserializeDynamicList(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value', report.prod_assy_cup_notes, defaultAssyCupItems);
+        deserializeDynamicList(removerListContainer, 'remover-item-name', 'remover-item-value', report.prod_remover_notes, defaultRemoverItems); 
+        deserializeDynamicList(touchUpAeroxListContainer, 'touchup-aerox-item-name', 'touchup-aerox-item-value', report.prod_touchup_notes, defaultTouchUpAeroxItems); 
 
         // Hitung ulang semua total
         calculateAllDynamicTotals();
+        updateProdChromTotal(); 
         
         // Atur state form
         currentlyEditingId = reportId;
@@ -462,7 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * FUNGSI BARU: Mengosongkan form dan mereset state
+     * FUNGSI: Mengosongkan form dan mereset state
      */
     function resetFormAndState() {
         incomingForm.reset(); 
@@ -471,10 +699,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset semua list dinamis ke default
         resetDynamicList(stepAssyListContainer, defaultStepAssyItems, 'step-assy-item-name', 'step-assy-item-value');
         resetDynamicList(bukaCapListContainer, defaultBukaCapItems, 'buka-cap-item-name', 'buka-cap-item-value');
-        resetDynamicList(assyCupListContainer, defaultAssyCupItems, 'assy-cup-item-name', 'assy-cup-item-value');
+        resetDynamicList(removerListContainer, defaultRemoverItems, 'remover-item-name', 'remover-item-value'); 
+        resetDynamicList(touchUpAeroxListContainer, defaultTouchUpAeroxItems, 'touchup-aerox-item-name', 'touchup-aerox-item-value'); 
         
         // Hitung ulang semua total (jadi 0)
         calculateAllDynamicTotals();
+        updateProdChromTotal(); 
         
         // Kembalikan teks tombol dan judul
         formTitleEl.textContent = 'Buat Laporan Baru';
@@ -488,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelEditBtn.addEventListener('click', resetFormAndState);
 
     /**
-     * FUNGSI BARU: Mengumpulkan semua data form ke 1 objek
+     * FUNGSI: Mengumpulkan semua data form ke 1 objek
      */
     function getFormData() {
         return {
@@ -498,16 +728,40 @@ document.addEventListener('DOMContentLoaded', () => {
             shift: parseInt(document.getElementById('shift').value), 
             chief_name: document.getElementById('chief_name').value,
             
-            absensi_incoming_masuk: parseInt(document.getElementById('absensi_incoming_masuk').value),
-            absensi_incoming_tdk_masuk: document.getElementById('absensi_incoming_tdk_masuk').value,
-            absensi_step_assy_masuk: parseInt(document.getElementById('absensi_step_assy_masuk').value),
-            absensi_step_assy_tdk_masuk: document.getElementById('absensi_step_assy_tdk_masuk').value,
-            absensi_buka_cap_masuk: parseInt(document.getElementById('absensi_buka_cap_masuk').value),
-            absensi_buka_cap_tdk_masuk: document.getElementById('absensi_buka_cap_tdk_masuk').value,
+            // Absensi
+            absensi_incoming_masuk: parseInt(document.getElementById('abs_incoming_masuk').value) || 0,
+            absensi_incoming_tdk_masuk_org: parseInt(document.getElementById('abs_incoming_tdk_masuk_org').value) || 0,
+            absensi_incoming_tdk_masuk_nama: document.getElementById('abs_incoming_tdk_masuk_nama').value,
+            absensi_step_assy_masuk: parseInt(document.getElementById('abs_step_assy_masuk').value) || 0,
+            absensi_step_assy_tdk_masuk_org: parseInt(document.getElementById('abs_step_assy_tdk_masuk_org').value) || 0,
+            absensi_step_assy_tdk_masuk_nama: document.getElementById('abs_step_assy_tdk_masuk_nama').value,
+            absensi_buka_cap_masuk: parseInt(document.getElementById('abs_buka_cap_masuk').value) || 0,
+            absensi_buka_cap_tdk_masuk_org: parseInt(document.getElementById('abs_buka_cap_tdk_masuk_org').value) || 0,
+            absensi_buka_cap_tdk_masuk_nama: document.getElementById('abs_buka_cap_tdk_masuk_nama').value,
+            absensi_chrom_masuk: parseInt(document.getElementById('abs_chrom_masuk').value) || 0,
+            absensi_chrom_tdk_masuk_org: parseInt(document.getElementById('abs_chrom_tdk_masuk_org').value) || 0,
+            absensi_chrom_tdk_masuk_nama: document.getElementById('abs_chrom_tdk_masuk_nama').value,
+            absensi_remover_masuk: parseInt(document.getElementById('abs_remover_masuk').value) || 0,
+            absensi_remover_tdk_masuk_org: parseInt(document.getElementById('abs_remover_tdk_masuk_org').value) || 0,
+            absensi_remover_tdk_masuk_nama: document.getElementById('abs_remover_tdk_masuk_nama').value,
+            absensi_touch_up_aerox_masuk: parseInt(document.getElementById('abs_touch_up_aerox_masuk').value) || 0,
+            absensi_touch_up_aerox_tdk_masuk_org: parseInt(document.getElementById('abs_touch_up_aerox_tdk_masuk_org').value) || 0,
+            absensi_touch_up_aerox_tdk_masuk_nama: document.getElementById('abs_touch_up_aerox_tdk_masuk_nama').value,
+            absensi_verifikasi_masuk: parseInt(document.getElementById('abs_verifikasi_masuk').value) || 0,
+            absensi_verifikasi_tdk_masuk_org: parseInt(document.getElementById('abs_verifikasi_tdk_masuk_org').value) || 0,
+            absensi_verifikasi_tdk_masuk_nama: document.getElementById('abs_verifikasi_tdk_masuk_nama').value,
             
+            // Prod Incoming
             prod_wuster: document.getElementById('prod_wuster').value,
             prod_chrom: document.getElementById('prod_chrom').value,
             
+            // Prod Line Chrom
+            prod_chrom_machining: parseInt(document.getElementById('prod_chrom_machining').value) || 0,
+            prod_chrom_finishing: parseInt(document.getElementById('prod_chrom_finishing').value) || 0,
+            prod_chrom_remover: parseInt(document.getElementById('prod_chrom_remover').value) || 0,
+            prod_chrom_total: parseInt(document.getElementById('prod_chrom_total').value) || 0,
+            
+            // Quality
             quality_item: document.getElementById('quality_item').value,
             quality_cek: document.getElementById('quality_cek').value,
             quality_ng: document.getElementById('quality_ng').value,
@@ -516,14 +770,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // Serialisasi list dinamis
             prod_step_assy_notes: serializeDynamicList(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value'),
             prod_buka_cap_notes: serializeDynamicList(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value'),
-            prod_assy_cup_notes: serializeDynamicList(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value'),
+            prod_remover_notes: serializeDynamicList(removerListContainer, 'remover-item-name', 'remover-item-value'), 
+            prod_touchup_notes: serializeDynamicList(touchUpAeroxListContainer, 'touchup-aerox-item-name', 'touchup-aerox-item-value'), 
 
-            check_thickness_notes: document.getElementById('check_thickness_notes').value
+            // Textareas
+            check_thickness_notes: document.getElementById('check_thickness_notes').value,
+            verifikasi_notes: document.getElementById('verifikasi_notes').value 
         };
     }
 
     /**
-     * FUNGSI BARU: Logika submit yang di-refactor
+     * FUNGSI: Logika submit yang di-refactor
      */
     async function handleFormSubmit(isDraft = false) {
         if (!currentUser) {
@@ -532,7 +789,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formMessageEl.textContent = 'Menyimpan...';
 
         const laporanData = getFormData();
-        laporanData.status = isDraft ? 'draft' : 'published'; // SET STATUS
+        laporanData.status = isDraft ? 'draft' : 'published'; 
 
         let error;
         if (currentlyEditingId) {
@@ -555,9 +812,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Submit Error:', error);
         } else {
             formMessageEl.textContent = `Laporan berhasil disimpan sebagai ${isDraft ? 'Draft' : 'Final'}!`;
-            resetFormAndState(); // Reset form
+            resetFormAndState(); 
             
-            // Muat ulang kedua tabel
             await loadIncomingDrafts(); 
             currentPage = 1; 
             await loadIncomingHistory(); 
@@ -569,12 +825,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener "Simpan Laporan Final" (submit utama)
     incomingForm.onsubmit = async (event) => {
         event.preventDefault();
-        await handleFormSubmit(false); // false = bukan draft
+        await handleFormSubmit(false); 
     };
 
     // Event listener "Simpan Draft"
     saveDraftBtn.addEventListener('click', async () => {
-        await handleFormSubmit(true); // true = draft
+        await handleFormSubmit(true); 
     });
 
 
@@ -591,7 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
             session = await getActiveUserSession();
             if (!session) {
                 alert('Anda harus login terlebih dahulu!');
-                window.location.href = 'index.html'; // Arahkan ke index/login
+                window.location.href = 'index.html'; 
                 return;
             }
             currentUser = session.user; 
@@ -602,10 +858,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Jalankan reset form untuk set nilai default
         resetFormAndState();
         
-        // Muat riwayat & draft
         try {
             await loadIncomingDrafts();
             await loadIncomingHistory(); 
