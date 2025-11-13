@@ -233,10 +233,10 @@ async function loadDashboardData() {
     const dataNonshift = fullLogData.filter(d => d.filterGroup === 'nonshift');
 
     // Render 4 chart terpisah
-    renderWusterStyleChart('chiefChartYanto', dataYanto, 'YANTO H', 'rgba(153, 102, 255, 1)');
-    renderWusterStyleChart('chiefChartSubagyo', dataSubagyo, 'SUBAGYO', 'rgba(255, 206, 86, 1)');
-    renderWusterStyleChart('chiefChartSarno', dataSarno, 'SARNO', 'rgba(75, 192, 75, 1)');
-    renderWusterStyleChart('chiefChartNonshift', dataNonshift, 'NONSHIFT', 'rgba(54, 162, 235, 1)');
+    renderWusterStyleChart('chiefChartYanto', dataYanto, 'YANTO H', 'rgb(153, 102, 255)');
+    renderWusterStyleChart('chiefChartSubagyo', dataSubagyo, 'SUBAGYO', 'rgb(255, 206, 86)');
+    renderWusterStyleChart('chiefChartSarno', dataSarno, 'SARNO', 'rgb(75, 192, 75)');
+    renderWusterStyleChart('chiefChartNonshift', dataNonshift, 'NONSHIFT', 'rgba(82, 4, 4, 1)');
     // ==========================================================
 }
 
@@ -292,7 +292,6 @@ function renderTable() {
 }
 
 function renderChart(data) {
-    // ... (Fungsi ini dikembalikan seperti semula, dengan datalabel NUMPUK) ...
     const ctx = document.getElementById('dailyUsageChart').getContext('2d');
     const selectedMonthText = document.getElementById('monthFilter').options[document.getElementById('monthFilter').selectedIndex]?.text || 'Bulan';
     document.getElementById('dailyChartTitle').textContent = `Monitoring Hasil Assy Cap - ${selectedMonthText}`;
@@ -310,11 +309,25 @@ function renderChart(data) {
         return;
     }
 
+    // Agregasi (SHIFT -> CHIEF)
     const usageByDate = new Map();
     data.forEach(item => {
-        if (!usageByDate.has(item.tanggal)) usageByDate.set(item.tanggal, { '1': 0, '2': 0, '3': 0 });
+        if (!usageByDate.has(item.tanggal)) {
+            usageByDate.set(item.tanggal, { 
+                'YANTO H': 0, 
+                'SARNO': 0, 
+                'SUBAGYO': 0, 
+                'nonshift': 0,
+                'unknown': 0 
+            });
+        }
         const dailyRecord = usageByDate.get(item.tanggal);
-        dailyRecord[item.shift] = (dailyRecord[item.shift] || 0) + item.qty;
+        
+        if (dailyRecord.hasOwnProperty(item.filterGroup)) {
+            dailyRecord[item.filterGroup] += item.qty;
+        } else {
+             dailyRecord['unknown'] += item.qty; 
+        }
     });
 
     const sortedDates = Array.from(usageByDate.keys()).sort((a, b) => parseLocalDate(a) - parseLocalDate(b));
@@ -324,21 +337,50 @@ function renderChart(data) {
         return tgl.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
     });
     
-    const shift1Data = sortedDates.map(date => usageByDate.get(date)['1'] || 0);
-    const shift2Data = sortedDates.map(date => usageByDate.get(date)['2'] || 0);
-    const shift3Data = sortedDates.map(date => usageByDate.get(date)['3'] || 0);
-    const totalData = sortedDates.map(date => (usageByDate.get(date)['1'] || 0) + (usageByDate.get(date)['2'] || 0) + (usageByDate.get(date)['3'] || 0));
+    // Data series baru
+    const yantoData = sortedDates.map(date => usageByDate.get(date)['YANTO H'] || 0);
+    const sarnoData = sortedDates.map(date => usageByDate.get(date)['SARNO'] || 0);
+    const subagyoData = sortedDates.map(date => usageByDate.get(date)['SUBAGYO'] || 0);
+    const nonshiftData = sortedDates.map(date => usageByDate.get(date)['nonshift'] || 0);
+    
+    const totalData = sortedDates.map(date => 
+        (usageByDate.get(date)['YANTO H'] || 0) + 
+        (usageByDate.get(date)['SARNO'] || 0) + 
+        (usageByDate.get(date)['SUBAGYO'] || 0) +
+        (usageByDate.get(date)['nonshift'] || 0) +
+        (usageByDate.get(date)['unknown'] || 0)
+    );
 
     dailyChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
+            // ==========================================================
+            // === PERUBAHAN URUTAN STACK (SESUAI SHIFT) ===
+            // ==========================================================
             datasets: [
-                { label: 'Shift 1', data: shift1Data, backgroundColor: '#36A2EB' },
-                { label: 'Shift 2', data: shift2Data, backgroundColor: '#FFCE56' },
-                { label: 'Shift 3', data: shift3Data, backgroundColor: '#4BC0C0' },
-                { type: 'line', label: 'Total Harian', data: totalData, borderColor: '#e74c3c', tension: 0.1, order: -1 }
+                // NONSHIFT (Paling Bawah)
+                { label: 'NONSHIFT', data: nonshiftData, backgroundColor: 'rgba(82, 4, 4, 1)' },
+                // YANTO H (Shift 1)
+                { label: 'YANTO H', data: yantoData, backgroundColor: 'rgb(153, 102, 255)' },
+                // SARNO (Shift 2)
+                { label: 'SARNO', data: sarnoData, backgroundColor: 'rgb(75, 192, 75)' },
+                // SUBAGYO (Shift 3 - Paling Atas)
+                { label: 'SUBAGYO', data: subagyoData, backgroundColor: 'rgb(255, 206, 86)' },
+                
+                // Ini garis total hariannya (tetap ada)
+                { 
+                    type: 'line', 
+                    label: 'Total Harian', 
+                    data: totalData, 
+                    borderColor: '#e74c3c', 
+                    tension: 0.1, 
+                    order: -1 
+                }
             ]
+            // ==========================================================
+            // === AKHIR PERUBAHAN DATASETS ===
+            // ==========================================================
         },
         options: {
             responsive: true, maintainAspectRatio: false,
@@ -349,7 +391,7 @@ function renderChart(data) {
                     }
                 },
                 datalabels: {
-                    // Tampilkan semua angka (biar numpuk lagi sesuai keinginan abang)
+                    // Tampilkan semua angka (numpuk)
                     display: (context) => context.dataset.data[context.dataIndex] > 0,
                     formatter: (value) => value.toLocaleString('id-ID'),
                     anchor: (context) => context.dataset.type === 'line' ? 'end' : 'center',
@@ -371,13 +413,14 @@ function renderChart(data) {
 
 // ==========================================================
 // === FUNGSI BARU UNTUK 4 GRAFIK CHIEF (MODEL WUSTER) ===
+// (FUNGSI INI DI-TIMPA/REPLACE)
 // ==========================================================
 /**
  * Membuat chart harian (model Wuster) untuk satu chief
  * @param {string} canvasId - ID dari elemen <canvas>
  * @param {Array} data - Data yang sudah di-filter untuk chief ini
  * @param {string} chiefName - Nama Chief (cth: "YANTO H")
- * @param {string} color - Warna garis (cth: "rgba(153, 102, 255, 1)")
+ * @param {string} color - Warna (cth: "rgba(153, 102, 255, 1)")
  */
 function renderWusterStyleChart(canvasId, data, chiefName, color) {
     const ctx = document.getElementById(canvasId).getContext('2d');
@@ -416,14 +459,35 @@ function renderWusterStyleChart(canvasId, data, chiefName, color) {
         data: {
             labels: labels,
             datasets: [
-                { label: 'Shift 1', data: shift1Data, backgroundColor: '#36A2EB' },
-                { label: 'Shift 2', data: shift2Data, backgroundColor: '#FFCE56' },
-                { label: 'Shift 3', data: shift3Data, backgroundColor: '#4BC0C0' },
+                // ==========================================================
+                // === PERUBAHAN DI SINI (WARNA STACK DISAMAKAN) ===
+                // ==========================================================
+                { 
+                    label: 'Shift 1', 
+                    data: shift1Data, 
+                    // Ambil 'color' (warna chief), ganti transparansi jadi 0.9
+                    backgroundColor: color.replace('1)', '0.9)') 
+                },
+                { 
+                    label: 'Shift 2', 
+                    data: shift2Data, 
+                    // Ambil 'color' (warna chief), ganti transparansi jadi 0.7
+                    backgroundColor: color.replace('1)', '0.7)') 
+                },
+                { 
+                    label: 'Shift 3', 
+                    data: shift3Data, 
+                    // Ambil 'color' (warna chief), ganti transparansi jadi 0.5
+                    backgroundColor: color.replace('1)', '0.5)') 
+                },
+                // ==========================================================
+                // === AKHIR PERUBAHAN ===
+                // ==========================================================
                 { 
                     type: 'line', 
                     label: 'Total Harian', 
                     data: totalData, 
-                    borderColor: color, // <-- PAKAI WARNA KHUSUS CHIEF
+                    borderColor: color, // Garis tetap solid
                     tension: 0.1, 
                     order: -1 
                 }
@@ -436,10 +500,9 @@ function renderWusterStyleChart(canvasId, data, chiefName, color) {
                     labels: { color: textColor }
                 },
                 title: {
-                    display: false // Judul sudah ada di <h4>
+                    display: false 
                 },
                 datalabels: {
-                    // HANYA tampilkan label untuk dataset 'line' (Total Harian)
                     display: (context) => context.dataset.type === 'line' && context.dataset.data[context.dataIndex] > 0,
                     formatter: (value) => value.toLocaleString('id-ID'),
                     anchor: 'end',
