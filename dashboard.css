@@ -1,0 +1,524 @@
+/* ----- Import Font & Variabel Global ----- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* Palet Warna Dark Mode */
+    --primary-color: #66a6ff;     /* Biru Aksen (dari gambar) */
+    --primary-color-light: #3a3b3c;
+    --sidebar-bg: #2a2d3e;        /* Warna Sidebar (Gelap Kebiruan) */
+    --body-bg: #1e1e2c;           /* Warna Latar Belakang Body (Lebih Gelap) */
+    --surface-color: #2a2d3e;     /* Warna Kartu/Konten */
+    --text-color-primary: #f0f2f5;  /* Teks Putih */
+    --text-color-secondary: #adb5bd; /* Teks Abu-abu */
+    --border-color: #444;
+
+    --sidebar-width: 260px;
+    --tran-02: all 0.2s ease;
+    --tran-03: all 0.3s ease;
+    --tran-04: all 0.4s ease;
+    --tran-05: all 0.5s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: var(--body-bg);
+    color: var(--text-color-primary);
+    min-height: 100vh;
+}
+
+/* ================================================= */
+/* ===== BAGIAN 1: STYLE SIDEBAR (DARK) ===== */
+/* ================================================= */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    padding: 10px 14px;
+    transition: var(--tran-04);
+    z-index: 100;
+    border-right: 1px solid var(--border-color);
+}
+
+/* --- State Sidebar Diciutkan (Collapsed) --- */
+.sidebar.collapsed {
+    width: 88px;
+}
+
+.sidebar .text {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-color-secondary);
+    transition: var(--tran-03);
+    white-space: nowrap;
+    opacity: 1;
+}
+
+.sidebar.collapsed .text {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar .icon {
+    min-width: 60px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color-secondary);
+}
+
+/* --- Bagian Menu Bar (Scrollable) --- */
+.sidebar .menu-bar {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow-y: auto; /* Memungkinkan scroll jika menu panjang */
+}
+
+/* Sembunyikan scrollbar bawaan */
+.menu-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.menu-bar .menu {
+    padding-top: 20px;
+}
+
+.menu-bar .menu-links {
+    list-style: none; /* <-- INI MENGHILANGKAN BULLET POINT UTAMA */
+    padding: 0;
+}
+
+.sidebar .nav-link {
+    list-style: none;
+    margin-top: 5px;
+}
+
+/* --- Link Biasa (Non-Dropdown) --- */
+.sidebar .nav-link > a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    padding: 10px 0;
+    border-radius: 6px;
+    transition: var(--tran-03);
+}
+
+.sidebar .nav-link > a:hover,
+.sidebar .nav-link > a.active { /* 'active' untuk link non-dropdown */
+    background-color: var(--primary-color);
+}
+
+.sidebar .nav-link > a:hover .icon,
+.sidebar .nav-link > a:hover .text,
+.sidebar .nav-link > a.active .icon,
+.sidebar .nav-link > a.active .text {
+    color: #fff; /* Teks jadi putih saat di-hover */
+}
+
+/* --- Link Dropdown --- */
+.dropdown-toggle {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--tran-03);
+    position: relative;
+}
+
+.dropdown-toggle .arrow {
+    position: absolute;
+    right: 15px;
+    font-size: 18px;
+    color: var(--text-color-secondary);
+    transition: var(--tran-03);
+}
+
+.sidebar.collapsed .dropdown-toggle .arrow {
+    opacity: 0;
+}
+
+/* --- Submenu (Bagian Dropdown) --- */
+/* INI ADALAH BAGIAN PENTING YANG HILANG DI GAMBAR ANDA */
+.submenu {
+    list-style: none; /* <-- MENGHILANGKAN BULLET POINT */
+    padding: 0;
+    margin: 5px 0 0 20px; /* Indentasi submenu */
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    
+    /* Sembunyikan by default */
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out;
+}
+
+.sidebar.collapsed .submenu {
+    /* Saat sidebar diciutkan, submenu jadi pop-out */
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin-left: 5px;
+    padding: 10px;
+    width: 200px;
+    background: var(--sidebar-bg);
+    box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+    border: 1px solid var(--border-color);
+}
+
+.sidebar.collapsed .nav-link:hover .submenu {
+    max-height: 500px; /* Tampilkan saat hover di mode collapsed */
+}
+
+/* INI JUGA PENTING UNTUK LINK DI DALAM DROPDOWN */
+.submenu a {
+    text-decoration: none; /* <-- MENGHILANGKAN GARIS BAWAH */
+    display: block;
+    padding: 8px 30px; /* Padding untuk item submenu */
+    color: var(--text-color-secondary);
+    font-size: 14px;
+    transition: var(--tran-02);
+}
+
+.submenu a:hover {
+    color: var(--text-color-primary);
+}
+
+/* Style untuk link submenu yang aktif */
+.submenu a.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-radius: 4px;
+}
+
+/* --- State Dropdown Aktif (Dibuka) --- */
+.nav-link.active .submenu {
+    max-height: 500px; /* Tampilkan submenu */
+}
+
+.nav-link.active .dropdown-toggle {
+    background-color: var(--primary-color);
+}
+
+.nav-link.active .dropdown-toggle .icon,
+.nav-link.active .dropdown-toggle .text,
+.nav-link.active .dropdown-toggle .arrow {
+    color: #fff;
+}
+
+.nav-link.active .dropdown-toggle .arrow {
+    transform: rotate(180deg);
+}
+
+/* --- Konten Bawah (Logout) --- */
+.sidebar .bottom-content {
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.bottom-content .logout {
+    list-style: none;
+}
+
+.bottom-content .logout a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    padding: 10px 0;
+    border-radius: 6px;
+    transition: var(--tran-03);
+}
+
+.bottom-content .logout a:hover {
+    background-color: #d9534f; /* Warna merah untuk logout hover */
+}
+
+.bottom-content .logout a:hover .icon,
+.bottom-content .logout a:hover .text {
+    color: #fff;
+}
+
+/* ================================================= */
+/* ===== BAGIAN 2: KONTEN UTAMA & LAINNYA ===== */
+/* ================================================= */
+
+.main-content {
+    position: relative;
+    left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+    min-height: 100vh;
+    padding: 30px;
+    background-color: var(--body-bg);
+    transition: var(--tran-04);
+}
+
+.sidebar.collapsed ~ .main-content {
+    left: 88px;
+    width: calc(100% - 88px);
+}
+
+#sidebar-toggle {
+    font-size: 28px;
+    color: var(--text-color-primary);
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+/* --- Style Bawaan dari HTML Anda (Header, Chart, Table) --- */
+/* (Saya sesuaikan warnanya agar cocok dengan Dark Mode) */
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.header-content h1 {
+    color: var(--text-color-primary);
+}
+
+.filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.filter-wrapper label {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-color-secondary);
+}
+#monthFilter {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 15px;
+    background-color: var(--surface-color);
+    color: var(--text-color-primary);
+}
+
+.action-button {
+    text-decoration: none;
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    cursor: pointer;
+}
+.action-button:hover {
+    background-color: #4a90e2; /* Versi lebih gelap dari --primary-color */
+}
+
+/* --- Chart --- */
+.chart-container {
+    background-color: var(--surface-color);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    border: 1px solid var(--border-color);
+}
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.chart-header h4, #dailyChartTotal {
+    color: var(--text-color-primary);
+}
+.chart-wrapper {
+    position: relative;
+    height: 350px; /* Anda bisa atur tingginya */
+}
+
+/* --- Log Table --- */
+.log-container {
+    margin-top: 30px;
+    background-color: var(--surface-color);
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+.log-header h3 {
+    color: var(--text-color-primary);
+}
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+table th, table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color-secondary);
+}
+table th {
+    background-color: var(--body-bg);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-color-primary);
+}
+table tbody tr {
+    transition: background-color 0.2s ease;
+}
+table tbody tr:hover {
+    background-color: #3a3f51; /* Warna hover sedikit lebih terang */
+}
+.table-filter-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 13px;
+    background-color: var(--body-bg);
+    color: var(--text-color-primary);
+}
+.table-filter-input:focus {
+    background-color: var(--surface-color);
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* --- Pagination --- */
+.pagination-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-color-secondary);
+}
+.page-button {
+    padding: 8px 15px;
+    border: 1px solid var(--border-color);
+    background-color: var(--surface-color);
+    color: var(--text-color-primary);
+    border-radius: 6px;
+    cursor: pointer;
+}
+.page-button:hover:not(:disabled) {
+    background-color: var(--body-bg);
+}
+.page-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* --- Footer --- */
+.main-footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 20px;
+    color: var(--text-color-secondary);
+    font-size: 14px;
+}
+
+/* --- Modal Style (Dark) --- */
+.modal-overlay {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+.modal-content {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+}
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+}
+.modal-header h2, .close-button {
+    color: var(--text-color-primary);
+}
+.modal-body form label {
+    color: var(--text-color-secondary);
+}
+.modal-body form input,
+.modal-body form select {
+    background-color: var(--body-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color-primary);
+}
+.btn-cancel {
+    background-color: #444;
+    color: #fff;
+}
+.btn-save {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+/* --- Garis Pemisah Menu --- */
+.menu-divider {
+    border-top: 1px solid var(--border-color);
+    margin: 10px 0;
+}
+
+
+/* ================================================= */
+/* ===== BAGIAN 3: RESPONSIVE (MOBILE) ===== */
+/* ================================================= */
+
+@media (max-width: 768px) {
+    .sidebar {
+        left: -100%; /* Sembunyi di luar layar */
+        width: 100%; /* Penuhi layar saat dibuka */
+        background: rgba(42, 45, 62, 0.95); /* Sedikit transparan saat di mobile */
+        backdrop-filter: blur(5px);
+    }
+    
+    .sidebar.active {
+        left: 0; /* Munculkan sidebar */
+    }
+
+    .sidebar.collapsed {
+        /* Mode collapsed tidak berlaku di mobile */
+        width: 100%; 
+    }
+
+    .sidebar.collapsed .text,
+    .sidebar.collapsed .dropdown-toggle .arrow {
+        opacity: 1; /* Selalu tampilkan teks di mobile */
+    }
+    
+    .main-content {
+        left: 0;
+        width: 100%;
+        padding: 15px;
+    }
+
+    .sidebar.collapsed ~ .main-content {
+        left: 0;
+        width: 100%;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .chart-wrapper {
+        height: 300px; /* Lebih pendek di mobile */
+    }
+}

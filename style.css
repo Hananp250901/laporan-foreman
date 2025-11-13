@@ -843,3 +843,115 @@ fieldset.total-fieldset legend {
     padding: 1rem;
   }
 }
+/* --- 15. Sidebar Dropdown (TAMBAHAN) --- */
+.sidebar-nav .dropdown .dropdown-toggle {
+  position: relative; /* Agar panah bisa diposisikan */
+}
+
+.sidebar-nav .dropdown .arrow {
+  position: absolute;
+  right: 1rem;
+  font-size: 20px;
+  transition: transform 0.3s ease;
+}
+
+/* Sembunyikan submenu by default */
+.sidebar-nav .submenu {
+  list-style: none; /* <-- INI MENGHILANGKAN BULLET POINT */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease-out;
+  padding-left: 1.5rem; 
+  background: rgba(0, 0, 0, 0.1); 
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.sidebar-nav .submenu a {
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary); /* <-- WARNA DEFAULT LINK */
+  text-decoration: none; /* <-- HILANGKAN GARIS BAWAH */
+}
+
+/* Saat dropdown 'active' (terbuka) */
+.sidebar-nav .dropdown.active > .submenu {
+  max-height: 500px; /* Tampilkan submenu */
+}
+
+.sidebar-nav .dropdown.active > .dropdown-toggle {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: var(--primary-color);
+}
+
+/* Ini akan memutar panah saat aktif */
+.sidebar-nav .dropdown.active > .dropdown-toggle .arrow {
+  transform: rotate(180deg);
+}
+
+/* Style untuk link submenu yang aktif (halaman saat ini) */
+.sidebar-nav .submenu a.active {
+  color: var(--primary-color);
+  font-weight: bold;
+  background: none; 
+}
+/* Style hover biasa untuk submenu */
+.sidebar-nav .submenu a:hover {
+  color: var(--text-primary); 
+  background: none;
+}
+
+
+/* --- 16. Filter Tabel (TAMBAHAN) --- */
+.table-filter-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 13px;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+}
+.table-filter-input:focus {
+    background-color: var(--surface-color);
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* --- 17. Tombol Aksi Tabel (Edit/Delete) (TAMBAHAN) --- */
+.action-btn { 
+    padding: 5px 10px; 
+    border: none; 
+    border-radius: 5px; 
+    color: white; 
+    cursor: pointer; 
+    margin-right: 5px; 
+    font-size: 14px; 
+}
+.edit-btn { background-color: #f0ad4e; }
+.edit-btn:hover { background-color: #ec971f; }
+.delete-btn { background-color: #d9534f; }
+.delete-btn:hover { background-color: #c9302c; }
+
+/* --- 18. Modal (TAMBAHAN) --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background: var(--surface-color); padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; }
+.modal-header h2 { margin: 0; color: var(--text-primary); }
+.close-button { font-size: 24px; cursor: pointer; border: none; background: none; color: var(--text-primary); }
+.modal-body form label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--text-secondary); }
+.modal-body form input, .modal-body form select { 
+    width: 100%; 
+    padding: 8px 12px; 
+    margin-bottom: 15px; 
+    border: 1px solid var(--border-color); 
+    border-radius: 4px; 
+    background-color: var(--bg-color); 
+    font-size: 14px;
+    color: var(--text-primary);
+}
+.modal-footer { text-align: right; }
+.modal-footer button { padding: 8px 15px; border-radius: 5px; border: none; cursor: pointer; }
+.btn-save { background-color: var(--primary-color); color: white; }
+.btn-cancel { background-color: #444; color: #fff; margin-right: 10px; }
+.hidden { display: none; }

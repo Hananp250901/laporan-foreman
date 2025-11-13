@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Variabel Touch Up Aerox ===
     const touchUpAeroxListContainer = document.getElementById('prod-touch-up-aerox-list');
     const addTouchUpAeroxItemBtn = document.getElementById('add-touch-up-aerox-item-btn');
-    const defaultTouchUpAeroxItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS", "M/C K15A", "M/C K2SA", "M/C K3VA FR", "M/C XD 831", "M/C K84A FR"];
+    const defaultTouchUpAeroxItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS"];
     const touchUpAeroxTotalSpan = document.getElementById('prod-touch-up-aerox-total');
     
     /**

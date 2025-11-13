@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Assy Cap</title>
+    
+    <link rel="stylesheet" href="style.css"> 
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        /* CSS tambahan khusus untuk halaman ini */
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+            <h3>Laporan Foreman</h3>
+            
+            <div id="user-info"><h4>Memuat...</h4></div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="dashboard.html"> 
+                            <span class="material-icons">home</span>
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="incoming.html">
+                            <span class="material-icons">inventory_2</span>
+                            Incoming
+                        </a>
+                    </li>
+                    <li><a href="wuster.html"><span class="material-icons">cleaning_services</span>Wuster</a></li>
+                    <li><a href="repair.html"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
+                    
+                    <li><hr style="border-color: var(--border-color); margin: 10px 0;"></li>
+
+                    <li class="nav-link dropdown">
+                        <a href="#" class="dropdown-toggle">
+                            <span class="material-icons">format_paint</span> Assy Cap
+                            <span class="material-icons arrow">expand_more</span> </a>
+                        <ul class="submenu">
+                            <li><a href="dashboard-assy-cap.html" class="active">Dashboard</a></li>
+                            <li><a href="master-people.html">Master People</a></li>
+                            <li><a href="assy-cap.html">Add Data</a></li>
+                            <li><a href="laporan-assy-cap-people.html">Laporan AssyCap</a></li>
+                            <li><a href="laporan-assy-cap-harian-people.html">Laporan Harian</a></li>
+                        </ul>
+                    </li>
+                    </ul>
+            </nav>
+            
+            </div>
+        
+        <div class="sidebar-bottom">
+            <button id="logout-button">
+                <span class="material-icons">logout</span>
+                Logout
+            </button>
+        </div>
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+
+    <main class="main-content">
+        <header>
+            <button class="menu-toggle" id="menu-toggle">
+                <span class="material-icons">menu</span>
+            </button>
+            <h2>Dashboard Monitoring Assy Cap</h2>
+        </header>
+        
+        <div class="content-wrapper">
+            
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="input-group">
+                    <label for="monthFilter">Show Date Month:</label>
+                    <select id="monthFilter"></select>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="chart-header">
+                    <h4 id="dailyChartTitle">Monitoring Hasil Assy Cap</h4>
+                    <button id="downloadDailyChartButton" class="button-secondary">
+                        <span class="material-icons">download</span>
+                        Download Gambar
+                    </button>
+                </div>
+                <div id="dailyChartTotal" style="font-weight: bold; font-size: 1.1em; margin-top: 5px; color: var(--text-secondary);"></div>
+                <div class="chart-wrapper">
+                    <canvas id="dailyUsageChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="history-header">
+                    <h3>Log Input Terakhir</h3>
+                    <button id="downloadCsvButton" class="button-secondary">
+                        <span class="material-icons">download</span>
+                        Download CSV
+                    </button>
+                </div>
+                
+                <div class="table-container" style="margin-bottom: 1rem;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th><input type="text" placeholder="Filter..." data-filter="tanggal" class="table-filter-input"></th>
+                                <th><input type="text" placeholder="Filter..." data-filter="shift" class="table-filter-input"></th>
+                                <th><input type="text" placeholder="Filter..." data-filter="people" class="table-filter-input"></th>
+                                <th><input type="text" placeholder="Filter..." data-filter="part_name" class="table-filter-input"></th>
+                                <th><input type="text" placeholder="Filter..." data-filter="part_number" class="table-filter-input"></th>
+                                <th><input type="text" placeholder="Filter..." data-filter="qty" class="table-filter-input"></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+                <div class="table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Shift</th>
+                                <th>People</th>
+                                <th>Part Name</th>
+                                <th>Part Number</th>
+                                <th>Qty (pcs)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTableBody"></tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination-controls">
+                    <button id="togglePaginationButton" class="button-secondary" style="margin-right: auto;">Show All</button>
+                    <span id="pageInfo">Page 1 of 1</span>
+                    <button id="prevPageButton" class="button-secondary" disabled>&laquo; Prev</button>
+                    <button id="nextPageButton" class="button-secondary" disabled>Next &raquo;</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<div id="editModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Data Assy Cap</h2>
+            <button class="close-button">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                
+                <label for="editTanggal">Tanggal</label>
+                <input type="date" id="editTanggal" required>
+                
+                <label for="editShift">Shift</label>
+                <select id="editShift" required>
+                    <option value="1">Shift 1</option>
+                    <option value="2">Shift 2</option>
+                    <option value="3">Shift 3</option>
+                </select>
+
+                <label for="editPeople">People</label>
+                <select id="editPeople" required></select>
+
+                <label for="editPartName">Part Name</label>
+                <select id="editPartName" required></select>
+                
+                <label for="editPartNumber">Part Number</label>
+                <input type="text" id="editPartNumber" readonly>
+                
+                <label for="editQty">Qty (Pcs)</label>
+                <input type="number" id="editQty" required>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="cancelButton" class="btn-cancel">Batal</button>
+            <button type="submit" form="editForm" class="btn-save">Simpan Perubahan</button>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="app.js"></script> 
+<script src="dashboard-assy-cap.js?v=3"></script> 
+
+</body>
+</html>
