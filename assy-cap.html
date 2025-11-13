@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil assy cap</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+    <style>
+        #nama_part option,
+        #nama option,
+        #jam_ke option,
+        #shift option {
+            color: #000000; /* Paksa warna teks jadi HITAM */
+            background-color: #FFFFFF; /* Pastikan background-nya putih */
+        }
+        /* Mengganti container agar sesuai dengan layout baru */
+        .form-container-assy-cap {
+            max-width: 1200px; 
+            margin: auto; 
+        }
+    
+        .form-input { border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; margin-bottom: 25px; background-color: var(--card-bg); }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .form-grid div { display: flex; flex-direction: column; }
+        
+        label { margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: var(--text-secondary); }
+        
+        input[type="date"],
+        input[type="number"],
+        select {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 1em;
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+        }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .header h2 { margin: 0; font-size: 1.5em; }
+        .header-buttons { display: flex; gap: 10px; }
+        
+        .part-entry { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 2.5fr 1fr 1fr auto; gap: 15px; align-items: flex-end; }
+        
+        /* === PERBAIKAN TOMBOL "Tambah +" === */
+        #add-part-btn {
+            background-color: var(--primary-color);
+            color: white; 
+            padding: 10px; /* Samakan dengan input */
+            font-size: 1em; /* Samakan dengan input */
+            border: 1px solid var(--primary-color);
+            box-sizing: border-box; /* Samakan dengan input */
+            line-height: normal; 
+            width: 100%; /* Pastikan lebarnya 100% */
+            cursor: pointer;
+        }
+        #add-part-btn:hover {
+            background-color: var(--primary-color-dark);
+        }
+        /* === AKHIR PERBAIKAN TOMBOL === */
+        
+        #save-all-btn { margin-top: 20px; padding: 12px; font-size: 1.1em; background-color: #dc3545; }
+        #save-all-btn:hover { background-color: #c82333; }
+        
+        #parts-list-container { margin-top: 20px; padding: 20px; background-color: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); }
+        .part-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--sidebar-bg); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 8px; }
+        .part-item span { flex-grow: 1; }
+        .part-item button { width: auto; background-color: #6c757d; padding: 5px 10px; font-size: 0.8em; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        
+        #dashboard-area {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow-x: auto; /* Fallback untuk desktop jika terlalu lebar */
+        }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 25px; font-size: 0.9em; }
+        th, td { border: 1px solid var(--border-color); padding: 8px; text-align: center; }
+        th { background-color: var(--sidebar-bg); font-weight: 600; }
+        .total-row td { font-weight: bold; background-color: var(--hover-color); }
+        
+        .edit-btn, .delete-btn { padding: 5px 10px; font-size: 0.8em; margin: 2px; width: auto; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        .edit-btn { background-color: #ffc107; }
+        .delete-btn { background-color: #dc3545; }
+        
+        /* Modal Style (Disesuaikan dengan Dark Mode) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); }
+        .modal-content { background-color: var(--card-bg); color: var(--text-primary); margin: 10% auto; padding: 25px; border: 1px solid var(--border-color); width: 90%; max-width: 600px; border-radius: 8px; position: relative; }
+        .close-btn { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: var(--text-primary); }
+        .edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin: 20px 0; }
+        
+        /* === CSS UNTUK PRINT === */
+        @media print {
+            body { margin: 0; padding: 0; font-size: 10pt; color: #000; background-color: #fff; }
+            .dashboard-container { display: block; }
+            .sidebar, .overlay, .main-content header { display: none !important; }
+            .main-content { margin-left: 0 !important; width: 100%; padding: 0; }
+            .content-wrapper { padding: 0; }
+            
+            .print-hide, .form-input, #parts-list-container, .header-buttons, .modal, .aksi-column {
+                display: none !important;
+            }
+            .form-container-assy-cap, .card { box-shadow: none; border: none; padding: 0; width: 100%; max-width: 100%; background: none; }
+            #dashboard-area { margin: 0; padding: 0; border: none; background: none; }
+            .header h2 { padding-top: 20px; font-size: 16pt; color: #000; }
+            table { display: table !important; color: #000; }
+            th, td { border: 1px solid #888 !important; }
+            th { background-color: #eee !important; }
+            thead { display: table-header-group !important; }
+            tbody { display: table-row-group !important; }
+            tr { display: table-row !important; }
+            td, th { display: table-cell !important; }
+            .total-row td { background-color: #f0f0f0 !important; }
+        }
+
+        /* ========================================= */
+        /* === PERBAIKAN TABEL (TOTAL ROW TURUN) === */
+        /* ========================================= */
+        #dashboard-area table {
+            display: table !important;
+            border-collapse: collapse; 
+        }
+        #dashboard-area thead {
+            display: table-header-group !important;
+        }
+        #dashboard-area tbody {
+            display: table-row-group !important;
+        }
+        #dashboard-area tr {
+            display: table-row !important;
+        }
+        #dashboard-area th, 
+        #dashboard-area td {
+            display: table-cell !important;
+        }
+
+
+        /* ========================================= */
+        /* === KODE RESPONSIVE (VERSI SCROLL) === */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            
+            /* 1. Perbaiki Form Input */
+            .part-entry {
+                grid-template-columns: 1fr; /* Semua input jadi 1 kolom */
+                gap: 12px;
+            }
+            .part-entry button {
+                width: 100%; /* Tombol "Tambah" jadi full width */
+            }
+
+            /* 2. Perbaiki Header */
+            .header {
+                flex-direction: column; /* Tombol header turun ke bawah */
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .header-buttons {
+                flex-direction: column;
+                width: 100%;
+                gap: 8px;
+            }
+            .header-buttons button, .header-buttons a {
+                width: 100%;
+            }
+
+            /* 3. Perbaiki Modal Edit */
+            .edit-grid {
+                grid-template-columns: 1fr 1fr; /* Input jam jadi 2 kolom */
+            }
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+
+            /* 4. Perbaiki Tabel Data (VERSI SCROLL) */
+            #dashboard-area {
+                overflow-x: auto; /* INI KUNCINYA: Membuat area tabel bisa di-scroll */
+                -webkit-overflow-scrolling: touch; /* Bikin scroll di iPhone/Safari mulus */
+            }
+            
+            #dashboard-area table {
+                min-width: 900px; /* Paksa tabel agar lebarnya minimal 900px */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+            <h3>Laporan Foreman</h3>
+            
+            <div id="user-info"><h4>Memuat...</h4></div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="dashboard.html"> 
+                            <span class="material-icons">home</span>
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="incoming.html">
+                            <span class="material-icons">inventory_2</span>
+                            Incoming
+                        </a>
+                    </li>
+                    <li><a href="wuster.html"><span class="material-icons">cleaning_services</span>Wuster</a></li>
+                    <li><a href="repair.html"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
+                    
+                    <li><hr style="border-color: var(--border-color); margin: 10px 0;"></li>
+
+                    <li class="nav-link dropdown">
+                        <a href="#" class="dropdown-toggle">
+                            <span class="material-icons">format_paint</span> Assy Cap
+                            <span class="material-icons arrow">expand_more</span> </a>
+                        <ul class="submenu">
+                            <li><a href="dashboard-assy-cap.html">Dashboard</a></li> 
+                            <li><a href="master-people.html">Master People</a></li> 
+                            <li><a href="assy-cap.html" class="active">Add Data</a></li> 
+                            <li><a href="laporan-assy-cap-people.html">Laporan AssyCap</a></li>
+                            <li><a href="laporan-assy-cap-harian-people.html">Laporan Harian</a></li>
+                        </ul>
+                    </li>
+                    </ul>
+            </nav>
+            
+            </div>
+        
+        <div class="sidebar-bottom">
+            <button id="logout-button">
+                <span class="material-icons">logout</span>
+                Logout
+            </button>
+        </div>
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+
+    <main class="main-content">
+        <header>
+            <button class="menu-toggle" id="menu-toggle">
+                <span class="material-icons">menu</span>
+            </button>
+            <h2>Form Input Hasil Assy Cap</h2>
+        </header>
+        
+        <div class="content-wrapper">
+            
+            <div class="form-container-assy-cap">
+                
+                <div class="header print-hide">
+                    <h2>Input Data Baru</h2>
+                    <div class="header-buttons">
+                        <button onclick="exportToExcel()" class="button-secondary print-hide">
+                            <span class="material-icons">download</span> Download Excel
+                        </button>
+                        <button onclick="window.print()" class="button-secondary print-hide">
+                            <span class="material-icons">print</span> Print
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card form-input print-hide">
+                    <div class="form-grid">
+                        <div><label for="tanggal">Tanggal:</label><input type="date" id="tanggal" required></div>
+                        <div><label for="shift">Shift:</label><select id="shift" required><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+                        <div><label for="nama">Nama:</label><select id="nama" required><option value="">Pilih Nama...</option></select></div>
+                    </div>
+                    
+                    <div class="part-entry">
+                        <div><label for="nama_part">Nama Part:</label><select id="nama_part"><option value="">Pilih Part...</option></select></div>
+                        <div><label for="jam_ke">Jam Ke-:</label><select id="jam_ke"><script>for(let i=1;i<=9;i++)document.write(`<option value="${i}">${i}</option>`)</script></select></div>
+                        <div><label for="quantity">Quantity:</label><input type="number" id="quantity" min="0"></div>
+                        
+                        <div>
+                            <label>&nbsp;</label> <button type="button" id="add-part-btn">Tambah +</button>
+                        </div>
+                        </div>
+                </div>
+
+                <div id="parts-list-container" class="card print-hide">
+                    <h3>Daftar Part untuk Disimpan</h3>
+                    <div id="parts-list"></div>
+                    <button type="button" id="save-all-btn" class="button-danger">Simpan Semua Data</button>
+                </div>
+
+                <div id="dashboard-area" class="card">
+                    </div>
+            </div>
+
+        </div> </main> </div> <div id="edit-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeEditModal()">&times;</span>
+        <h2>Edit Data Kuantitas</h2>
+        <form id="edit-form">
+            <input type="hidden" id="edit-record-id">
+            <p><strong>Nama Part:</strong> <span id="edit-part-name"></span></p>
+            <div class="edit-grid">
+                <script>
+                    for(let i = 1; i <= 9; i++) {
+                        document.write(`<div><label for="edit_qty_jam_${i}">Jam ${i}:</label><input type="number" id="edit_qty_jam_${i}" min="0"></div>`);
+                    }
+                </script>
+            </div>
+            <button type="submit" class="button-primary">Simpan Perubahan</button>
+        </form>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="app.js"></script>
+
+<script>
+    // KONEKSI SUPABASE (DIHAPUS KARENA SUDAH ADA DI app.js)
+    
+    // MENGGUNAKAN _supabase DARI app.js
+    
+    let masterPartsData = [];
+    let stagedParts = [];
+    const tanggalEl = document.getElementById('tanggal');
+    const shiftEl = document.getElementById('shift');
+    const namaEl = document.getElementById('nama');
+    const namaPartEl = document.getElementById('nama_part');
+    const jamKeEl = document.getElementById('jam_ke');
+    const quantityEl = document.getElementById('quantity');
+    const addPartBtn = document.getElementById('add-part-btn');
+    const partsListDiv = document.getElementById('parts-list');
+    const saveAllBtn = document.getElementById('save-all-btn');
+    const dashboardArea = document.getElementById('dashboard-area');
+    const editModal = document.getElementById('edit-modal');
+    const editForm = document.getElementById('edit-form');
+    const editRecordId = document.getElementById('edit-record-id');
+    const editPartName = document.getElementById('edit-part-name');
+
+    async function loadMasterData() {
+        // Menggunakan _supabase
+        const { data: people } = await _supabase.from('master_people').select('id, nama').order('nama');
+        if (people) {
+            namaEl.innerHTML = '<option value="">Pilih Nama...</option>';
+            people.forEach(person => namaEl.add(new Option(person.nama, person.id)));
+        }
+        
+        // Menggunakan _supabase
+        const { data: parts, error } = await _supabase.from('master_assy_cap').select('id, nama_part, part_number').order('nama_part');
+        if (parts) {
+            masterPartsData = parts;
+            namaPartEl.innerHTML = '<option value="">Pilih Part...</option>';
+            parts.forEach(part => {
+                const option = new Option(part.nama_part, part.id);
+                option.dataset.partNumber = part.part_number;
+                option.dataset.partName = part.nama_part;
+                namaPartEl.add(option);
+            });
+        } else {
+            console.error("Gagal memuat data master part:", error);
+        }
+    }
+    
+    // === FUNGSI JAVASCRIPT (VERSI SCROLL, TANPA DATA-LABEL) ===
+    async function displayDashboard(tanggal) {
+        dashboardArea.innerHTML = '<h3>Memuat data...</h3>';
+        // Menggunakan _supabase
+        const { data, error } = await _supabase.from('production_log').select(`*, master_people(nama)`).eq('tanggal', tanggal).order('created_at');
+        if (error) { dashboardArea.innerHTML = `<p style="color:red;">Gagal memuat data: ${error.message}</p>`; return; }
+        if (!data || data.length === 0) { dashboardArea.innerHTML = '<h3>Tidak ada data untuk tanggal ini.</h3>'; return; }
+
+        const groupedData = data.reduce((acc, curr) => {
+            const key = curr.master_people ? curr.master_people.nama : 'Tanpa Nama';
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(curr);
+            return acc;
+        }, {});
+
+        let html = '';
+        const formattedDate = new Date(tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }); // Fix timezone issue
+
+        for (const personName in groupedData) {
+            const records = groupedData[personName];
+            const shift = records[0].shift;
+            const totals = Array(9).fill(0);
+            let grandTotal = 0;
+
+            html += `<h3>NAMA: ${personName} &nbsp;&nbsp;|&nbsp;&nbsp; SHIFT: ${shift} &nbsp;&nbsp;|&nbsp;&nbsp; TANGGAL: ${formattedDate}</h3>`;
+            html += `<table><thead><tr><th>NO</th><th>NAMA PART</th>${Array.from({length: 9}, (_, i) => `<th>${i+1}</th>`).join('')}<th>TOTAL</th><th class="aksi-column print-hide">AKSI</th></tr></thead><tbody>`;
+            
+            records.forEach((rec, index) => {
+                let rowTotal = 0;
+                const partInfo = masterPartsData.find(p => p.id === rec.part_id);
+                const partName = partInfo ? partInfo.nama_part : `Part ID: ${rec.part_id}`;
+                
+                html += `<tr><td>${index + 1}</td><td>${partName}</td>`;
+                for (let i = 1; i <= 9; i++) {
+                    const qty = rec[`qty_jam_${i}`] || 0;
+                    html += `<td>${qty > 0 ? qty : ''}</td>`;
+                    totals[i - 1] += qty;
+                    rowTotal += qty;
+                }
+                grandTotal += rowTotal;
+                html += `<td>${rowTotal}</td><td class="aksi-column print-hide"><button class="edit-btn" onclick="openEditModal(${rec.id})">Edit</button><button class="delete-btn" onclick="deleteRecord(${rec.id})">Hapus</button></td></tr>`;
+            });
+            
+            html += `<tr class="total-row"><td colspan="2">TOTAL</td>${totals.map(t => `<td>${t > 0 ? t : ''}</td>`).join('')}<td>${grandTotal}</td><td class.="aksi-column print-hide"></td></tr></tbody></table>`;
+        }
+        dashboardArea.innerHTML = html;
+    }
+
+    function renderStagedParts() {
+        partsListDiv.innerHTML = !stagedParts.length ? '<p style="color:var(--text-secondary); font-style:italic;">Belum ada part yang ditambahkan.</p>' : '';
+        stagedParts.forEach((part, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'part-item';
+            itemDiv.innerHTML = `<span><strong>${part.partName}</strong> (Jam: ${part.jamKe}, Qty: ${part.quantity})</span><button onclick="removeStagedPart(${index})">Hapus</button>`;
+            partsListDiv.appendChild(itemDiv);
+        });
+    }
+
+    function removeStagedPart(index) {
+        stagedParts.splice(index, 1);
+        renderStagedParts();
+    }
+    
+    async function saveAllParts() {
+        if (stagedParts.length === 0 || !tanggalEl.value || !shiftEl.value || !namaEl.value) {
+            alert('Harap lengkapi semua data dan tambahkan minimal satu part.'); return;
+        }
+        
+        const summary = new Map();
+        stagedParts.forEach(part => {
+            if (!summary.has(part.partId)) summary.set(part.partId, { ...part, quantity: 0 });
+            summary.get(part.partId).quantity += part.quantity;
+        });
+
+        const recordsForDashboard = Array.from(summary.values()).map(part => ({
+            tanggal: tanggalEl.value, shift: parseInt(shiftEl.value), people: namaEl.options[namaEl.selectedIndex].text,
+            part_name: part.partName, part_number: part.partNumber, qty: part.quantity
+        }));
+
+        const logUpsertMap = new Map();
+        stagedParts.forEach(log => {
+            if (!logUpsertMap.has(log.partId)) {
+                logUpsertMap.set(log.partId, {
+                    tanggal: tanggalEl.value, shift: parseInt(shiftEl.value), person_id: parseInt(namaEl.value), part_id: log.partId
+                });
+            }
+            const existing = logUpsertMap.get(log.partId);
+            existing[`qty_jam_${log.jamKe}`] = (existing[`qty_jam_${log.jamKe}`] || 0) + log.quantity;
+        });
+        const finalRecordsForLog = Array.from(logUpsertMap.values());
+
+        try {
+            // Menggunakan _supabase
+            const { error: dashboardError } = await _supabase.from('hasil_assy_cap').insert(recordsForDashboard);
+            if (dashboardError) throw dashboardError;
+            
+            // Menggunakan _supabase
+            const { error: logError } = await _supabase.from('production_log').upsert(finalRecordsForLog, { onConflict: 'tanggal, shift, person_id, part_id' });
+            if (logError) throw logError;
+            
+            alert('Semua data berhasil disimpan!');
+            stagedParts = [];
+            renderStagedParts();
+            jamKeEl.value = '1';
+            displayDashboard(tanggalEl.value);
+        } catch (error) {
+            alert('Gagal menyimpan data: ' + error.message);
+        }
+    }
+    
+    async function openEditModal(recordId) {
+        // Menggunakan _supabase
+        const { data, error } = await _supabase.from('production_log').select(`*`).eq('id', recordId).single();
+        if (error || !data) { alert('Gagal mengambil data untuk diedit!'); return; }
+        editRecordId.value = data.id;
+        const partInfo = masterPartsData.find(p => p.id === data.part_id);
+        editPartName.textContent = partInfo ? partInfo.nama_part : 'Part tidak ditemukan';
+        for (let i = 1; i <= 9; i++) document.getElementById(`edit_qty_jam_${i}`).value = data[`qty_jam_${i}`] || '';
+        editModal.style.display = 'block';
+    }
+
+    function closeEditModal() { editModal.style.display = 'none'; }
+
+    async function deleteRecord(recordId) {
+        if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
+        // Menggunakan _supabase
+        const { error } = await _supabase.from('production_log').delete().eq('id', recordId);
+        if (error) alert('Gagal menghapus data: ' + error.message);
+        else {
+            alert('Data berhasil dihapus.');
+            displayDashboard(tanggalEl.value);
+        }
+    }
+
+    function exportToExcel() {
+        const tables = document.querySelectorAll('#dashboard-area table');
+        if (tables.length === 0) return alert('Tidak ada data untuk di-export!');
+        const wb = XLSX.utils.book_new();
+        tables.forEach(table => {
+            // Kloning tabel untuk menghapus kolom Aksi sebelum export
+            const tableClone = table.cloneNode(true);
+            Array.from(tableClone.querySelectorAll('.aksi-column')).forEach(col => col.remove());
+            
+            const personName = table.previousElementSibling.innerText.split('|')[0].replace('NAMA: ', '').trim();
+            const ws = XLSX.utils.table_to_sheet(tableClone);
+            XLSX.utils.book_append_sheet(wb, ws, personName.slice(0, 30));
+        });
+        XLSX.writeFile(wb, `Laporan Produksi ${tanggalEl.value}.xlsx`);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        tanggalEl.value = new Date().toISOString().split('T')[0];
+        loadMasterData().then(() => {
+            displayDashboard(tanggalEl.value);
+        });
+        renderStagedParts();
+        
+        tanggalEl.addEventListener('change', () => displayDashboard(tanggalEl.value));
+
+        addPartBtn.addEventListener('click', () => {
+            const selectedOption = namaPartEl.options[namaPartEl.selectedIndex];
+            if (!selectedOption.value) { alert('Pilih Nama Part terlebih dahulu!'); return; }
+            const partId = parseInt(selectedOption.value), partName = selectedOption.dataset.partName;
+            const partNumber = selectedOption.dataset.partNumber, jamKe = parseInt(jamKeEl.value);
+            const quantity = parseInt(quantityEl.value);
+            if (!quantity || quantity <= 0) { alert('Isi Quantity dengan benar!'); return; }
+            stagedParts.push({ partId, partName, partNumber, jamKe, quantity });
+            renderStagedParts();
+            namaPartEl.value = ''; quantityEl.value = ''; namaPartEl.focus();
+            // Logika auto-increment jam
+            const nextJam = (jamKe % 9) + 1;
+            jamKeEl.value = nextJam;
+        });
+
+        saveAllBtn.addEventListener('click', saveAllParts);
+
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const recordId = editRecordId.value;
+            const updates = {};
+            for (let i = 1; i <= 9; i++) updates[`qty_jam_${i}`] = parseInt(document.getElementById(`edit_qty_jam_${i}`).value) || null;
+            
+            // Menggunakan _supabase
+            const { error } = await _supabase.from('production_log').update(updates).eq('id', recordId);
+            if (error) alert('Gagal menyimpan perubahan: ' + error.message);
+            else {
+                alert('Data berhasil diperbarui!');
+                closeEditModal();
+                displayDashboard(tanggalEl.value);
+            }
+        });
+    }); // Akhir dari DOMContentLoaded
+
+    // Membuat fungsi bisa diakses dari HTML onclick
+    window.removeStagedPart = removeStagedPart;
+    window.openEditModal = openEditModal;
+    window.closeEditModal = closeEditModal;
+    window.deleteRecord = deleteRecord;
+    window.exportToExcel = exportToExcel;
+</script>
+</body>
+</html>

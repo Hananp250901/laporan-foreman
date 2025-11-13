@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Assy Cap per People</title>
+    
+    <link rel="stylesheet" href="style.css"> 
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+    /* CSS tambahan khusus untuk halaman ini */
+    .chart-wrapper {
+        position: relative;
+        height: 1000px; /* Atur tinggi chart di sini */
+    }
+    .filter-wrapper {
+        display: flex;
+        flex-wrap: wrap; /* Agar responsif di HP */
+        align-items: center;
+        gap: 1rem;
+    }
+    #monthFilter option {
+            color: #000000; /* Paksa warna teks jadi HITAM */
+            background-color: #FFFFFF; /* Pastikan background-nya putih */
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+            <h3>Laporan Foreman</h3>
+            
+            <div id="user-info"><h4>Memuat...</h4></div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="dashboard.html"> 
+                            <span class="material-icons">home</span>
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="incoming.html">
+                            <span class="material-icons">inventory_2</span>
+                            Incoming
+                        </a>
+                    </li>
+                    <li><a href="wuster.html"><span class="material-icons">cleaning_services</span>Wuster</a></li>
+                    <li><a href="repair.html"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
+                    
+                    <li><hr style="border-color: var(--border-color); margin: 10px 0;"></li>
+
+                    <li class="nav-link dropdown">
+                        <a href="#" class="dropdown-toggle">
+                            <span class="material-icons">format_paint</span> Assy Cap
+                            <span class="material-icons arrow">expand_more</span> </a>
+                        <ul class="submenu">
+                            <li><a href="dashboard-assy-cap.html">Dashboard</a></li> 
+                            <li><a href="master-people.html">Master People</a></li> 
+                            <li><a href="assy-cap.html">Add Data</a></li> 
+                            <li><a href="laporan-assy-cap-people.html" class="active">Laporan AssyCap</a></li> 
+                            <li><a href="laporan-assy-cap-harian-people.html">Laporan Harian</a></li>
+                        </ul>
+                    </li>
+                    </ul>
+            </nav>
+            
+            </div>
+        
+        <div class="sidebar-bottom">
+            <button id="logout-button">
+                <span class="material-icons">logout</span>
+                Logout
+            </button>
+        </div>
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+
+    <main class="main-content">
+        <header>
+            <button class="menu-toggle" id="menu-toggle">
+                <span class="material-icons">menu</span>
+            </button>
+            <h2>Laporan Hasil Assy Cap All</h2>
+        </header>
+        
+        <div class="content-wrapper">
+            
+            <div class="card" style="margin-bottom: 1.5rem; padding: 1.5rem;">
+                <div class="filter-wrapper">
+                    <label for="monthFilter" style="margin: 0;">Tampilkan data bulan:</label>
+                    <select id="monthFilter" style="margin-left: auto;"></select>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="chart-container" style="padding: 1.5rem;">
+                    <div class="chart-header" style="text-align: center; margin-bottom: 1rem;">
+                        <h3 id="totalQtyText">Total Hasil Bulan Ini: Menghitung...</h3>
+                        <!-- <button id="downloadChartButton" class="button-secondary" style="width: auto; padding: 0.5rem 1rem; margin-top: 0.5rem;">
+                            <span class="material-icons">download</span> Download Gambar
+                        </button> -->
+                    </div>
+                    <h4 id="chartTitle" style="text-align: center; margin-bottom: 1.5rem;">Peringkat Hasil Assy Cap</h4>
+                    <div class="chart-wrapper">
+                        <canvas id="byPeopleChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div> </main> </div> <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="app.js"></script> 
+
+<script src="laporan-assy-cap-people.js"></script> 
+
+</body>
+</html>

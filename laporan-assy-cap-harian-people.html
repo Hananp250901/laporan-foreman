@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Harian per People</title>
+    
+    <link rel="stylesheet" href="style.css"> 
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
+    
+    <style>
+        #monthFilter option {
+            color: #000000; /* Paksa warna teks jadi HITAM */
+            background-color: #FFFFFF; /* Pastikan background-nya putih */
+        }
+    /* CSS tambahan khusus untuk halaman ini */
+    .chart-wrapper {
+        position: relative;
+        height: 350px; /* Atur tinggi chart */
+    }
+    .filter-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    /* ============================================== */
+    /* === CSS KHUSUS UNTUK DARK MODE CHOICES.JS === */
+    /* ============================================== */
+    .choices {
+            width: 100%;
+        }
+        /* Ini kotak utamanya (waktu ditutup) */
+        .choices__inner {
+            background-color: var(--input-bg) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 5px !important;
+            padding: 6px 10px !important;
+            font-size: 1em !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* Ini adalah bagian dropdown yang terbuka */
+        .choices__list--dropdown,
+        .choices__list[aria-expanded] {
+            background-color: var(--card-bg) !important; /* Background dropdown jadi gelap */
+            border-color: var(--border-color) !important;
+        }
+        
+        /* Ini adalah kolom search di dalam dropdown (YANG BERMASALAH) */
+        .choices__list--dropdown .choices__input {
+            background-color: var(--input-bg) !important; /* Background search bar jadi gelap */
+            color: var(--text-primary) !important; /* Teks ketikan jadi putih */
+            border: 1px solid var(--border-color) !important; /* Border search bar */
+            padding: 6px 10px !important; 
+            font-size: 1em !important; 
+        }
+        
+        /* Ini untuk placeholder text "Cari..." */
+        .choices__list--dropdown .choices__input::placeholder {
+            color: var(--text-secondary) !important; /* Warna placeholder jadi abu-abu */
+        }
+
+        /* Ini adalah pilihan-pilihan di dropdown (yang TIDAK di-highlight) */
+        .choices__list--dropdown .choices__item--selectable {
+            color: var(--text-primary) !important; /* Teks pilihan jadi putih/terang */
+            padding: 8px 10px !important;
+        }
+
+        /* Ini adalah pilihan yang sedang di-highlight (kena mouse) */
+        .choices__list--dropdown .choices__item--selectable.is-highlighted {
+            background-color: var(--primary-color) !important; /* Background jadi biru */
+            color: white !important; /* Teks jadi putih */
+        }
+
+        /* Ini untuk teks "Tekan untuk memilih" */
+        .choices__list--dropdown .choices__item--selectable::after {
+            color: var(--text-secondary) !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+            <h3>Laporan Foreman</h3>
+            
+            <div id="user-info"><h4>Memuat...</h4></div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="dashboard.html"> 
+                            <span class="material-icons">home</span>
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="incoming.html">
+                            <span class="material-icons">inventory_2</span>
+                            Incoming
+                        </a>
+                    </li>
+                    <li><a href="wuster.html"><span class="material-icons">cleaning_services</span>Wuster</a></li>
+                    <li><a href="repair.html"><span class="material-icons">build</span>Repair dan Touch Up</a></li>
+                    
+                    <li><hr style="border-color: var(--border-color); margin: 10px 0;"></li>
+
+                    <li class="nav-link dropdown">
+                        <a href="#" class="dropdown-toggle">
+                            <span class="material-icons">format_paint</span> Assy Cap
+                            <span class="material-icons arrow">expand_more</span> </a>
+                        <ul class="submenu">
+                            <li><a href="dashboard-assy-cap.html">Dashboard</a></li> 
+                            <li><a href="master-people.html">Master People</a></li> 
+                            <li><a href="assy-cap.html">Add Data</a></li> 
+                            <li><a href="laporan-assy-cap-people.html">Laporan AssyCap</a></li> 
+                            <li><a href="laporan-assy-cap-harian-people.html" class="active">Laporan Harian</a></li>
+                        </ul>
+                    </li>
+                    </ul>
+            </nav>
+            
+            </div>
+        
+        <div class="sidebar-bottom">
+            <button id="logout-button">
+                <span class="material-icons">logout</span>
+                Logout
+            </button>
+        </div>
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+
+    <main class="main-content">
+        <header>
+            <button class="menu-toggle" id="menu-toggle">
+                <span class="material-icons">menu</span>
+            </button>
+            <h2>Laporan Harian Assy Cap per People</h2>
+        </header>
+        
+        <div class="content-wrapper">
+            
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="filter-container">
+                    <div class="filter-group">
+                        <label for="monthFilter">Bulan:</label>
+                        <select id="monthFilter"></select>
+                    </div>
+                     <div class="filter-group">
+                        <label for="peopleFilter">Pilih Nama People:</label>
+                        <select id="peopleFilter" placeholder="Cari nama..."></select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="chart-container" style="padding: 1.5rem;">
+                    <div class="chart-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                        <h4 id="chartTitle" style="margin: 0;">Analisis Harian Assy Cap</h4>
+                        <button id="downloadChartButton" class="button-secondary" style="width: auto;">
+                            <span class="material-icons">download</span> Download Gambar
+                        </button>
+                    </div>
+                    <div id="chartTotal" style="font-weight: bold; font-size: 1.1em; margin-bottom: 1.5rem; color: var(--text-secondary);"></div>
+            
+                    <div class="chart-wrapper">
+                        <canvas id="usageChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="log-container" style="padding: 1.5rem;">
+                    <div class="log-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0;">Log Input Terakhir</h3>
+                         <button id="downloadCsvButton" class="button-secondary" style="width: auto;">
+                            <span class="material-icons">download</span> Download CSV
+                        </button>
+                    </div>
+                    
+                    <div class="table-container"> <table class="history-table"> <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Shift</th>
+                                    <th>Part Name</th>
+                                    <th>Part Number</th>
+                                    <th>Qty (Pcs)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logTableBody"></tbody>
+                        </table>
+                    </div>
+                     <div class="pagination-controls" style="margin-top: 1.5rem;">
+                        <button id="togglePaginationButton" class="button-secondary" style="margin-right: auto;">Tampilkan Semua</button>
+                        <span id="pageInfo">Halaman 1 dari 1</span>
+                        <button id="prevPageButton" class="button-secondary" disabled>&laquo; Prev</button>
+                        <button id="nextPageButton" class="button-secondary" disabled>Next &raquo;</button>
+                    </div>
+                </div>
+            </div>
+
+        </div> </main> </div> <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="app.js"></script> 
+
+<script src="laporan-assy-cap-harian-people.js"></script> 
+
+</body>
+</html>
