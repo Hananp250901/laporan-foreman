@@ -120,6 +120,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function calculateTable() {
         const rows = productionTable.getElementsByTagName('tr');
         let prevAccGap = 0, prevAccFilled = 0, prevAccEmpty = 0, prevAccLoss = 0;
+        
+        let lastAccFilled = 0;
+        let lastAccEmpty = 0;
 
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
@@ -143,7 +146,20 @@ document.addEventListener('DOMContentLoaded', function() {
             prevAccFilled = accFilled;
             prevAccEmpty = accEmpty;
             prevAccLoss = accLoss;
+            
+            // Simpan nilai ACC terakhir
+            lastAccFilled = accFilled;
+            lastAccEmpty = accEmpty;
         }
+        
+        // ================== MODIFIKASI JS DI SINI ==================
+        // Update input summary Hanger Isi dan Kosong
+        document.getElementById('hanger-isi').value = lastAccFilled;
+        document.getElementById('hanger-kosong').value = lastAccEmpty;
+        
+        // Panggil calculateSummary untuk update Total Hanger dan Performance
+        calculateSummary();
+        // ================ AKHIR MODIFIKASI JS ================
     }
 
     /**
@@ -273,17 +289,42 @@ document.addEventListener('DOMContentLoaded', function() {
      * Fungsi untuk menghitung total Hanger dan Produksi di summary bawah
      */
     function calculateSummary() {
+        // ================== MODIFIKASI JS DI SINI ==================
+        
+        // 1. Baca nilai (yang sudah diisi otomatis oleh calculateTable)
         const hangerIsi = parseFloat(document.getElementById('hanger-isi').value) || 0;
         const hangerKosong = parseFloat(document.getElementById('hanger-kosong').value) || 0;
+        
+        // 2. Baca nilai produksi
         const fresh = parseFloat(document.getElementById('fresh').value) || 0;
         const repair = parseFloat(document.getElementById('repair').value) || 0;
 
-        document.getElementById('total-hanger').value = hangerIsi + hangerKosong;
+        // 3. Hitung Total Hanger
+        const totalHanger = hangerIsi + hangerKosong;
+        document.getElementById('total-hanger').value = totalHanger;
+        
+        // 4. Hitung Total Produksi
         document.getElementById('total-produksi').value = fresh + repair;
+        
+        // 5. Hitung Performance
+        const rows = productionTable.getElementsByTagName('tr');
+        let totalTarget = 0;
+        if (rows.length > 0) {
+            const lastRow = rows[rows.length - 1];
+            totalTarget = parseFloat(lastRow.querySelector('[data-col="target-end"]').value) || 0;
+        }
+        
+        const performance = (totalTarget > 0) ? (totalHanger / totalTarget) * 100 : 0;
+        document.getElementById('performance').value = performance.toFixed(2) + '%';
+        
+        // ================ AKHIR MODIFIKASI JS ================
     }
     
-    // Daftarkan event listener untuk 4 input di summary bawah
-    const summaryInputs = ['hanger-isi', 'hanger-kosong', 'fresh', 'repair'];
+    // ================== MODIFIKASI JS DI SINI ==================
+    // Daftarkan event listener HANYA untuk input manual (fresh dan repair)
+    const summaryInputs = ['fresh', 'repair'];
+    // 'hanger-isi' dan 'hanger-kosong' dihapus dari array ini
+    // ================ AKHIR MODIFIKASI JS ================
     summaryInputs.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', calculateSummary);
@@ -302,9 +343,17 @@ document.addEventListener('DOMContentLoaded', function() {
         currentlyEditingId = null; 
 
         document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
-        targetPerJamEl.value = '224'; // Reset target ke default
+        targetPerJamEl.value = '240'; // Reset target ke default (diubah dari 224)
         
         productionTable.innerHTML = ''; 
+        
+        // ================== MODIFIKASI JS DI SINI ==================
+        // Kosongkan juga field performance
+        if(document.getElementById('performance')) {
+            document.getElementById('performance').value = '';
+        }
+        // ================ AKHIR MODIFIKASI JS ================
+
         calculateSummary(); 
         
         formTitleEl.textContent = 'Buat Laporan Baru';
@@ -422,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 5. Buat ulang tabel produksi (DIPERBARUI)
         
         // Ambil target per jam dari baris PERTAMA detail
-        const hourlyTarget = detailData[0]?.target_end || 224; // Default 224 jika tidak ada data
+        const hourlyTarget = detailData[0]?.target_end || 240; // Default 240 jika tidak ada data
         targetPerJamEl.value = hourlyTarget; // Set input Target per Jam
         
         jamKerjaEl.value = mainReport.jam_kerja;
@@ -482,6 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ng: parseFloat(document.getElementById('ng').value) || 0,
             total_produksi: parseFloat(document.getElementById('total-produksi').value) || 0,
             catatan_lain: document.getElementById('catatan-lain').value
+            // Performance tidak perlu disimpan, karena bisa dihitung kapan saja
         };
     }
 
@@ -799,12 +849,19 @@ document.addEventListener('DOMContentLoaded', function() {
             doc.setFontSize(10); doc.setFont(undefined, 'bold');
             doc.text('Komentar & Catatan:', 20, finalY);
 
+            // ================== MODIFIKASI PDF DI SINI ==================
+            // Hitung performance
+            const totalTarget = detailData.length > 0 ? detailData[detailData.length - 1]?.target_end : 0;
+            const performance = (totalTarget > 0) ? (mainReport.total_hanger / totalTarget) * 100 : 0;
+            const performanceText = performance.toFixed(2) + '%';
+            
             const bodyKiri = [
                 ['Loss Time (Menit)', mainReport.loss_time_menit || '0'],
                 ['Loss Time (Hanger)', mainReport.loss_time_hanger || '0'],
                 ['Hanger ISI', mainReport.hanger_isi || '0'],
                 ['Hanger Kosong', mainReport.hanger_kosong || '0'],
-                [{ content: 'TOTAL Hanger', styles: { fontStyle: 'bold' } }, { content: mainReport.total_hanger || '0', styles: { fontStyle: 'bold', halign: 'center' } }]
+                [{ content: 'Total Hanger', styles: { fontStyle: 'bold' } }, { content: mainReport.total_hanger || '0', styles: { fontStyle: 'bold', halign: 'center' } }],
+                [{ content: 'Performance', styles: { fontStyle: 'bold' } }, { content: performanceText, styles: { fontStyle: 'bold', halign: 'center' } }] // <-- BARIS BARU
             ];
             
             const bodyKanan = [
@@ -830,19 +887,22 @@ document.addEventListener('DOMContentLoaded', function() {
             doc.autoTable({ startY: finalY + 3, body: bodyKanan, ...tableStyles, margin: { left: 155 } });
             const rightTableFinalY = doc.lastAutoTable.finalY;
 
-            // --- "Catatan Lain" ---
-            let catatanY = leftTableFinalY + 4; 
+            // --- "Catatan Lain" (Dipindahkan ke Kanan) ---
+            let catatanY = rightTableFinalY + 4; // <-- DIUBAH: dari leftTableFinalY
+            const catatanX = 155; // <-- BARU: X-coordinate baru (sama dgn margin kiri tabel kanan)
+            
             doc.setFontSize(10); 
             doc.setFont(undefined, 'bold');
-            doc.text('Catatan Lain:', 20, catatanY);
+            doc.text('Catatan Lain:', catatanX, catatanY); // <-- DIUBAH: dari 20
             doc.setFont(undefined, 'normal');
             doc.setLineWidth(0.1);
-            doc.rect(20, catatanY + 2, 120, 18);
-            doc.text(mainReport.catatan_lain || '-', 21, catatanY + 7, { maxWidth: 118 }); 
-            const catatanFinalY = catatanY + 2 + 18; 
+            doc.rect(catatanX, catatanY + 2, 120, 18); // <-- DIUBAH: dari 20.
+            doc.text(mainReport.catatan_lain || '-', catatanX + 1, catatanY + 7, { maxWidth: 118 }); // <-- DIUBAH: dari 21
+            const catatanFinalY = catatanY + 2 + 18; // <-- Ini tetap
 
             // --- TANDA TANGAN ---
-            let sigY = Math.max(catatanFinalY, rightTableFinalY) + 7; 
+            let sigY = Math.max(leftTableFinalY, catatanFinalY) + 7; // <-- DIUBAH: dari (catatanFinalY, rightTableFinalY)
+            // ================ AKHIR MODIFIKASI PDF ================
 
             doc.setFontSize(9);
             const sigCol1 = 45, sigCol2 = 145, sigCol3 = 245;
