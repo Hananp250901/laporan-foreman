@@ -6,69 +6,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadButton = document.getElementById('downloadChartButton');
     const ctx = document.getElementById('byPeopleChart').getContext('2d');
     let byPeopleChart;
+    let masterData = { people: new Map() }; // Cache untuk master data
 
     /**
      * Inisialisasi halaman
      */
-    const initializePage = () => {
+    const initializePage = async () => {
+        // Muat data master DULU
+        await loadMasterDataCache();
+        
         populateMonthFilter();
         const selectedMonth = monthFilter.value;
-        loadReportData(selectedMonth);
+        await loadReportData(selectedMonth);
 
         monthFilter.addEventListener('change', () => loadReportData(monthFilter.value));
         downloadButton.addEventListener('click', downloadChart);
     };
 
     // ==========================================================
-    // === FUNGSI BARU UNTUK "LOOPING" (PAGINASI) ===
+    // === FUNGSI LOOPING (PAGINASI) ===
     // ==========================================================
-    /**
-     * Mengambil SEMUA data dari query Supabase, mengatasi limit 1000 baris
-     * dengan cara "looping" (paginasi).
-     * @param {object} query - Query Supabase (cth: _supabase.from('...').select('...'))
-     * @returns {Array|null} Array berisi semua data, atau null jika ada error.
-     */
     async function loadAllDataWithPagination(query) {
         let allData = [];
         let from = 0;
-        const pageSize = 1000; // Ukuran "loop" per request, sesuai limit Supabase
-
+        const pageSize = 1000; 
         console.log("Memulai 'looping' untuk mengambil semua data (laporan per people)...");
-
         while (true) {
-            // .range() harus dipanggil di akhir query-nya
             const { data, error } = await query.range(from, from + pageSize - 1);
-
             if (error) {
                 console.error("Error saat 'looping' data Supabase:", error);
-                return null; // Kembalikan null jika ada error
+                return null; 
             }
-
-            if (data) {
-                allData = allData.concat(data);
-            }
-
-            // Jika data yang kembali lebih sedikit dari ukuran loop, berarti ini halaman terakhir
-            if (!data || data.length < pageSize) {
-                break; // Hentikan "looping"
-            }
-
-            // Siapkan untuk "loop" berikutnya
+            if (data) allData = allData.concat(data);
+            if (!data || data.length < pageSize) break; 
             from += pageSize;
         }
-        
         console.log(`Selesai 'looping', total data diambil: ${allData.length} baris.`);
         return allData;
     }
+
     // ==========================================================
-    // === AKHIR FUNGSI BARU ===
+    // === FUNGSI MASTER DATA CACHE ===
     // ==========================================================
+    async function loadMasterDataCache() {
+        console.log("Memuat cache master data people (dengan looping)...");
+        const peopleQuery = _supabase.from('master_people').select('id, nama');
+        const peopleData = await loadAllDataWithPagination(peopleQuery);
+        
+        if (peopleData) {
+            peopleData.forEach(p => masterData.people.set(p.id, p.nama));
+        }
+        console.log("Cache master data people selesai dimuat.");
+    }
 
 
     /**
      * Mengisi dropdown filter bulan dengan 12 bulan terakhir.
      */
     const populateMonthFilter = () => {
+        // (Fungsi ini tidak perlu diubah, sudah benar)
         const now = new Date();
         for (let i = 0; i < 12; i++) {
             const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -94,21 +90,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const endDate = `${year}-${month}-${lastDay}`;
         
         try {
-            // 1. Buat query-nya
+            // =======================================================
+            // === PERUBAHAN DI SINI: Query ke production_log ===
+            // =======================================================
+            console.log("Mengambil data dari production_log...");
             const query = _supabase
-                .from('hasil_assy_cap')
-                .select('people, qty') 
+                .from('production_log') // <-- NAMA TABEL DIGANTI
+                .select('person_id, qty_jam_1, qty_jam_2, qty_jam_3, qty_jam_4, qty_jam_5, qty_jam_6, qty_jam_7, qty_jam_8, qty_jam_9') // <-- Ambil data rinci
                 .gte('tanggal', startDate)
                 .lte('tanggal', endDate);
-
-            // =======================================================
-            // === PERUBAHAN DI SINI: Menggunakan fungsi looping ===
-            // =======================================================
-            // const { data, error } = await _supabase... // <-- Kode lama
-            const data = await loadAllDataWithPagination(query); // <-- Kode BARU
+            
+            const data = await loadAllDataWithPagination(query); // <-- Pakai looping
             // =======================================================
 
-            if (data === null) { // Cek jika 'looping' gagal
+            if (data === null) {
                 throw new Error("Gagal mengambil data dari database (looping error).");
             }
 
@@ -122,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Mengolah data mentah, menghitung total, dan memanggil fungsi render.
-     * @param {Array} rawData - Data dari Supabase.
+     * @param {Array} rawData - Data dari Supabase (dari production_log).
      */
     const processAndRenderData = (rawData) => {
         if (!rawData || rawData.length === 0) {
@@ -131,19 +126,30 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 1. Agregasi data: jumlahkan qty per 'people'
+        // =======================================================
+        // === PERUBAHAN DI SINI: Logika perhitungan diubah ===
+        // =======================================================
         const summary = {};
         let grandTotal = 0;
+        
         rawData.forEach(item => {
-            // Tambahkan pengecekan untuk data null/kosong
-            const person = item.people || 'Tidak Diketahui';
-            if (summary[person]) {
-                summary[person] += item.qty;
+            // 1. Hitung total qty dari data per jam
+            const totalQty = (item.qty_jam_1 || 0) + (item.qty_jam_2 || 0) + (item.qty_jam_3 || 0) +
+                             (item.qty_jam_4 || 0) + (item.qty_jam_5 || 0) + (item.qty_jam_6 || 0) +
+                             (item.qty_jam_7 || 0) + (item.qty_jam_8 || 0) + (item.qty_jam_9 || 0);
+                             
+            // 2. Dapatkan nama orang dari cache master data
+            const personName = masterData.people.get(item.person_id) || 'Tidak Diketahui';
+            
+            // 3. Jumlahkan totalnya
+            if (summary[personName]) {
+                summary[personName] += totalQty;
             } else {
-                summary[person] = item.qty;
+                summary[personName] = totalQty;
             }
-            grandTotal += item.qty;
+            grandTotal += totalQty;
         });
+        // =======================================================
 
         // 2. Ubah objek summary menjadi array agar bisa diurutkan
         const summaryArray = Object.keys(summary).map(name => ({
@@ -177,10 +183,23 @@ document.addEventListener('DOMContentLoaded', () => {
             byPeopleChart.destroy();
         }
 
-        // Mendapatkan warna teks dari CSS Variable (untuk dark mode)
+        // ==========================================================
+        // === TAMBAHAN UNTUK TINGGI GRAFIK DINAMIS ===
+        // ==========================================================
+        const chartWrapper = ctx.canvas.parentElement; 
+        const labelsCount = labels.length; 
+        const heightPerLabel = 30; // 30px per nama
+        const baseHeight = 100; 
+        let newHeight = (labelsCount * heightPerLabel) + baseHeight;
+        const minHeight = 400; 
+        if (newHeight < minHeight) {
+            newHeight = minHeight;
+        }
+        chartWrapper.style.height = `${newHeight}px`;
+        // ==========================================================
+
         const textColor = getComputedStyle(document.body).getPropertyValue('--text-primary') || '#000';
         const gridColor = getComputedStyle(document.body).getPropertyValue('--border-color') || 'rgba(128, 128, 128, 0.2)';
-
 
         byPeopleChart = new Chart(ctx, {
             type: 'bar',
@@ -200,18 +219,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 maintainAspectRatio: false,
                 layout: {
                     padding: {
-                        right: 50 // Beri ruang ekstra di kanan untuk datalabels
+                        right: 50 
                     }
                 },
                 plugins: {
                     legend: {
-                        display: false // Sembunyikan legenda
+                        display: false 
                     },
                     datalabels: {
                         anchor: 'end',
                         align: 'end',
                         formatter: (value) => value.toLocaleString('id-ID'),
-                        color: textColor // Gunakan warna teks dari dark mode
+                        color: textColor 
                     }
                 },
                 scales: {
@@ -220,24 +239,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         title: {
                             display: true,
                             text: 'Total Kuantitas (Pcs)',
-                            color: textColor // Gunakan warna teks dari dark mode
+                            color: textColor 
                         },
                         ticks: {
-                            color: textColor // Gunakan warna teks dari dark mode
+                            color: textColor 
                         },
                         grid: {
-                            color: gridColor // Garis grid abu-abu transparan
+                            color: gridColor 
                         }
                     },
                     y: {
                         ticks: {
-                            color: textColor, // Gunakan warna teks dari dark mode
+                            color: textColor, 
                             font: {
-                                weight: 100
+                                weight: '500'
                             }
                         },
                         grid: {
-                            display: false // Sembunyikan grid di sumbu Y
+                            display: false 
                         }
                     }
                 }
@@ -252,26 +271,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadChart = () => {
         if (!byPeopleChart) return;
         
-        // Buat canvas baru dengan background putih
         const canvas = byPeopleChart.canvas;
         const newCanvas = document.createElement('canvas');
         newCanvas.width = canvas.width;
         newCanvas.height = canvas.height;
         const newCtx = newCanvas.getContext('2d');
         
-        // Set background (bukan putih, tapi warna background card)
         const bgColor = getComputedStyle(document.body).getPropertyValue('--card-bg').trim() || '#FFFFFF';
         newCtx.fillStyle = bgColor;
         newCtx.fillRect(0, 0, newCanvas.width, newCanvas.height);
         
-        // Gambar chart di atas background
         newCtx.drawImage(canvas, 0, 0);
 
-        // Buat link download
         const link = document.createElement('a');
         const selectedMonthText = monthFilter.options[monthFilter.selectedIndex].text.replace(/\s+/g, '_');
         link.download = `laporan_assy_cap_per_people_${selectedMonthText}.png`;
-        link.href = newCanvas.toDataURL('image/png'); // Gunakan canvas baru
+        link.href = newCanvas.toDataURL('image/png'); 
         link.click();
     };
 

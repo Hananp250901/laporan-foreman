@@ -14,6 +14,41 @@
             position: relative;
             height: 350px;
         }
+        .filter-chief-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 1.5rem;
+        }
+        .button-filter {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            font-weight: 600;
+            border: 2px solid var(--border-color);
+            background-color: transparent;
+            color: var(--text-secondary);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        /* Style untuk tombol yang BUKAN 'Semua' */
+        .button-filter[id^="filter-"]:not(#filter-all) {
+            border-color: var(--chief-color);
+            color: var(--chief-color);
+        }
+        
+        /* Style untuk tombol AKTIF */
+        .button-filter.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #ffffff;
+        }
+        .button-filter[id^="filter-"]:not(#filter-all).active {
+            background-color: var(--chief-color);
+            border-color: var(--chief-color);
+            color: #ffffff;
+            box-shadow: 0 0 10px var(--chief-color);
+        }
     </style>
 </head>
 <body>
@@ -102,6 +137,41 @@
                     <canvas id="dailyUsageChart"></canvas>
                 </div>
             </div>
+            <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="chart-container" style="padding: 1.5rem;">
+        <h4 id="chiefChartTitleYanto" style="text-align: left; margin-bottom: 1.5rem;">Performa Assy Cap - YANTO H</h4>
+        <div class="chart-wrapper" style="position: relative; height: 350px;">
+            <canvas id="chiefChartYanto"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="chart-container" style="padding: 1.5rem;">
+        <h4 id="chiefChartTitleSubagyo" style="text-align: left; margin-bottom: 1.5rem;">Performa Assy Cap - SUBAGYO</h4>
+        <div class="chart-wrapper" style="position: relative; height: 350px;">
+            <canvas id="chiefChartSubagyo"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="chart-container" style="padding: 1.5rem;">
+        <h4 id="chiefChartTitleSarno" style="text-align: left; margin-bottom: 1.5rem;">Performa Assy Cap - SARNO</h4>
+        <div class="chart-wrapper" style="position: relative; height: 350px;">
+            <canvas id="chiefChartSarno"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="chart-container" style="padding: 1.5rem;">
+        <h4 id="chiefChartTitleNonshift" style="text-align: left; margin-bottom: 1.5rem;">Performa Assy Cap - NONSHIFT</h4>
+        <div class="chart-wrapper" style="position: relative; height: 350px;">
+            <canvas id="chiefChartNonshift"></canvas>
+        </div>
+    </div>
+</div>
 
             <div class="card">
                 <div class="history-header">

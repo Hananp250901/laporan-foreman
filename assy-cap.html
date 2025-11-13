@@ -12,13 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
     <style>
-        #nama_part option,
-        #nama option,
-        #jam_ke option,
-        #shift option {
-            color: #000000; /* Paksa warna teks jadi HITAM */
-            background-color: #FFFFFF; /* Pastikan background-nya putih */
-        }
         /* Mengganti container agar sesuai dengan layout baru */
         .form-container-assy-cap {
             max-width: 1200px; 
@@ -44,28 +37,36 @@
             color: var(--text-primary);
         }
         
+        /* === PERBAIKAN CSS DROPDOWN (DITAMBAH #chief_name) === */
+        #nama_part option,
+        #nama option,
+        #jam_ke option,
+        #shift option,
+        #chief_name option { /* <-- DITAMBAHKAN DI SINI */
+            color: #000000; 
+            background-color: #FFFFFF; 
+        }
+        
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
         .header h2 { margin: 0; font-size: 1.5em; }
         .header-buttons { display: flex; gap: 10px; }
         
         .part-entry { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 2.5fr 1fr 1fr auto; gap: 15px; align-items: flex-end; }
         
-        /* === PERBAIKAN TOMBOL "Tambah +" === */
         #add-part-btn {
             background-color: var(--primary-color);
             color: white; 
-            padding: 10px; /* Samakan dengan input */
-            font-size: 1em; /* Samakan dengan input */
+            padding: 10px; 
+            font-size: 1em; 
             border: 1px solid var(--primary-color);
-            box-sizing: border-box; /* Samakan dengan input */
+            box-sizing: border-box; 
             line-height: normal; 
-            width: 100%; /* Pastikan lebarnya 100% */
+            width: 100%; 
             cursor: pointer;
         }
         #add-part-btn:hover {
             background-color: var(--primary-color-dark);
         }
-        /* === AKHIR PERBAIKAN TOMBOL === */
         
         #save-all-btn { margin-top: 20px; padding: 12px; font-size: 1.1em; background-color: #dc3545; }
         #save-all-btn:hover { background-color: #c82333; }
@@ -81,7 +82,7 @@
             background-color: var(--card-bg);
             border-radius: 8px;
             border: 1px solid var(--border-color);
-            overflow-x: auto; /* Fallback untuk desktop jika terlalu lebar */
+            overflow-x: auto; 
         }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 25px; font-size: 0.9em; }
@@ -93,14 +94,12 @@
         .edit-btn { background-color: #ffc107; }
         .delete-btn { background-color: #dc3545; }
         
-        /* Modal Style (Disesuaikan dengan Dark Mode) */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: var(--card-bg); color: var(--text-primary); margin: 10% auto; padding: 25px; border: 1px solid var(--border-color); width: 90%; max-width: 600px; border-radius: 8px; position: relative; }
         .close-btn { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { color: var(--text-primary); }
         .edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin: 20px 0; }
         
-        /* === CSS UNTUK PRINT === */
         @media print {
             body { margin: 0; padding: 0; font-size: 10pt; color: #000; background-color: #fff; }
             .dashboard-container { display: block; }
@@ -124,9 +123,6 @@
             .total-row td { background-color: #f0f0f0 !important; }
         }
 
-        /* ========================================= */
-        /* === PERBAIKAN TABEL (TOTAL ROW TURUN) === */
-        /* ========================================= */
         #dashboard-area table {
             display: table !important;
             border-collapse: collapse; 
@@ -145,24 +141,17 @@
             display: table-cell !important;
         }
 
-
-        /* ========================================= */
-        /* === KODE RESPONSIVE (VERSI SCROLL) === */
-        /* ========================================= */
         @media (max-width: 768px) {
             
-            /* 1. Perbaiki Form Input */
             .part-entry {
-                grid-template-columns: 1fr; /* Semua input jadi 1 kolom */
+                grid-template-columns: 1fr; 
                 gap: 12px;
             }
             .part-entry button {
-                width: 100%; /* Tombol "Tambah" jadi full width */
+                width: 100%; 
             }
-
-            /* 2. Perbaiki Header */
             .header {
-                flex-direction: column; /* Tombol header turun ke bawah */
+                flex-direction: column; 
                 align-items: flex-start;
                 gap: 15px;
             }
@@ -174,24 +163,19 @@
             .header-buttons button, .header-buttons a {
                 width: 100%;
             }
-
-            /* 3. Perbaiki Modal Edit */
             .edit-grid {
-                grid-template-columns: 1fr 1fr; /* Input jam jadi 2 kolom */
+                grid-template-columns: 1fr 1fr; 
             }
             .modal-content {
                 width: 95%;
                 margin: 5% auto;
             }
-
-            /* 4. Perbaiki Tabel Data (VERSI SCROLL) */
             #dashboard-area {
-                overflow-x: auto; /* INI KUNCINYA: Membuat area tabel bisa di-scroll */
-                -webkit-overflow-scrolling: touch; /* Bikin scroll di iPhone/Safari mulus */
+                overflow-x: auto; 
+                -webkit-overflow-scrolling: touch; 
             }
-            
             #dashboard-area table {
-                min-width: 900px; /* Paksa tabel agar lebarnya minimal 900px */
+                min-width: 900px; 
             }
         }
     </style>
@@ -281,17 +265,26 @@
                         <div><label for="tanggal">Tanggal:</label><input type="date" id="tanggal" required></div>
                         <div><label for="shift">Shift:</label><select id="shift" required><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
                         <div><label for="nama">Nama:</label><select id="nama" required><option value="">Pilih Nama...</option></select></div>
+                        <div>
+                            <label for="chief_name">Chief:</label>
+                            <select id="chief_name" required>
+                                <option value="">Pilih Chief...</option>
+                                <option value="YANTO H">YANTO H</option>
+                                <option value="SARNO">SARNO</option>
+                                <option value="SUBAGYO">SUBAGYO</option>
+                            </select>
+                        </div>
                     </div>
-                    
                     <div class="part-entry">
                         <div><label for="nama_part">Nama Part:</label><select id="nama_part"><option value="">Pilih Part...</option></select></div>
                         <div><label for="jam_ke">Jam Ke-:</label><select id="jam_ke"><script>for(let i=1;i<=9;i++)document.write(`<option value="${i}">${i}</option>`)</script></select></div>
                         <div><label for="quantity">Quantity:</label><input type="number" id="quantity" min="0"></div>
                         
                         <div>
-                            <label>&nbsp;</label> <button type="button" id="add-part-btn">Tambah +</button>
+                            <label>&nbsp;</label> 
+                            <button type="button" id="add-part-btn">Tambah +</button>
                         </div>
-                        </div>
+                    </div>
                 </div>
 
                 <div id="parts-list-container" class="card print-hide">
@@ -304,7 +297,12 @@
                     </div>
             </div>
 
-        </div> </main> </div> <div id="edit-modal" class="modal">
+        </div> 
+    </main> 
+</div> 
+
+
+<div id="edit-modal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeEditModal()">&times;</span>
         <h2>Edit Data Kuantitas</h2>
@@ -325,12 +323,9 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script src="app.js"></script>
 
 <script>
-    // KONEKSI SUPABASE (DIHAPUS KARENA SUDAH ADA DI app.js)
-    
     // MENGGUNAKAN _supabase DARI app.js
     
     let masterPartsData = [];
@@ -338,6 +333,7 @@
     const tanggalEl = document.getElementById('tanggal');
     const shiftEl = document.getElementById('shift');
     const namaEl = document.getElementById('nama');
+    const chiefNameEl = document.getElementById('chief_name'); // <-- ELEMEN BARU DIAMBIL
     const namaPartEl = document.getElementById('nama_part');
     const jamKeEl = document.getElementById('jam_ke');
     const quantityEl = document.getElementById('quantity');
@@ -351,14 +347,13 @@
     const editPartName = document.getElementById('edit-part-name');
 
     async function loadMasterData() {
-        // Menggunakan _supabase
+        // (Tidak ada perubahan di sini)
         const { data: people } = await _supabase.from('master_people').select('id, nama').order('nama');
         if (people) {
             namaEl.innerHTML = '<option value="">Pilih Nama...</option>';
             people.forEach(person => namaEl.add(new Option(person.nama, person.id)));
         }
         
-        // Menggunakan _supabase
         const { data: parts, error } = await _supabase.from('master_assy_cap').select('id, nama_part, part_number').order('nama_part');
         if (parts) {
             masterPartsData = parts;
@@ -374,10 +369,9 @@
         }
     }
     
-    // === FUNGSI JAVASCRIPT (VERSI SCROLL, TANPA DATA-LABEL) ===
     async function displayDashboard(tanggal) {
+        // (Tidak ada perubahan di sini)
         dashboardArea.innerHTML = '<h3>Memuat data...</h3>';
-        // Menggunakan _supabase
         const { data, error } = await _supabase.from('production_log').select(`*, master_people(nama)`).eq('tanggal', tanggal).order('created_at');
         if (error) { dashboardArea.innerHTML = `<p style="color:red;">Gagal memuat data: ${error.message}</p>`; return; }
         if (!data || data.length === 0) { dashboardArea.innerHTML = '<h3>Tidak ada data untuk tanggal ini.</h3>'; return; }
@@ -390,7 +384,7 @@
         }, {});
 
         let html = '';
-        const formattedDate = new Date(tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }); // Fix timezone issue
+        const formattedDate = new Date(tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }); 
 
         for (const personName in groupedData) {
             const records = groupedData[personName];
@@ -423,6 +417,7 @@
     }
 
     function renderStagedParts() {
+        // (Tidak ada perubahan di sini)
         partsListDiv.innerHTML = !stagedParts.length ? '<p style="color:var(--text-secondary); font-style:italic;">Belum ada part yang ditambahkan.</p>' : '';
         stagedParts.forEach((part, index) => {
             const itemDiv = document.createElement('div');
@@ -433,31 +428,30 @@
     }
 
     function removeStagedPart(index) {
+        // (Tidak ada perubahan di sini)
         stagedParts.splice(index, 1);
         renderStagedParts();
     }
     
+    // ==========================================================
+    // === PERUBAHAN FUNGSI saveAllParts (Menyimpan NAMA CHIEF) ===
+    // ==========================================================
     async function saveAllParts() {
-        if (stagedParts.length === 0 || !tanggalEl.value || !shiftEl.value || !namaEl.value) {
-            alert('Harap lengkapi semua data dan tambahkan minimal satu part.'); return;
+        // Validasi ditambah: !chiefNameEl.value
+        if (stagedParts.length === 0 || !tanggalEl.value || !shiftEl.value || !namaEl.value || !chiefNameEl.value) {
+            alert('Harap lengkapi semua data (Termasuk Chief) dan tambahkan minimal satu part.'); 
+            return;
         }
         
-        const summary = new Map();
-        stagedParts.forEach(part => {
-            if (!summary.has(part.partId)) summary.set(part.partId, { ...part, quantity: 0 });
-            summary.get(part.partId).quantity += part.quantity;
-        });
-
-        const recordsForDashboard = Array.from(summary.values()).map(part => ({
-            tanggal: tanggalEl.value, shift: parseInt(shiftEl.value), people: namaEl.options[namaEl.selectedIndex].text,
-            part_name: part.partName, part_number: part.partNumber, qty: part.quantity
-        }));
-
         const logUpsertMap = new Map();
         stagedParts.forEach(log => {
             if (!logUpsertMap.has(log.partId)) {
                 logUpsertMap.set(log.partId, {
-                    tanggal: tanggalEl.value, shift: parseInt(shiftEl.value), person_id: parseInt(namaEl.value), part_id: log.partId
+                    tanggal: tanggalEl.value, 
+                    shift: parseInt(shiftEl.value), 
+                    person_id: parseInt(namaEl.value), 
+                    part_id: log.partId,
+                    chief_name: chiefNameEl.value // <-- BARIS INI DITAMBAHKAN
                 });
             }
             const existing = logUpsertMap.get(log.partId);
@@ -466,11 +460,9 @@
         const finalRecordsForLog = Array.from(logUpsertMap.values());
 
         try {
-            // Menggunakan _supabase
-            const { error: dashboardError } = await _supabase.from('hasil_assy_cap').insert(recordsForDashboard);
-            if (dashboardError) throw dashboardError;
+            // (Simpan ke hasil_assy_cap sudah dihapus, ini sudah benar)
             
-            // Menggunakan _supabase
+            // HANYA SIMPAN KE 'production_log'
             const { error: logError } = await _supabase.from('production_log').upsert(finalRecordsForLog, { onConflict: 'tanggal, shift, person_id, part_id' });
             if (logError) throw logError;
             
@@ -483,9 +475,12 @@
             alert('Gagal menyimpan data: ' + error.message);
         }
     }
+    // ==========================================================
+    // === AKHIR PERUBAHAN ===
+    // ==========================================================
     
     async function openEditModal(recordId) {
-        // Menggunakan _supabase
+        // (Tidak ada perubahan di sini)
         const { data, error } = await _supabase.from('production_log').select(`*`).eq('id', recordId).single();
         if (error || !data) { alert('Gagal mengambil data untuk diedit!'); return; }
         editRecordId.value = data.id;
@@ -495,11 +490,14 @@
         editModal.style.display = 'block';
     }
 
-    function closeEditModal() { editModal.style.display = 'none'; }
+    function closeEditModal() { 
+        // (Tidak ada perubahan di sini)
+        editModal.style.display = 'none'; 
+    }
 
     async function deleteRecord(recordId) {
+        // (Tidak ada perubahan di sini)
         if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
-        // Menggunakan _supabase
         const { error } = await _supabase.from('production_log').delete().eq('id', recordId);
         if (error) alert('Gagal menghapus data: ' + error.message);
         else {
@@ -509,11 +507,11 @@
     }
 
     function exportToExcel() {
+        // (Tidak ada perubahan di sini)
         const tables = document.querySelectorAll('#dashboard-area table');
         if (tables.length === 0) return alert('Tidak ada data untuk di-export!');
         const wb = XLSX.utils.book_new();
         tables.forEach(table => {
-            // Kloning tabel untuk menghapus kolom Aksi sebelum export
             const tableClone = table.cloneNode(true);
             Array.from(tableClone.querySelectorAll('.aksi-column')).forEach(col => col.remove());
             
@@ -525,6 +523,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        // (Tidak ada perubahan di sini)
         tanggalEl.value = new Date().toISOString().split('T')[0];
         loadMasterData().then(() => {
             displayDashboard(tanggalEl.value);
@@ -543,7 +542,6 @@
             stagedParts.push({ partId, partName, partNumber, jamKe, quantity });
             renderStagedParts();
             namaPartEl.value = ''; quantityEl.value = ''; namaPartEl.focus();
-            // Logika auto-increment jam
             const nextJam = (jamKe % 9) + 1;
             jamKeEl.value = nextJam;
         });
@@ -556,7 +554,6 @@
             const updates = {};
             for (let i = 1; i <= 9; i++) updates[`qty_jam_${i}`] = parseInt(document.getElementById(`edit_qty_jam_${i}`).value) || null;
             
-            // Menggunakan _supabase
             const { error } = await _supabase.from('production_log').update(updates).eq('id', recordId);
             if (error) alert('Gagal menyimpan perubahan: ' + error.message);
             else {
@@ -565,9 +562,8 @@
                 displayDashboard(tanggalEl.value);
             }
         });
-    }); // Akhir dari DOMContentLoaded
+    }); 
 
-    // Membuat fungsi bisa diakses dari HTML onclick
     window.removeStagedPart = removeStagedPart;
     window.openEditModal = openEditModal;
     window.closeEditModal = closeEditModal;
