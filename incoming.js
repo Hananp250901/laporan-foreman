@@ -1,6 +1,8 @@
 // =================================================================
 // C. LOGIKA HALAMAN INCOMING (incoming.html)
 // (VERSI MODIFIKASI: Layout PDF diubah, Remover & Touch Up pindah ke KIRI)
+// (MODIFIKASI 2: Verifikasi jadi list dinamis, PDF skip item 0)
+// (MODIFIKASI 3: Check dipecah jadi 3 textarea)
 // =================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -57,6 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultTouchUpAeroxItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS"];
     const touchUpAeroxTotalSpan = document.getElementById('prod-touch-up-aerox-total');
     
+    // === TAMBAHAN: Variabel Line Verifikasi ===
+    const verifikasiListContainer = document.getElementById('prod-verifikasi-list');
+    const addVerifikasiItemBtn = document.getElementById('add-verifikasi-item-btn');
+    const defaultVerifikasiItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS"]; // Default kosong
+    const verifikasiTotalSpan = document.getElementById('prod-verifikasi-total');
+
     /**
      * FUNGSI: Menghitung total Produksi Chrom (A)
      */
@@ -130,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (addBukaCapItemBtn) addBukaCapItemBtn.addEventListener('click', () => addDynamicRow(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value'));
     if (addRemoverItemBtn) addRemoverItemBtn.addEventListener('click', () => addDynamicRow(removerListContainer, 'remover-item-name', 'remover-item-value')); 
     if (addTouchUpAeroxItemBtn) addTouchUpAeroxItemBtn.addEventListener('click', () => addDynamicRow(touchUpAeroxListContainer, 'touchup-aerox-item-name', 'touchup-aerox-item-value')); 
+    if (addVerifikasiItemBtn) addVerifikasiItemBtn.addEventListener('click', () => addDynamicRow(verifikasiListContainer, 'verifikasi-item-name', 'verifikasi-item-value')); // TAMBAHAN
 
     // Event listener untuk tombol "Hapus" (Delegasi)
     incomingForm.addEventListener('click', (e) => {
@@ -147,7 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (targetClass.contains('step-assy-item-value') ||
             targetClass.contains('buka-cap-item-value') ||
             targetClass.contains('remover-item-value') || 
-            targetClass.contains('touchup-aerox-item-value')) { 
+            targetClass.contains('touchup-aerox-item-value') ||
+            targetClass.contains('verifikasi-item-value')) { // TAMBAHAN
             calculateAllDynamicTotals(); 
         }
     });
@@ -194,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateDynamicListTotal(bukaCapListContainer, 'buka-cap-item-value', bukaCapTotalSpan);
         calculateDynamicListTotal(removerListContainer, 'remover-item-value', removerTotalSpan); 
         calculateDynamicListTotal(touchUpAeroxListContainer, 'touchup-aerox-item-value', touchUpAeroxTotalSpan); 
+        calculateDynamicListTotal(verifikasiListContainer, 'verifikasi-item-value', verifikasiTotalSpan); // TAMBAHAN
     }
 
     
@@ -212,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * FUNGSI HELPER PDF (KANAN): 
          * Mengubah string notes (cth: "Item A: 10\nItem B: 20") 
          * menjadi baris-baris autoTable (3 kolom) lengkap dengan rowSpan dan TOTAL.
+         * MODIFIKASI: Melewatkan item jika quantity 0.
          */
         function parseNotesToRows(groupName, notesString) {
             const parsedRows = []; 
@@ -219,8 +231,22 @@ document.addEventListener('DOMContentLoaded', () => {
             let sum = 0;
             
             const lines = notesString ? notesString.split('\n').filter(l => l.trim() !== '') : [];
+            
+            lines.forEach(line => {
+                const parts = line.split(': ');
+                const name = parts[0] || '';
+                const value = parts.slice(1).join(': ') || ''; 
+                const quantity = parseInt(value) || 0;
+                
+                // MODIFIKASI: Hanya tambahkan jika quantity > 0
+                if (quantity > 0) {
+                    sum += quantity;
+                    itemRows.push([name, value]);
+                } 
+            });
 
-            if (lines.length === 0) {
+            // MODIFIKASI: Cek jika itemRows kosong (artinya list asli kosong ATAU semua item nilainya 0)
+            if (itemRows.length === 0) {
                 parsedRows.push([
                     { content: groupName, styles: { fontStyle: 'bold', valign: 'top' } },
                     '(Kosong)',
@@ -228,15 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ]);
                 return parsedRows;
             }
-            
-            lines.forEach(line => {
-                const parts = line.split(': ');
-                const name = parts[0] || '';
-                const value = parts.slice(1).join(': ') || ''; 
-                const quantity = parseInt(value) || 0;
-                sum += quantity;
-                itemRows.push([name, value]); 
-            });
+            // AKHIR MODIFIKASI
 
             itemRows.push([
                 { content: 'TOTAL', styles: { fontStyle: 'bold', halign: 'right' } },
@@ -261,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
          * FUNGSI HELPER PDF (KIRI): 
          * Mengubah string notes menjadi baris-baris sederhana [Item, Jumlah]
          * untuk tabel KIRI (2 kolom).
+         * MODIFIKASI: Melewatkan item jika quantity 0.
          */
         function parseNotesToSimpleRows(title, notesString) {
             const rows = [];
@@ -273,20 +292,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }]);
             
             const lines = notesString ? notesString.split('\n').filter(l => l.trim() !== '') : [];
-
-            if (lines.length === 0) {
-                rows.push(['(Kosong)', '']);
-                return rows;
-            }
+            const validItemRows = []; // Tampung item yang valid di sini
 
             lines.forEach(line => {
                 const parts = line.split(': ');
                 const name = '   ' + (parts[0] || ''); 
                 const value = parts.slice(1).join(': ') || ''; 
                 const quantity = parseInt(value) || 0;
-                sum += quantity;
-                rows.push([name, { content: value, styles: { halign: 'center' } }]); 
+                
+                // MODIFIKASI: Hanya tambahkan jika quantity > 0
+                if (quantity > 0) {
+                    sum += quantity;
+                    validItemRows.push([name, { content: value, styles: { halign: 'center' } }]); 
+                }
             });
+
+            // MODIFIKASI: Cek jika tidak ada item valid
+            if (validItemRows.length === 0) {
+                rows.push(['(Kosong)', '']);
+                return rows;
+            }
+            // AKHIR MODIFIKASI
+
+            // Tambahkan semua item valid ke rows
+            rows.push(...validItemRows);
 
             rows.push([
                 { content: 'TOTAL', styles: { fontStyle: 'bold' } },
@@ -426,16 +455,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const bukaCapRows = parseNotesToRows('Line Buka Cap', report.prod_buka_cap_notes);
             table3Body.push(...bukaCapRows);
             
-            // Data Check Thickness & Verifikasi
+            // MODIFIKASI: Ganti Verifikasi statis jadi dinamis
+            const verifikasiRows = parseNotesToRows('Line Verifikasi', report.prod_verifikasi_notes);
+            table3Body.push(...verifikasiRows);
+
+            // ================== MODIFIKASI PDF DI SINI ==================
+            // Data Check (3 baris baru)
             table3Body.push([
                 { content: 'Check Thickness', styles: { fontStyle: 'bold', valign: 'top' } },
                 { content: report.check_thickness_notes || '(Kosong)', colSpan: 2 } 
             ]);
             table3Body.push([
-                { content: 'Line Verifikasi', styles: { fontStyle: 'bold', valign: 'top' } },
-                { content: report.verifikasi_notes || '(Kosong)', colSpan: 2 } 
+                { content: 'Check Adhesive Delivery', styles: { fontStyle: 'bold', valign: 'top' } },
+                { content: report.check_adhesive_delivery_notes || '(Kosong)', colSpan: 2 } 
             ]);
-
+            table3Body.push([
+                { content: 'Check Adhesive Assy', styles: { fontStyle: 'bold', valign: 'top' } },
+                { content: report.check_adhesive_assy_notes || '(Kosong)', colSpan: 2 } 
+            ]);
+            // ================ AKHIR MODIFIKASI PDF ================
+            
             // 2. Gambar Tabel Kanan
             doc.autoTable({
                 startY: table2StartY, 
@@ -664,15 +703,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('quality_ng').value = report.quality_ng;
         document.getElementById('quality_balik_material').value = report.quality_balik_material;
         
+        // ================== MODIFIKASI LOAD DI SINI ==================
         // Textareas
         document.getElementById('check_thickness_notes').value = report.check_thickness_notes;
-        document.getElementById('verifikasi_notes').value = report.verifikasi_notes; 
+        document.getElementById('check_adhesive_delivery_notes').value = report.check_adhesive_delivery_notes; // TAMBAHAN
+        document.getElementById('check_adhesive_assy_notes').value = report.check_adhesive_assy_notes; // TAMBAHAN
+        // ================ AKHIR MODIFIKASI LOAD ================
 
         // Isi dynamic lists
         deserializeDynamicList(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value', report.prod_step_assy_notes, defaultStepAssyItems);
         deserializeDynamicList(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value', report.prod_buka_cap_notes, defaultBukaCapItems);
         deserializeDynamicList(removerListContainer, 'remover-item-name', 'remover-item-value', report.prod_remover_notes, defaultRemoverItems); 
         deserializeDynamicList(touchUpAeroxListContainer, 'touchup-aerox-item-name', 'touchup-aerox-item-value', report.prod_touchup_notes, defaultTouchUpAeroxItems); 
+        deserializeDynamicList(verifikasiListContainer, 'verifikasi-item-name', 'verifikasi-item-value', report.prod_verifikasi_notes, defaultVerifikasiItems); // TAMBAHAN
 
         // Hitung ulang semua total
         calculateAllDynamicTotals();
@@ -701,6 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetDynamicList(bukaCapListContainer, defaultBukaCapItems, 'buka-cap-item-name', 'buka-cap-item-value');
         resetDynamicList(removerListContainer, defaultRemoverItems, 'remover-item-name', 'remover-item-value'); 
         resetDynamicList(touchUpAeroxListContainer, defaultTouchUpAeroxItems, 'touchup-aerox-item-name', 'touchup-aerox-item-value'); 
+        resetDynamicList(verifikasiListContainer, defaultVerifikasiItems, 'verifikasi-item-name', 'verifikasi-item-value'); // TAMBAHAN
         
         // Hitung ulang semua total (jadi 0)
         calculateAllDynamicTotals();
@@ -772,10 +816,14 @@ document.addEventListener('DOMContentLoaded', () => {
             prod_buka_cap_notes: serializeDynamicList(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value'),
             prod_remover_notes: serializeDynamicList(removerListContainer, 'remover-item-name', 'remover-item-value'), 
             prod_touchup_notes: serializeDynamicList(touchUpAeroxListContainer, 'touchup-aerox-item-name', 'touchup-aerox-item-value'), 
+            prod_verifikasi_notes: serializeDynamicList(verifikasiListContainer, 'verifikasi-item-name', 'verifikasi-item-value'), // TAMBAHAN
 
+            // ================== MODIFIKASI SIMPAN DI SINI ==================
             // Textareas
             check_thickness_notes: document.getElementById('check_thickness_notes').value,
-            verifikasi_notes: document.getElementById('verifikasi_notes').value 
+            check_adhesive_delivery_notes: document.getElementById('check_adhesive_delivery_notes').value, // TAMBAHAN
+            check_adhesive_assy_notes: document.getElementById('check_adhesive_assy_notes').value // TAMBAHAN
+            // ================ AKHIR MODIFIKASI SIMPAN ================
         };
     }
 

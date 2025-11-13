@@ -251,14 +251,30 @@
                         </div>
 
                     <h4 class="form-section-title">Check</h4>
-                    <div class="input-group"><label for="check_thickness_notes">Catatan Check Thickness / check adhesive ( delivery / assy)</label><textarea id="check_thickness_notes" rows="3" placeholder="cth: CH BKW TOTAL CEK: 82, OK: 80, NG: 2 "></textarea></div>
-
-                    <h4 class="form-section-title">Line Verifikasi</h4>
                     <div class="input-group">
-                        <label for="verifikasi_notes">Catatan Verifikasi</label>
-                        <textarea id="verifikasi_notes" rows="4" placeholder="Contoh: Hasil Repair..."></textarea>
+                        <label for="check_thickness_notes">check thickness</label>
+                        <textarea id="check_thickness_notes" rows="3" placeholder="cth: CH BKW TOTAL CEK: 82, OK: 80, NG: 2 "></textarea>
                     </div>
+                    <div class="input-group">
+                        <label for="check_adhesive_delivery_notes">check adhesive delivery</label>
+                        <textarea id="check_adhesive_delivery_notes" rows="3" placeholder="Catatan check adhesive delivery..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="check_adhesive_assy_notes">check adhesive assy</label>
+                        <textarea id="check_adhesive_assy_notes" rows="3" placeholder="Catatan check adhesive assy..."></textarea>
+    
+                    </div>
+                    <h4 class="form-section-title">Line Verifikasi</h4>
+                    <fieldset class="absensi-fieldset">
+                        <legend>Line Verifikasi</legend>
+                        <div class="dynamic-list-container" id="prod-verifikasi-list"></div>
+                        <button type="button" class="button-add" id="add-verifikasi-item-btn">
+                            <span class="material-icons">add_circle</span> Tambah Item Lain
+                        </button>
+                        <div class="list-total-display">TOTAL <span id="prod-verifikasi-total">0</span></div>
+                    </fieldset>
                     <br>
+                    
                     <div class="form-actions">
                         <button type="button" class="button-secondary" id="save-draft-btn">Simpan Draft</button>
                         <button type="submit" class="button-primary" id="main-submit-btn">Simpan Laporan Final</button>
