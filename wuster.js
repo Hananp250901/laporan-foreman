@@ -1,6 +1,6 @@
 // =================================================================
 // D. LOGIKA HALAMAN WUSTER (wuster.html)
-// (MODIFIKASI: PDF tidak menampilkan item list yang bernilai 0)
+// (MODIFIKASI: PDF 'TOTAL CHECK' pindah ke kanan)
 // =================================================================
 
 // *** FUNGSI HELPER BARU ***
@@ -454,18 +454,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     const parts = item.split(': '); 
                     const name = parts[0] || ''; 
                     const qty = parts.length > 1 ? (parts.slice(1).join(': ') || '0') : '0'; 
-                    return [name, qty.trim()]; 
+                    return { name: name, qty: qty, qtyNum: parseInt(qty) || 0 };
                 });
 
                 // 2. Filter item yang nilainya 0
-                const filteredItems = allItems.filter(item => {
-                    const quantity = parseInt(item[1]) || 0;
-                    return quantity > 0; // Hanya simpan jika quantity > 0
-                });
+                const filteredItems = allItems
+                    .filter(item => item.qtyNum > 0)
+                    .map(item => [item.name, item.qty]); // Konversi balik ke array [nama, qty_string]
 
-                // 3. Hitung total dari item yang sudah difilter
+                // 3. Hitung total dari SEMUA item (yang 0 dan > 0)
                 let total = 0;
-                filteredItems.forEach(item => { total += parseInt(item[1]) || 0; });
+                allItems.forEach(item => { total += item.qtyNum; });
                 
                 // 4. Tambahkan baris Total
                 filteredItems.push(['Total', total.toString()]); 
@@ -500,17 +499,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const prodTotal = (report.total_prod_fresh || 0) + (report.total_prod_repair || 0) + (report.total_prod_ng || 0);
             leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL PRODUKSI', 'Jumlah']], body: [['Fresh', report.total_prod_fresh || 0], ['Repair', report.total_prod_repair || 0], ['NG', report.total_prod_ng || 0], ['Total', prodTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } }); 
 
-            const checkTotal = (report.total_check_ok || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
-            leftY = drawCalcTable({ startY: leftY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col1X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } }); 
-            
             // --- BAGIAN MENGGAMBAR TABEL (KANAN) ---
             let rightY = startY2Col; 
             rightY = drawDynamicListTable('Hasil Assy Cup', report.hasil_assy_cup_notes || '', rightY, col2X);
-            rightY = drawDynamicListTable('Hasil Touch Up', report.hasil_touch_up_notes || '', rightY + marginYSmall, col2X);
-            rightY = drawDynamicListTable('Hasil Buka Cap', report.hasil_buka_cap_notes || '', rightY + marginYSmall, col2X);
+            // rightY = drawDynamicListTable('Hasil Touch Up', report.hasil_touch_up_notes || '', rightY + marginYSmall, col2X);
+            // rightY = drawDynamicListTable('Hasil Buka Cap', report.hasil_buka_cap_notes || '', rightY + marginYSmall, col2X);
             
             const wusterTotal = (report.perf_wuster_isi || 0) + (report.perf_wuster_kosong || 0);
             rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['PERFORMA WUSTER', 'Jumlah']], body: [['Hanger Isi', report.perf_wuster_isi || 0], ['Hanger Kosong', report.perf_wuster_kosong || 0], ['Total', wusterTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } }); 
+            
+            // ================== MODIFIKASI PINDAH POSISI ==================
+            // Pindahkan TOTAL CHECK ke kolom KANAN
+            const checkTotal = (report.total_check_ok || 0) + (report.total_check_repair || 0) + (report.total_check_body || 0);
+            rightY = drawCalcTable({ startY: rightY + marginYSmall, head: [['TOTAL CHECK', 'Jumlah']], body: [['OK', report.total_check_ok || 0], ['NG', report.total_check_ng || 0], ['Repair', report.total_check_repair || 0], ['Body', report.total_check_body || 0], ['Total', checkTotal]], margin: { left: col2X }, tableWidth: colWidth, columnStyles: { 0: { cellWidth: 54.5, fontStyle: 'bold' }, 1: { cellWidth: 38, halign: 'center' } } }); 
+            // ================== AKHIR MODIFIKASI PINDAH POSISI ==================
             
             doc.autoTable({ 
                 startY: rightY + marginYSmall, 
