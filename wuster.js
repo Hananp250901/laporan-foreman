@@ -1,5 +1,6 @@
 // =================================================================
 // D. LOGIKA HALAMAN WUSTER (wuster.html)
+// (MODIFIKASI: PDF tidak menampilkan item list yang bernilai 0)
 // =================================================================
 
 // *** FUNGSI HELPER BARU ***
@@ -445,17 +446,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 doc.autoTable({ ...tableStyles, ...options, didParseCell: boldTotalRow }); 
                 return doc.autoTable.previous.finalY; 
             }
+            
+            // ================== MODIFIKASI PDF DI SINI ==================
             function drawDynamicListTable(title, notesString, startY, startX, width = colWidth) {
-                const items = (notesString || '').split('\n').filter(item => item.trim() !== '').map(item => { const parts = item.split(': '); const name = parts[0] || ''; const qty = parts.length > 1 ? (parts.slice(1).join(': ') || '0') : '0'; return [name, qty.trim()]; });
+                // 1. Ambil semua item
+                const allItems = (notesString || '').split('\n').filter(item => item.trim() !== '').map(item => { 
+                    const parts = item.split(': '); 
+                    const name = parts[0] || ''; 
+                    const qty = parts.length > 1 ? (parts.slice(1).join(': ') || '0') : '0'; 
+                    return [name, qty.trim()]; 
+                });
+
+                // 2. Filter item yang nilainya 0
+                const filteredItems = allItems.filter(item => {
+                    const quantity = parseInt(item[1]) || 0;
+                    return quantity > 0; // Hanya simpan jika quantity > 0
+                });
+
+                // 3. Hitung total dari item yang sudah difilter
                 let total = 0;
-                items.forEach(item => { total += parseInt(item[1]) || 0; });
-                items.push(['Total', total.toString()]); 
+                filteredItems.forEach(item => { total += parseInt(item[1]) || 0; });
+                
+                // 4. Tambahkan baris Total
+                filteredItems.push(['Total', total.toString()]); 
+                
                 const nameWidth = width - 26.5; 
                 doc.autoTable({ 
                     ...tableStyles, 
                     startY: startY, 
                     head: [[title, 'QTY']], 
-                    body: items, 
+                    body: filteredItems, // 5. Gunakan filteredItems sebagai body
                     margin: { left: startX }, 
                     tableWidth: width, 
                     columnStyles: { 
@@ -466,6 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 return doc.autoTable.previous.finalY;
             }
+            // ================ AKHIR MODIFIKASI PDF ================
 
             // --- BAGIAN MENGGAMBAR TABEL (KIRI) ---
             let leftY = startY2Col;

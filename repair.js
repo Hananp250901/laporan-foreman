@@ -1,6 +1,6 @@
 // =================================================================
 // E. LOGIKA HALAMAN REPAIR (repair.html)
-// (MODIFIKASI: Ditambah border PDF, list 'Hasil Assy Cup' & 'Verifikasi Notes')
+// (MODIFIKASI: Font PDF diperkecil, item list 0 QTY disembunyikan)
 // =================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -255,18 +255,25 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.rect(margin, margin, pageWidth - (margin * 2), pageHeight - (margin * 2)); // Gambar kotak
             // === AKHIR TAMBAHAN ===
 
+            // ================== MODIFIKASI FONT & PADDING ==================
             const tableStyles = {
                 theme: 'grid', 
-                styles: { cellWidth: 'wrap', fontSize: 8, cellPadding: 1 }, 
+                styles: { 
+                    cellWidth: 'wrap', 
+                    fontSize: 7,       // <-- Diperkecil dari 8
+                    cellPadding: 0.8   // <-- Dirapatkan dari 1
+                }, 
                 headStyles: { 
                     fillColor: [22, 160, 133], 
                     textColor: [255, 255, 255], 
-                    fontSize: 9, 
+                    fontSize: 8,       // <-- Diperkecil dari 9
                     fontStyle: 'bold',
                     lineColor: [0, 0, 0], 
-                    lineWidth: 0.1       
+                    lineWidth: 0.1,
+                    cellPadding: 0.8   // <-- Dirapatkan dari 1
                 } 
             };
+            // ================== AKHIR MODIFIKASI FONT ==================
 
             const marginX = 15; // Margin konten (biar ada jarak dari border)
             const fullWidth = doc.internal.pageSize.width - (marginX * 2);
@@ -285,10 +292,17 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.text("SHIFT", marginX, currentY); doc.text(`: ${report.shift || ''}`, marginX + 30, currentY);
             currentY += 8; 
 
+            // ================== AWAL MODIFIKASI PDF LAYOUT ==================
+            
+            const topSectionY = currentY; // Simpan Y awal
+            const leftColX = marginX;
+            const leftColWidth = 80; // Lebar tabel Main Power
+            const rightColX = marginX + leftColWidth + 5; // Posisi X kolom kanan
+            const rightColWidth = fullWidth - leftColWidth - 5; // Lebar sisa untuk kolom kanan
 
-            // --- Tabel Main Power ---
+            // --- Tabel Main Power (KIRI) ---
             doc.autoTable({
-                startY: currentY,
+                startY: topSectionY,
                 head: [['MAIN POWER', 'Jumlah / Nama']],
                 body: [
                     ['Masuk: REPAIR', report.mp_masuk_repair],
@@ -299,14 +313,62 @@ document.addEventListener('DOMContentLoaded', () => {
                     ['Total (Masuk)', report.mp_total], 
                 ],
                 ...tableStyles,
-                margin: { left: marginX },
-                tableWidth: 80, 
+                margin: { left: leftColX },
+                tableWidth: leftColWidth, 
                 didParseCell: (data) => {
                     if (data.row.index === 5) { data.cell.styles.fontStyle = 'bold'; } 
                     if (data.column.index === 0) { data.cell.styles.fontStyle = 'bold'; } 
                 }
             });
-            currentY = doc.autoTable.previous.finalY + 8;
+            const mainPowerFinalY = doc.autoTable.previous.finalY; // Simpan Y akhir kolom kiri
+
+            // --- Kolom Kanan: Catatan ---
+            let catatanY = topSectionY; // Mulai dari Y yang sama dengan Main Power
+            doc.autoTable({
+                startY: catatanY,
+                head: [['PROBLEM QUALITY']],
+                body: [[report.problem_quality_notes || '']],
+                ...tableStyles, margin: { left: rightColX }, tableWidth: rightColWidth
+            });
+            catatanY = doc.autoTable.previous.finalY + 2;
+            
+            doc.autoTable({
+                startY: catatanY,
+                head: [['EQUIPMENT']],
+                body: [[report.equipment_notes || '']],
+                ...tableStyles, margin: { left: rightColX }, tableWidth: rightColWidth
+            });
+            catatanY = doc.autoTable.previous.finalY + 2;
+            
+            doc.autoTable({
+                startY: catatanY,
+                head: [['BOX / LORRY']],
+                body: [[report.lorry_notes || '']],
+                ...tableStyles, margin: { left: rightColX }, tableWidth: rightColWidth
+            });
+            catatanY = doc.autoTable.previous.finalY + 2;
+            
+            doc.autoTable({
+                startY: catatanY,
+                head: [['PEMAKAIAN AMPLAS SANDERS']],
+                body: [[report.amplas_notes || '']],
+                ...tableStyles, margin: { left: rightColX }, tableWidth: rightColWidth
+            });
+            catatanY = doc.autoTable.previous.finalY + 2; 
+            
+            // Verifikasi (Kanan)
+            doc.autoTable({
+                startY: mainPowerFinalY,
+                head: [['VERIFIKASI']],
+                body: [[report.verifikasi_notes || '']],
+                ...tableStyles, margin: { left: leftColX }, tableWidth: leftColWidth
+            });
+            const catatanFinalY = doc.autoTable.previous.finalY; // Simpan Y akhir kolom kanan
+
+            // Tentukan Y berikutnya berdasarkan kolom tertinggi
+            currentY = Math.max(mainPowerFinalY, catatanFinalY) + 8;
+            
+            // ================== AKHIR MODIFIKASI PDF LAYOUT ==================
 
             // --- Tabel Activity ---
             doc.setFontSize(12);
@@ -355,115 +417,95 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             currentY = doc.autoTable.previous.finalY + 8;
 
-            // --- Area Catatan & Hasil Touch Up (Side-by-side) ---
-            const leftColX = marginX;
-            const rightColX = marginX + (fullWidth / 2) + 5;
-            const colWidth = (fullWidth / 2) - 5;
+            // --- Area Hasil Touch Up & Assy Cup (Side-by-side) ---
+            const bottomleftColX = marginX;
+            const bottomrightColX = marginX + (fullWidth / 2) + 5;
+            const bottomcolWidth = (fullWidth / 2) - 5;
             
             let leftY = currentY;
             let rightY = currentY;
 
-            // --- Kolom Kiri: Catatan ---
-            doc.autoTable({
-                startY: leftY,
-                head: [['PROBLEM QUALITY']],
-                body: [[report.problem_quality_notes || '']],
-                ...tableStyles, margin: { left: leftColX }, tableWidth: colWidth
-            });
-            leftY = doc.autoTable.previous.finalY + 2;
+            // ================== MODIFIKASI FILTER PDF ==================
             
-            doc.autoTable({
-                startY: leftY,
-                head: [['EQUIPMENT']],
-                body: [[report.equipment_notes || '']],
-                ...tableStyles, margin: { left: leftColX }, tableWidth: colWidth
-            });
-            leftY = doc.autoTable.previous.finalY + 2;
-            
-            doc.autoTable({
-                startY: leftY,
-                head: [['BOX / LORRY']],
-                body: [[report.lorry_notes || '']],
-                ...tableStyles, margin: { left: leftColX }, tableWidth: colWidth
-            });
-            leftY = doc.autoTable.previous.finalY + 2;
-            
-            doc.autoTable({
-                startY: leftY,
-                head: [['PEMAKAIAN AMPLAS SANDERS']],
-                body: [[report.amplas_notes || '']],
-                ...tableStyles, margin: { left: leftColX }, tableWidth: colWidth
-            });
-            leftY = doc.autoTable.previous.finalY + 2; // Kasih jarak
-            
-            // Verifikasi (Kiri)
-            doc.autoTable({
-                startY: leftY,
-                head: [['VERIFIKASI']],
-                body: [[report.verifikasi_notes || '']],
-                ...tableStyles, margin: { left: leftColX }, tableWidth: colWidth
-            });
-            
-            leftY = doc.autoTable.previous.finalY; // Simpan Y terakhir kolom kiri
-
-            // --- Kolom Kanan: Hasil Touch Up ---
-            const touchUpItems = (report.hasil_touch_up_notes || '').split('\n')
+            // --- Kolom Kiri: Hasil Touch Up ---
+            // 1. Parse semua item
+            const touchUpItemsParsed = (report.hasil_touch_up_notes || '').split('\n')
                 .filter(item => item.trim() !== '')
                 .map(item => {
                     const parts = item.split(': ');
-                    return [parts[0] || '', parts[1] || ''];
+                    const name = parts[0] || '';
+                    const qty = parts[1] || '0';
+                    return { name: name, qty: qty, qtyNum: parseInt(qty) || 0 };
                 });
             
+            // 2. Filter untuk display (hanya yang > 0)
+            const touchUpItems = touchUpItemsParsed
+                .filter(item => item.qtyNum > 0)
+                .map(item => [item.name, item.qty]); // Konversi balik ke array [nama, qty_string]
+
+            // 3. Hitung total dari SEMUA item (yang 0 dan > 0)
             let touchUpTotal = 0;
-            touchUpItems.forEach(item => { touchUpTotal += parseInt(item[1]) || 0; });
-            touchUpItems.push(['TOTAL', touchUpTotal]); 
+            touchUpItemsParsed.forEach(item => { touchUpTotal += item.qtyNum; });
+            touchUpItems.push(['TOTAL', touchUpTotal.toString()]); // Tambah baris total
 
             doc.autoTable({
-                startY: rightY,
+                startY: leftY,
                 head: [['HASIL TOUCH UP', 'QTY']],
-                body: touchUpItems,
+                body: touchUpItems, // Gunakan data yang sudah difilter
                 ...tableStyles,
-                margin: { left: rightColX }, 
-                tableWidth: colWidth,
+                margin: { left: bottomleftColX }, 
+                tableWidth: bottomcolWidth,
                 didParseCell: (data) => {
                     if (data.row.index === (touchUpItems.length - 1)) { 
                         data.cell.styles.fontStyle = 'bold';
                     }
                 }
             });
-            rightY = doc.autoTable.previous.finalY + 2; 
+            leftY = doc.autoTable.previous.finalY; // Simpan Y terakhir kolom kiri
 
-            // Hasil Assy Cup (di bawah Touch Up)
-            const assyCupItems = (report.hasil_assy_cup_notes || '').split('\n')
+            // --- Kolom Kanan: Bantuan Operator ---
+            // 1. Parse semua item
+            const assyCupItemsParsed = (report.hasil_assy_cup_notes || '').split('\n')
                 .filter(item => item.trim() !== '')
                 .map(item => {
                     const parts = item.split(': ');
-                    return [parts[0] || '', parts[1] || ''];
+                    const name = parts[0] || '';
+                    const qty = parts[1] || '0';
+                    return { name: name, qty: qty, qtyNum: parseInt(qty) || 0 };
                 });
-            
+
+            // 2. Filter untuk display (hanya yang > 0)
+            const assyCupItems = assyCupItemsParsed
+                .filter(item => item.qtyNum > 0)
+                .map(item => [item.name, item.qty]);
+
+            // 3. Hitung total dari SEMUA item
             let assyCupTotal = 0;
-            assyCupItems.forEach(item => { assyCupTotal += parseInt(item[1]) || 0; });
-            assyCupItems.push(['TOTAL', assyCupTotal]);
+            assyCupItemsParsed.forEach(item => { assyCupTotal += item.qtyNum; });
+            assyCupItems.push(['TOTAL', assyCupTotal.toString()]);
 
             doc.autoTable({
                 startY: rightY, 
                 head: [['BANTUAN OPERATOR REPAIR', 'QTY']],
-                body: assyCupItems,
+                body: assyCupItems, // Gunakan data yang sudah difilter
                 ...tableStyles,
-                margin: { left: rightColX }, 
-                tableWidth: colWidth,
+                margin: { left: bottomrightColX }, 
+                tableWidth: bottomcolWidth,
                 didParseCell: (data) => {
                     if (data.row.index === (assyCupItems.length - 1)) { 
                         data.cell.styles.fontStyle = 'bold';
                     }
                 }
             });
+            rightY = doc.autoTable.previous.finalY;
+            
+            // ================== AKHIR MODIFIKASI FILTER PDF ==================
 
 
             // ===== FOOTER PDF =====
             // Gunakan margin 15mm dari pinggir border, bukan pinggir kertas
             const footerMarginX = 15; 
-            currentY = Math.max(doc.autoTable.previous.finalY, leftY) + 20; 
+            currentY = Math.max(leftY, rightY) + 20; // Y baru dari 2 tabel terbawah
             
             // Cek jika footer keluar halaman
             if (currentY > pageHeight - 40) { // Cek 40mm dari bawah
