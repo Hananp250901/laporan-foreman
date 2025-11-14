@@ -63,13 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // === BARU: Variabel List Dinamis (3 Kolom) ===
     const adhesiveDeliveryListContainer = document.getElementById('check-adhesive-delivery-list');
     const addAdhesiveDeliveryItemBtn = document.getElementById('add-adhesive-delivery-item-btn');
-    const defaultAdhesiveDeliveryItems = ["C/C 1DY 1", "C/C 1DY 2", "C/E 9307"]; // Hanya nama item
+    const defaultAdhesiveDeliveryItems = ["M/C D092", "M/C BLS", "M/C BCM"]; // Hanya nama item
     const adhesiveDeliveryTotalOkSpan = document.getElementById('check-adhesive-delivery-total-ok');
     const adhesiveDeliveryTotalNgSpan = document.getElementById('check-adhesive-delivery-total-ng');
     
     const adhesiveAssyListContainer = document.getElementById('check-adhesive-assy-list');
     const addAdhesiveAssyItemBtn = document.getElementById('add-adhesive-assy-item-btn');
-    const defaultAdhesiveAssyItems = ["C/C 1DY 1", "C/C 1DY 2", "C/E 9307"]; // Hanya nama item
+    const defaultAdhesiveAssyItems = ["CAP 2DP", "CAP K97A", "CAP BC11"]; // Hanya nama item
     const adhesiveAssyTotalOkSpan = document.getElementById('check-adhesive-assy-total-ok');
     const adhesiveAssyTotalNgSpan = document.getElementById('check-adhesive-assy-total-ng');
 
