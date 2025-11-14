@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === TAMBAHAN BARU: Variabel List Dinamis (Hasil Assy Cup) ===
     const assyCupListContainer = document.getElementById('assy-cup-list');
     const addAssyCupItemBtn = document.getElementById('add-assy-cup-item-btn');
-    const defaultAssyCupItems = ["LEVER BLS", "LEVER 2DP RH","LEVER B3M", "HOL UPPER K0WL", "HOL UNDER K0WL", "HOL UPPER K0WM", "HOL UNDER K0WM", "HOL UPPER K81A", "HOL UNDER K81A"];
+    const defaultAssyCupItems = ["LEVER BLS", "LEVER 2DP RH","LEVER B3M","LEVER K2VG","LEVER K2SA LH", "HOL UPPER K0WL", "HOL UNDER K0WL", "HOL UPPER K0WM", "HOL UNDER K0WM", "HOL UPPER K81A", "HOL UNDER K81A","HOL UPPER K2VM"];
     const assyCupTotalSpan = document.getElementById('assy-cup-total');
     // === AKHIR TAMBAHAN ===
     
