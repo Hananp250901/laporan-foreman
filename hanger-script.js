@@ -306,13 +306,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // 4. Hitung Total Produksi
         document.getElementById('total-produksi').value = fresh + repair;
         
-        // 5. Hitung Performance
-        const rows = productionTable.getElementsByTagName('tr');
-        let totalTarget = 0;
-        if (rows.length > 0) {
-            const lastRow = rows[rows.length - 1];
-            totalTarget = parseFloat(lastRow.querySelector('[data-col="target-end"]').value) || 0;
-        }
+        // 5. Hitung Performance (MODIFIKASI: Target di-hardcode)
+        const totalTarget = 1680; // <-- PERUBAHAN DI SINI
+        
+        // Pastikan totalHanger sudah dihitung di atas
+        // const totalHanger = hangerIsi + hangerKosong; 
         
         const performance = (totalTarget > 0) ? (totalHanger / totalTarget) * 100 : 0;
         document.getElementById('performance').value = performance.toFixed(2) + '%';
@@ -850,8 +848,8 @@ document.addEventListener('DOMContentLoaded', function() {
             doc.text('Komentar & Catatan:', 20, finalY);
 
             // ================== MODIFIKASI PDF DI SINI ==================
-            // Hitung performance
-            const totalTarget = detailData.length > 0 ? detailData[detailData.length - 1]?.target_end : 0;
+            // Hitung performance (MODIFIKASI: Target di-hardcode)
+            const totalTarget = 1680; // <-- PERUBAHAN DI SINI
             const performance = (totalTarget > 0) ? (mainReport.total_hanger / totalTarget) * 100 : 0;
             const performanceText = performance.toFixed(2) + '%';
             
