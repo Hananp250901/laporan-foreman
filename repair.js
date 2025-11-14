@@ -1,6 +1,7 @@
 // =================================================================
 // E. LOGIKA HALAMAN REPAIR (repair.html)
 // (MODIFIKASI: Font PDF diperkecil, item list 0 QTY disembunyikan)
+// (MODIFIKASI 2: Tambah VERIF di IN, HASIL, OUT REPAIR + Hapus VERIFIKASI NOTES)
 // =================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === TAMBAHAN BARU: Variabel List Dinamis (Hasil Assy Cup) ===
     const assyCupListContainer = document.getElementById('assy-cup-list');
     const addAssyCupItemBtn = document.getElementById('add-assy-cup-item-btn');
-    const defaultAssyCupItems = ["LEVER BLS", "LEVER 2DP RH","LEVER B3M","LEVER K2VG","LEVER K2SA LH", "HOL UPPER K0WL", "HOL UNDER K0WL", "HOL UPPER K0WM", "HOL UNDER K0WM", "HOL UPPER K81A", "HOL UNDER K81A","HOL UPPER K2VM"];
+    const defaultAssyCupItems = ["LEVER BLS", "LEVER 2DP RH","LEVER B3M", "HOL UPPER K0WL", "HOL UNDER K0WL", "HOL UPPER K0WM", "HOL UNDER K0WM", "HOL UPPER K81A", "HOL UNDER K81A"];
     const assyCupTotalSpan = document.getElementById('assy-cup-total');
     // === AKHIR TAMBAHAN ===
     
@@ -221,9 +222,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculateAllTotals() {
         updateMainPowerTotal();
         calculateDynamicListTotal(touchUpListContainer, 'touchup-item-value', touchUpTotalSpan);
-        // === TAMBAHAN BARU ===
-        calculateDynamicListTotal(assyCupListContainer, 'assy-cup-item-name', assyCupTotalSpan);
-        // === AKHIR TAMBAHAN ===
+        // === MODIFIKASI: Bug kalkulasi total Assy Cup ===
+        calculateDynamicListTotal(assyCupListContainer, 'assy-cup-item-value', assyCupTotalSpan); 
+        // === AKHIR MODIFIKASI ===
         
         // Hitung ulang total untuk semua baris Activity
         const rowSuffixes = ['in_repair', 'hasil_repair', 'out_repair', 'in_remover', 'hasil_remover', 'out_remover'];
@@ -354,19 +355,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: [[report.amplas_notes || '']],
                 ...tableStyles, margin: { left: rightColX }, tableWidth: rightColWidth
             });
-            catatanY = doc.autoTable.previous.finalY + 2; 
+            catatanY = doc.autoTable.previous.finalY + 2; // Simpan Y akhir kolom kanan
             
-            // Verifikasi (Kanan)
-            doc.autoTable({
-                startY: mainPowerFinalY,
-                head: [['VERIFIKASI']],
-                body: [[report.verifikasi_notes || '']],
-                ...tableStyles, margin: { left: leftColX }, tableWidth: leftColWidth
-            });
-            const catatanFinalY = doc.autoTable.previous.finalY; // Simpan Y akhir kolom kanan
-
+            // --- HAPUS TABEL VERIFIKASI ---
+            
             // Tentukan Y berikutnya berdasarkan kolom tertinggi
-            currentY = Math.max(mainPowerFinalY, catatanFinalY) + 8;
+            currentY = Math.max(mainPowerFinalY, catatanY) + 8; // <-- PERBAIKAN LOGIKA
             
             // ================== AKHIR MODIFIKASI PDF LAYOUT ==================
 
@@ -375,29 +369,33 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.text("ACTIVITY", marginX, currentY);
             currentY += 4;
             
+            // === MODIFIKASI HEADER (ColSpan 3 -> 4) ===
             const activityHeaders = [
                 [
                     { content: 'KETERANGAN', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } }, 
                     { content: 'TOTAL', rowSpan: 2, styles: { halign: 'center', valign: 'middle' } },      
-                    { content: 'MUSTHOLIH', colSpan: 3, styles: { halign: 'center' } },   
-                    { content: 'NUR AHMAD', colSpan: 3, styles: { halign: 'center' } },   
-                    { content: 'SUNARNO', colSpan: 3, styles: { halign: 'center' } }    
+                    { content: 'MUSTHOLIH', colSpan: 4, styles: { halign: 'center' } }, // <-- diubah   
+                    { content: 'NUR AHMAD', colSpan: 4, styles: { halign: 'center' } }, // <-- diubah   
+                    { content: 'SUNARNO', colSpan: 4, styles: { halign: 'center' } }  // <-- diubah    
                 ],
                 [
-                    ...['FRESH', 'R1', 'R2', 'FRESH', 'R1', 'R2', 'FRESH', 'R1', 'R2'].map(text => ({
+                    // === MODIFIKASI SUB-HEADER (Tambah VERIF) ===
+                    ...['FRESH', 'R1', 'R2', 'VERIF', 'FRESH', 'R1', 'R2', 'VERIF', 'FRESH', 'R1', 'R2', 'VERIF'].map(text => ({
                         content: text,
                         styles: { halign: 'center' } 
                     }))
                 ]
             ];
             
+            // === MODIFIKASI BODY (Tambah ...verif dan padding null) ===
             const activityBody = [
-                ['IN REPAIR', report.act_in_repair_total, report.act_in_repair_wahyu_fresh, report.act_in_repair_wahyu_r1, report.act_in_repair_wahyu_r2, report.act_in_repair_khasanul_fresh, report.act_in_repair_khasanul_r1, report.act_in_repair_khasanul_r2, report.act_in_repair_sunarno_fresh, report.act_in_repair_sunarno_r1, report.act_in_repair_sunarno_r2],
-                ['HASIL REPAIR', report.act_hasil_repair_total, report.act_hasil_repair_wahyu_fresh, report.act_hasil_repair_wahyu_r1, report.act_hasil_repair_wahyu_r2, report.act_hasil_repair_khasanul_fresh, report.act_hasil_repair_khasanul_r1, report.act_hasil_repair_khasanul_r2, report.act_hasil_repair_sunarno_fresh, report.act_hasil_repair_sunarno_r1, report.act_hasil_repair_sunarno_r2],
-                ['OUT REPAIR', report.act_out_repair_total, report.act_out_repair_wahyu_fresh, report.act_out_repair_wahyu_r1, report.act_out_repair_wahyu_r2, report.act_out_repair_khasanul_fresh, report.act_out_repair_khasanul_r1, report.act_out_repair_khasanul_r2, report.act_out_repair_sunarno_fresh, report.act_out_repair_sunarno_r1, report.act_out_repair_sunarno_r2],
-                ['IN REMOVER', report.act_in_remover_total, report.act_in_remover_wahyu_fresh, report.act_in_remover_wahyu_r1, report.act_in_remover_wahyu_r2, report.act_in_remover_khasanul_fresh, report.act_in_remover_khasanul_r1, report.act_in_remover_khasanul_r2, report.act_in_remover_sunarno_fresh, report.act_in_remover_sunarno_r1, report.act_in_remover_sunarno_r2],
-                ['HASIL REMOVER', report.act_hasil_remover_total, report.act_hasil_remover_wahyu_fresh, report.act_hasil_remover_wahyu_r1, report.act_hasil_remover_wahyu_r2, report.act_hasil_remover_khasanul_fresh, report.act_hasil_remover_khasanul_r1, report.act_hasil_remover_khasanul_r2, report.act_hasil_remover_sunarno_fresh, report.act_hasil_remover_sunarno_r1, report.act_hasil_remover_sunarno_r2],
-                ['OUT REMOVER', report.act_out_remover_total, report.act_out_remover_wahyu_fresh, report.act_out_remover_wahyu_r1, report.act_out_remover_wahyu_r2, report.act_out_remover_khasanul_fresh, report.act_out_remover_khasanul_r1, report.act_out_remover_khasanul_r2, report.act_out_remover_sunarno_fresh, report.act_out_remover_sunarno_r1, report.act_out_remover_sunarno_r2],
+                ['IN REPAIR', report.act_in_repair_total, report.act_in_repair_wahyu_fresh, report.act_in_repair_wahyu_r1, report.act_in_repair_wahyu_r2, report.act_in_repair_wahyu_verif, report.act_in_repair_khasanul_fresh, report.act_in_repair_khasanul_r1, report.act_in_repair_khasanul_r2, report.act_in_repair_khasanul_verif, report.act_in_repair_sunarno_fresh, report.act_in_repair_sunarno_r1, report.act_in_repair_sunarno_r2, report.act_in_repair_sunarno_verif],
+                ['HASIL REPAIR', report.act_hasil_repair_total, report.act_hasil_repair_wahyu_fresh, report.act_hasil_repair_wahyu_r1, report.act_hasil_repair_wahyu_r2, report.act_hasil_repair_wahyu_verif, report.act_hasil_repair_khasanul_fresh, report.act_hasil_repair_khasanul_r1, report.act_hasil_repair_khasanul_r2, report.act_hasil_repair_khasanul_verif, report.act_hasil_repair_sunarno_fresh, report.act_hasil_repair_sunarno_r1, report.act_hasil_repair_sunarno_r2, report.act_hasil_repair_sunarno_verif],
+                ['OUT REPAIR', report.act_out_repair_total, report.act_out_repair_wahyu_fresh, report.act_out_repair_wahyu_r1, report.act_out_repair_wahyu_r2, report.act_out_repair_wahyu_verif, report.act_out_repair_khasanul_fresh, report.act_out_repair_khasanul_r1, report.act_out_repair_khasanul_r2, report.act_out_repair_khasanul_verif, report.act_out_repair_sunarno_fresh, report.act_out_repair_sunarno_r1, report.act_out_repair_sunarno_r2, report.act_out_repair_sunarno_verif],
+                // Baris REMOVER diberi padding 'null' agar kolomnya sejajar
+                ['IN REMOVER', report.act_in_remover_total, report.act_in_remover_wahyu_fresh, report.act_in_remover_wahyu_r1, report.act_in_remover_wahyu_r2, null, report.act_in_remover_khasanul_fresh, report.act_in_remover_khasanul_r1, report.act_in_remover_khasanul_r2, null, report.act_in_remover_sunarno_fresh, report.act_in_remover_sunarno_r1, report.act_in_remover_sunarno_r2, null],
+                ['HASIL REMOVER', report.act_hasil_remover_total, report.act_hasil_remover_wahyu_fresh, report.act_hasil_remover_wahyu_r1, report.act_hasil_remover_wahyu_r2, null, report.act_hasil_remover_khasanul_fresh, report.act_hasil_remover_khasanul_r1, report.act_hasil_remover_khasanul_r2, null, report.act_hasil_remover_sunarno_fresh, report.act_hasil_remover_sunarno_r1, report.act_hasil_remover_sunarno_r2, null],
+                ['OUT REMOVER', report.act_out_remover_total, report.act_out_remover_wahyu_fresh, report.act_out_remover_wahyu_r1, report.act_out_remover_wahyu_r2, null, report.act_out_remover_khasanul_fresh, report.act_out_remover_khasanul_r1, report.act_out_remover_khasanul_r2, null, report.act_out_remover_sunarno_fresh, report.act_out_remover_sunarno_r1, report.act_out_remover_sunarno_r2, null],
             ];
             
             doc.autoTable({
@@ -407,12 +405,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...tableStyles,
                 margin: { left: marginX },
                 tableWidth: fullWidth,
+                // === MODIFIKASI COLUMN STYLE (11 -> 14 kolom) ===
                 columnStyles: { 
-                    0: { cellWidth: 35, fontStyle: 'bold' }, 
-                    1: { cellWidth: 15, halign: 'center' }, 
-                    2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'center' },
-                    5: { halign: 'center' }, 6: { halign: 'center' }, 7: { halign: 'center' },
-                    8: { halign: 'center' }, 9: { halign: 'center' }, 10: { halign: 'center' } 
+                    0: { cellWidth: 25, fontStyle: 'bold' }, // Keterangan
+                    1: { cellWidth: 12, halign: 'center' }, // TOTAL
+                    2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'center' }, 5: { halign: 'center' }, // Leader 1
+                    6: { halign: 'center' }, 7: { halign: 'center' }, 8: { halign: 'center' }, 9: { halign: 'center' }, // Leader 2
+                    10: { halign: 'center' }, 11: { halign: 'center' }, 12: { halign: 'center' }, 13: { halign: 'center' } // Leader 3
                 }
             });
             currentY = doc.autoTable.previous.finalY + 8;
@@ -682,41 +681,54 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('mp_off').value = report.mp_off;
         document.getElementById('mp_sakit').value = report.mp_sakit;
 
+        // ==========================================================
+        // === MODIFIKASI: Tambah field VERIF saat loading data ===
+        // ==========================================================
+
         // Isi Activity Grid (Row 1: IN REPAIR)
         document.getElementById('act_in_repair_total').value = report.act_in_repair_total;
         document.getElementById('act_in_repair_wahyu_fresh').value = report.act_in_repair_wahyu_fresh;
         document.getElementById('act_in_repair_wahyu_r1').value = report.act_in_repair_wahyu_r1;
         document.getElementById('act_in_repair_wahyu_r2').value = report.act_in_repair_wahyu_r2;
+        document.getElementById('act_in_repair_wahyu_verif').value = report.act_in_repair_wahyu_verif; // <-- BARU
         document.getElementById('act_in_repair_khasanul_fresh').value = report.act_in_repair_khasanul_fresh;
         document.getElementById('act_in_repair_khasanul_r1').value = report.act_in_repair_khasanul_r1;
         document.getElementById('act_in_repair_khasanul_r2').value = report.act_in_repair_khasanul_r2;
+        document.getElementById('act_in_repair_khasanul_verif').value = report.act_in_repair_khasanul_verif; // <-- BARU
         document.getElementById('act_in_repair_sunarno_fresh').value = report.act_in_repair_sunarno_fresh;
         document.getElementById('act_in_repair_sunarno_r1').value = report.act_in_repair_sunarno_r1;
         document.getElementById('act_in_repair_sunarno_r2').value = report.act_in_repair_sunarno_r2;
+        document.getElementById('act_in_repair_sunarno_verif').value = report.act_in_repair_sunarno_verif; // <-- BARU
 
         // (Row 2: HASIL REPAIR)
         document.getElementById('act_hasil_repair_total').value = report.act_hasil_repair_total;
         document.getElementById('act_hasil_repair_wahyu_fresh').value = report.act_hasil_repair_wahyu_fresh;
         document.getElementById('act_hasil_repair_wahyu_r1').value = report.act_hasil_repair_wahyu_r1;
         document.getElementById('act_hasil_repair_wahyu_r2').value = report.act_hasil_repair_wahyu_r2;
+        document.getElementById('act_hasil_repair_wahyu_verif').value = report.act_hasil_repair_wahyu_verif; // <-- BARU
         document.getElementById('act_hasil_repair_khasanul_fresh').value = report.act_hasil_repair_khasanul_fresh;
         document.getElementById('act_hasil_repair_khasanul_r1').value = report.act_hasil_repair_khasanul_r1;
         document.getElementById('act_hasil_repair_khasanul_r2').value = report.act_hasil_repair_khasanul_r2;
+        document.getElementById('act_hasil_repair_khasanul_verif').value = report.act_hasil_repair_khasanul_verif; // <-- BARU
         document.getElementById('act_hasil_repair_sunarno_fresh').value = report.act_hasil_repair_sunarno_fresh;
         document.getElementById('act_hasil_repair_sunarno_r1').value = report.act_hasil_repair_sunarno_r1;
         document.getElementById('act_hasil_repair_sunarno_r2').value = report.act_hasil_repair_sunarno_r2;
+        document.getElementById('act_hasil_repair_sunarno_verif').value = report.act_hasil_repair_sunarno_verif; // <-- BARU
         
         // (Row 3: OUT REPAIR)
         document.getElementById('act_out_repair_total').value = report.act_out_repair_total;
         document.getElementById('act_out_repair_wahyu_fresh').value = report.act_out_repair_wahyu_fresh;
         document.getElementById('act_out_repair_wahyu_r1').value = report.act_out_repair_wahyu_r1;
         document.getElementById('act_out_repair_wahyu_r2').value = report.act_out_repair_wahyu_r2;
+        document.getElementById('act_out_repair_wahyu_verif').value = report.act_out_repair_wahyu_verif; // <-- BARU
         document.getElementById('act_out_repair_khasanul_fresh').value = report.act_out_repair_khasanul_fresh;
         document.getElementById('act_out_repair_khasanul_r1').value = report.act_out_repair_khasanul_r1;
         document.getElementById('act_out_repair_khasanul_r2').value = report.act_out_repair_khasanul_r2;
+        document.getElementById('act_out_repair_khasanul_verif').value = report.act_out_repair_khasanul_verif; // <-- BARU
         document.getElementById('act_out_repair_sunarno_fresh').value = report.act_out_repair_sunarno_fresh;
         document.getElementById('act_out_repair_sunarno_r1').value = report.act_out_repair_sunarno_r1;
         document.getElementById('act_out_repair_sunarno_r2').value = report.act_out_repair_sunarno_r2;
+        document.getElementById('act_out_repair_sunarno_verif').value = report.act_out_repair_sunarno_verif; // <-- BARU
 
         // (Row 4: IN REMOVER)
         document.getElementById('act_in_remover_total').value = report.act_in_remover_total;
@@ -760,8 +772,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('equipment_notes').value = report.equipment_notes;
         document.getElementById('lorry_notes').value = report.lorry_notes;
         document.getElementById('amplas_notes').value = report.amplas_notes;
-        document.getElementById('verifikasi_notes').value = report.verifikasi_notes; // <-- BARIS BARU
-
+        // verifikasi_notes Dihapus
+        
         // Isi dynamic list
         deserializeDynamicList(touchUpListContainer, 'touchup-item-name', 'touchup-item-value', report.hasil_touch_up_notes, defaultTouchUpItems);
         deserializeDynamicList(assyCupListContainer, 'assy-cup-item-name', 'assy-cup-item-value', report.hasil_assy_cup_notes, defaultAssyCupItems);
@@ -827,41 +839,54 @@ document.addEventListener('DOMContentLoaded', () => {
             mp_sakit: document.getElementById('mp_sakit').value, 
             mp_total: getIntVal('mp_total'), 
 
+            // ==========================================================
+            // === MODIFIKASI: Tambah field VERIF saat menyimpan data ===
+            // ==========================================================
+
             // Activity: IN REPAIR
             act_in_repair_total: getIntVal('act_in_repair_total'),
             act_in_repair_wahyu_fresh: getIntVal('act_in_repair_wahyu_fresh'),
             act_in_repair_wahyu_r1: getIntVal('act_in_repair_wahyu_r1'),
             act_in_repair_wahyu_r2: getIntVal('act_in_repair_wahyu_r2'),
+            act_in_repair_wahyu_verif: getIntVal('act_in_repair_wahyu_verif'), // <-- BARU
             act_in_repair_khasanul_fresh: getIntVal('act_in_repair_khasanul_fresh'),
             act_in_repair_khasanul_r1: getIntVal('act_in_repair_khasanul_r1'),
             act_in_repair_khasanul_r2: getIntVal('act_in_repair_khasanul_r2'),
+            act_in_repair_khasanul_verif: getIntVal('act_in_repair_khasanul_verif'), // <-- BARU
             act_in_repair_sunarno_fresh: getIntVal('act_in_repair_sunarno_fresh'),
             act_in_repair_sunarno_r1: getIntVal('act_in_repair_sunarno_r1'),
             act_in_repair_sunarno_r2: getIntVal('act_in_repair_sunarno_r2'),
+            act_in_repair_sunarno_verif: getIntVal('act_in_repair_sunarno_verif'), // <-- BARU
 
             // Activity: HASIL REPAIR
             act_hasil_repair_total: getIntVal('act_hasil_repair_total'),
             act_hasil_repair_wahyu_fresh: getIntVal('act_hasil_repair_wahyu_fresh'),
             act_hasil_repair_wahyu_r1: getIntVal('act_hasil_repair_wahyu_r1'),
             act_hasil_repair_wahyu_r2: getIntVal('act_hasil_repair_wahyu_r2'),
+            act_hasil_repair_wahyu_verif: getIntVal('act_hasil_repair_wahyu_verif'), // <-- BARU
             act_hasil_repair_khasanul_fresh: getIntVal('act_hasil_repair_khasanul_fresh'),
             act_hasil_repair_khasanul_r1: getIntVal('act_hasil_repair_khasanul_r1'),
             act_hasil_repair_khasanul_r2: getIntVal('act_hasil_repair_khasanul_r2'),
+            act_hasil_repair_khasanul_verif: getIntVal('act_hasil_repair_khasanul_verif'), // <-- BARU
             act_hasil_repair_sunarno_fresh: getIntVal('act_hasil_repair_sunarno_fresh'),
             act_hasil_repair_sunarno_r1: getIntVal('act_hasil_repair_sunarno_r1'),
             act_hasil_repair_sunarno_r2: getIntVal('act_hasil_repair_sunarno_r2'),
+            act_hasil_repair_sunarno_verif: getIntVal('act_hasil_repair_sunarno_verif'), // <-- BARU
             
             // Activity: OUT REPAIR
             act_out_repair_total: getIntVal('act_out_repair_total'),
             act_out_repair_wahyu_fresh: getIntVal('act_out_repair_wahyu_fresh'),
             act_out_repair_wahyu_r1: getIntVal('act_out_repair_wahyu_r1'),
             act_out_repair_wahyu_r2: getIntVal('act_out_repair_wahyu_r2'),
+            act_out_repair_wahyu_verif: getIntVal('act_out_repair_wahyu_verif'), // <-- BARU
             act_out_repair_khasanul_fresh: getIntVal('act_out_repair_khasanul_fresh'),
             act_out_repair_khasanul_r1: getIntVal('act_out_repair_khasanul_r1'),
             act_out_repair_khasanul_r2: getIntVal('act_out_repair_khasanul_r2'),
+            act_out_repair_khasanul_verif: getIntVal('act_out_repair_khasanul_verif'), // <-- BARU
             act_out_repair_sunarno_fresh: getIntVal('act_out_repair_sunarno_fresh'),
             act_out_repair_sunarno_r1: getIntVal('act_out_repair_sunarno_r1'),
             act_out_repair_sunarno_r2: getIntVal('act_out_repair_sunarno_r2'),
+            act_out_repair_sunarno_verif: getIntVal('act_out_repair_sunarno_verif'), // <-- BARU
             
             // Activity: IN REMOVER
             act_in_remover_total: getIntVal('act_in_remover_total'),
@@ -904,7 +929,7 @@ document.addEventListener('DOMContentLoaded', () => {
             equipment_notes: document.getElementById('equipment_notes').value,
             lorry_notes: document.getElementById('lorry_notes').value,
             amplas_notes: document.getElementById('amplas_notes').value,
-            verifikasi_notes: document.getElementById('verifikasi_notes').value, // <-- BARIS BARU
+            // verifikasi_notes Dihapus
 
             // Hasil Touch Up
             hasil_touch_up_notes: serializeDynamicList(touchUpListContainer, 'touchup-item-name', 'touchup-item-value'),
