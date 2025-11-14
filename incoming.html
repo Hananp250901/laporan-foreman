@@ -37,7 +37,28 @@
             .absensi-grid-4col > input {
                 width: 100%;
             }
-        }
+        
+            /* --- TAMBAHAN CSS UNTUK LINE CHROM --- */
+            .form-grid-4-simple {
+                grid-template-columns: auto 1fr;
+            }
+
+            /* ====================================================
+            === KODE CSS MOBILE DIPINDAH KE SINI (INI BENAR) ===
+            ====================================================
+            */
+            .dynamic-list-header-3col {
+                display: none; /* Sembunyikan header (Nama Item, OK, NG) di mobile */
+            }
+        
+            .dynamic-list-row-3col {
+                grid-template-columns: 1fr; /* Ubah jadi 1 kolom, semua item akan menumpuk ke bawah */
+                gap: 0.75rem; /* Tambah jarak antar item yang menumpuk */
+            }
+            /* === AKHIR TAMBAHAN RESPONSIVE === */
+            
+        } /* <-- INI ADALAH PENUTUP @media (max-width: 768px) */
+        
 
         /* --- TAMBAHAN CSS UNTUK LINE CHROM --- */
         .form-grid-4-simple {
@@ -47,10 +68,26 @@
             align-items: center;
         }
         
-        @media (max-width: 768px) {
-            .form-grid-4-simple {
-                grid-template-columns: auto 1fr;
-            }
+        /* === CSS BARU UNTUK 3-COLUMN LIST (DESKTOP) === */
+        .dynamic-list-header-3col {
+            display: grid;
+            grid-template-columns: 1fr 6rem 6rem auto; /* Kolom Item, OK, NG, Hapus */
+            gap: 0.5rem;
+            padding: 0 0.5rem 0.5rem 0.5rem;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #ccc;
+        }
+        .dynamic-list-header-3col span:nth-child(2),
+        .dynamic-list-header-3col span:nth-child(3) {
+            text-align: center;
+        }
+
+        .dynamic-list-row-3col {
+            display: grid;
+            grid-template-columns: 1fr 6rem 6rem 2.5rem; /* Kolom Item, OK, NG, Hapus */
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
         }
         /* --- AKHIR TAMBAHAN CSS --- */
 
@@ -233,7 +270,7 @@
                         </fieldset>
 
                         <fieldset class="absensi-fieldset">
-                            <legend>B. Line Remover</legend>
+                            <legend>Line Remover</legend>
                             <div class="dynamic-list-container" id="prod-remover-list"></div>
                             <button type="button" class="button-add" id="add-remover-item-btn">
                                 <span class="material-icons">add_circle</span> Tambah Item Lain
@@ -241,7 +278,7 @@
                             <div class="list-total-display">TOTAL <span id="prod-remover-total">0</span></div>
                         </fieldset>
                         <fieldset class="absensi-fieldset">
-                            <legend>C. Line Touch Up Aerox</legend>
+                            <legend>Line Touch Up Aerox</legend>
                             <div class="dynamic-list-container" id="prod-touch-up-aerox-list"></div>
                             <button type="button" class="button-add" id="add-touch-up-aerox-item-btn">
                                 <span class="material-icons">add_circle</span> Tambah Item Lain
@@ -255,15 +292,46 @@
                         <label for="check_thickness_notes">check thickness</label>
                         <textarea id="check_thickness_notes" rows="3" placeholder="cth: CH BKW TOTAL CEK: 82, OK: 80, NG: 2 "></textarea>
                     </div>
+
                     <div class="input-group">
-                        <label for="check_adhesive_delivery_notes">check adhesive delivery</label>
-                        <textarea id="check_adhesive_delivery_notes" rows="3" placeholder="Catatan check adhesive delivery..."></textarea>
+                        <label for="check_sortir_notes">check sortir</label>
+                        <textarea id="check_sortir_notes" rows="3" placeholder="Catatan check sortir..."></textarea>
                     </div>
-                    <div class="input-group">
-                        <label for="check_adhesive_assy_notes">check adhesive assy</label>
-                        <textarea id="check_adhesive_assy_notes" rows="3" placeholder="Catatan check adhesive assy..."></textarea>
-    
-                    </div>
+                    <fieldset class="absensi-fieldset">
+                        <legend>Check Adhesive Delivery</legend>
+                        <div class="dynamic-list-header-3col">
+                            <span>Nama Item</span>
+                            <span>OK</span>
+                            <span>NG</span>
+                        </div>
+                        <div class="dynamic-list-container" id="check-adhesive-delivery-list"></div>
+                        <button type="button" class="button-add" id="add-adhesive-delivery-item-btn">
+                            <span class="material-icons">add_circle</span> Tambah Item Lain
+                        </button>
+                        <div class="list-total-display">
+                            TOTAL OK: <span id="check-adhesive-delivery-total-ok" style="margin-right: 1rem;">0</span>
+                            TOTAL NG: <span id="check-adhesive-delivery-total-ng">0</span>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="absensi-fieldset">
+                        <legend>Check Adhesive Assy</legend>
+                        <div class="dynamic-list-header-3col">
+                            <span>Nama Item</span>
+                            <span>OK</span>
+                            <span>NG</span>
+                        </div>
+                        <div class="dynamic-list-container" id="check-adhesive-assy-list"></div>
+                        <button type="button" class="button-add" id="add-adhesive-assy-item-btn">
+                            <span class="material-icons">add_circle</span> Tambah Item Lain
+                        </button>
+                        <div class="list-total-display">
+                            TOTAL OK: <span id="check-adhesive-assy-total-ok" style="margin-right: 1rem;">0</span>
+                            TOTAL NG: <span id="check-adhesive-assy-total-ng">0</span>
+                        </div>
+                    </fieldset>
+                    <br>
+
                     <h4 class="form-section-title">Line Verifikasi</h4>
                     <fieldset class="absensi-fieldset">
                         <legend>Line Verifikasi</legend>

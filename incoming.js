@@ -1,8 +1,6 @@
 // =================================================================
 // C. LOGIKA HALAMAN INCOMING (incoming.html)
-// (VERSI MODIFIKASI: Layout PDF diubah, Remover & Touch Up pindah ke KIRI)
-// (MODIFIKASI 2: Verifikasi jadi list dinamis, PDF skip item 0)
-// (MODIFIKASI 3: Check dipecah jadi 3 textarea)
+// (MODIFIKASI 6: Pindah blok 'Check' ke kolom KIRI di PDF)
 // =================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const prodChromInputs = document.querySelectorAll('.prod-chrom-calc');
     const prodChromTotalInput = document.getElementById('prod_chrom_total');
 
-    // === Variabel List Dinamis ===
+    // === Variabel List Dinamis (2 Kolom) ===
     const stepAssyListContainer = document.getElementById('prod-step-assy-list');
     const addStepAssyItemBtn = document.getElementById('add-step-assy-item-btn');
     const defaultStepAssyItems = ["S/B K41K LH", "S/B K41K SP", "S/B K41K CW", "S/B KPYX LH", "S/B KPYX SP", "S/B KPYX CW"];
@@ -47,23 +45,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultBukaCapItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS", "M/C K15A", "M/C K2SA", "M/C K3VA FR", "M/C XD 831", "M/C K84A FR"];
     const bukaCapTotalSpan = document.getElementById('prod-buka-cap-total');
 
-    // === Variabel Line Remover ===
     const removerListContainer = document.getElementById('prod-remover-list');
     const addRemoverItemBtn = document.getElementById('add-remover-item-btn');
     const defaultRemoverItems = ["C/H BXD", "C/C 1DY 2", "HOLDER KYEA"];
     const removerTotalSpan = document.getElementById('prod-remover-total');
     
-    // === Variabel Touch Up Aerox ===
     const touchUpAeroxListContainer = document.getElementById('prod-touch-up-aerox-list');
     const addTouchUpAeroxItemBtn = document.getElementById('add-touch-up-aerox-item-btn');
     const defaultTouchUpAeroxItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS"];
     const touchUpAeroxTotalSpan = document.getElementById('prod-touch-up-aerox-total');
     
-    // === TAMBAHAN: Variabel Line Verifikasi ===
     const verifikasiListContainer = document.getElementById('prod-verifikasi-list');
     const addVerifikasiItemBtn = document.getElementById('add-verifikasi-item-btn');
-    const defaultVerifikasiItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS"]; // Default kosong
+    const defaultVerifikasiItems = ["M/C 2DP RH", "M/C 2DP LH", "M/C K1ZV ABS", "M/C K1ZV CBS"];
     const verifikasiTotalSpan = document.getElementById('prod-verifikasi-total');
+    
+    // === BARU: Variabel List Dinamis (3 Kolom) ===
+    const adhesiveDeliveryListContainer = document.getElementById('check-adhesive-delivery-list');
+    const addAdhesiveDeliveryItemBtn = document.getElementById('add-adhesive-delivery-item-btn');
+    const defaultAdhesiveDeliveryItems = ["C/C 1DY 1", "C/C 1DY 2", "C/E 9307"]; // Hanya nama item
+    const adhesiveDeliveryTotalOkSpan = document.getElementById('check-adhesive-delivery-total-ok');
+    const adhesiveDeliveryTotalNgSpan = document.getElementById('check-adhesive-delivery-total-ng');
+    
+    const adhesiveAssyListContainer = document.getElementById('check-adhesive-assy-list');
+    const addAdhesiveAssyItemBtn = document.getElementById('add-adhesive-assy-item-btn');
+    const defaultAdhesiveAssyItems = ["C/C 1DY 1", "C/C 1DY 2", "C/E 9307"]; // Hanya nama item
+    const adhesiveAssyTotalOkSpan = document.getElementById('check-adhesive-assy-total-ok');
+    const adhesiveAssyTotalNgSpan = document.getElementById('check-adhesive-assy-total-ng');
+
 
     /**
      * FUNGSI: Menghitung total Produksi Chrom (A)
@@ -79,8 +88,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tambahkan event listener ke setiap input Prod Chrom
     prodChromInputs.forEach(input => input.addEventListener('input', updateProdChromTotal));
 
+    // ==========================================================
+    // === FUNGSI LIST DINAMIS 2 KOLOM (Name, Qty) ===
+    // ==========================================================
+
     /**
-     * FUNGSI: Menambahkan baris item ke list dinamis
+     * FUNGSI: Menambahkan baris item ke list dinamis (2 kolom)
      */
     function addDynamicRow(container, nameClass, valueClass, itemName = "", itemValue = "") {
         if (!container) return;
@@ -102,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * FUNGSI: Mereset list dinamis ke item default
+     * FUNGSI: Mereset list dinamis ke item default (2 kolom)
      */
     function resetDynamicList(container, defaultItems, nameClass, valueClass) {
         if (!container) return;
@@ -111,7 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * FUNGSI: Mengurai string dari database kembali menjadi baris input
+     * FUNGSI: Mengurai string dari database kembali menjadi baris input (2 kolom)
+     * Format: "Nama Item: 10"
      */
     function deserializeDynamicList(container, nameClass, valueClass, notesString, defaultItems) {
         container.innerHTML = ''; 
@@ -132,38 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // Event listener untuk tombol "Tambah Item"
-    if (addStepAssyItemBtn) addStepAssyItemBtn.addEventListener('click', () => addDynamicRow(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value'));
-    if (addBukaCapItemBtn) addBukaCapItemBtn.addEventListener('click', () => addDynamicRow(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value'));
-    if (addRemoverItemBtn) addRemoverItemBtn.addEventListener('click', () => addDynamicRow(removerListContainer, 'remover-item-name', 'remover-item-value')); 
-    if (addTouchUpAeroxItemBtn) addTouchUpAeroxItemBtn.addEventListener('click', () => addDynamicRow(touchUpAeroxListContainer, 'touchup-aerox-item-name', 'touchup-aerox-item-value')); 
-    if (addVerifikasiItemBtn) addVerifikasiItemBtn.addEventListener('click', () => addDynamicRow(verifikasiListContainer, 'verifikasi-item-name', 'verifikasi-item-value')); // TAMBAHAN
-
-    // Event listener untuk tombol "Hapus" (Delegasi)
-    incomingForm.addEventListener('click', (e) => {
-        if (e.target.closest('.button-remove')) {
-            const row = e.target.closest('.dynamic-list-row');
-            if (!row) return;
-            row.remove(); 
-            calculateAllDynamicTotals(); 
-        }
-    });
-
-    // Event listener untuk perubahan input di list dinamis
-    incomingForm.addEventListener('input', (e) => {
-        const targetClass = e.target.classList;
-        if (targetClass.contains('step-assy-item-value') ||
-            targetClass.contains('buka-cap-item-value') ||
-            targetClass.contains('remover-item-value') || 
-            targetClass.contains('touchup-aerox-item-value') ||
-            targetClass.contains('verifikasi-item-value')) { // TAMBAHAN
-            calculateAllDynamicTotals(); 
-        }
-    });
-
+    
     /**
-     * FUNGSI: Serialisasi data list dinamis (untuk disimpan ke DB)
+     * FUNGSI: Serialisasi data list dinamis (2 kolom)
+     * Format: "Nama Item: 10"
      */
     function serializeDynamicList(container, nameClass, valueClass) {
         if (!container) return ""; 
@@ -184,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * FUNGSI: Menghitung total untuk list dinamis
+     * FUNGSI: Menghitung total untuk list dinamis (2 kolom)
      */
     function calculateDynamicListTotal(listContainer, valueClass, totalSpan) {
         if (!listContainer || !totalSpan) return;
@@ -196,15 +182,176 @@ document.addEventListener('DOMContentLoaded', () => {
         totalSpan.textContent = sum;
     }
 
+
+    // ==========================================================
+    // === FUNGSI BARU: LIST DINAMIS 3 KOLOM (Name, OK, NG) ===
+    // ==========================================================
+
+    /**
+     * FUNGSI: Menambahkan baris item ke list dinamis (3 kolom)
+     */
+    function addDynamicRow3Col(container, nameClass, okClass, ngClass, itemName = "", itemOk = "", itemNg = "") {
+        if (!container) return;
+        const row = document.createElement('div');
+        row.className = 'dynamic-list-row-3col';
+
+        row.innerHTML = `
+            <input type="text" class="${nameClass}" placeholder="Nama Item" value="${itemName}">
+            <input type="number" class="${okClass}" placeholder="OK" value="${itemOk || ''}">
+            <input type="number" class="${ngClass}" placeholder="NG" value="${itemNg || ''}">
+            <button type="button" class="button-remove">
+                <span class="material-icons">remove_circle</span>
+            </button>
+        `;
+        container.appendChild(row);
+    }
+
+    /**
+     * FUNGSI: Mereset list dinamis ke item default (3 kolom)
+     */
+    function resetDynamicList3Col(container, defaultItems, nameClass, okClass, ngClass) {
+        if (!container) return;
+        container.innerHTML = '';
+        // defaultItems hanya berisi nama, OK dan NG dikosongkan
+        defaultItems.forEach(item => addDynamicRow3Col(container, nameClass, okClass, ngClass, item, "", ""));
+    }
+
+    /**
+     * FUNGSI: Mengurai string dari database kembali menjadi baris input (3 kolom)
+     * Format: "Nama Item: 10, 2"
+     */
+    function deserializeDynamicList3Col(container, nameClass, okClass, ngClass, notesString, defaultItems) {
+        container.innerHTML = ''; 
+        if (!notesString || notesString.trim() === '') {
+            resetDynamicList3Col(container, defaultItems, nameClass, okClass, ngClass);
+            return;
+        }
+        
+        const items = notesString.split('\n');
+        items.forEach(item => {
+            const parts = item.split(': ');
+            if (parts.length >= 2) {
+                const name = parts[0];
+                const values = parts.slice(1).join(': ').split(','); // Pisahkan "10, 2"
+                const okVal = values[0] ? values[0].trim() : "";
+                const ngVal = values[1] ? values[1].trim() : "";
+                addDynamicRow3Col(container, nameClass, okClass, ngClass, name, okVal, ngVal);
+            } else if (item.trim() !== '') {
+                // Handle jika data lama hanya nama
+                addDynamicRow3Col(container, nameClass, okClass, ngClass, item, "", "");
+            }
+        });
+    }
+
+    /**
+     * FUNGSI: Serialisasi data list dinamis (3 kolom)
+     * Format: "Nama Item: 10, 2"
+     */
+    function serializeDynamicList3Col(container, nameClass, okClass, ngClass) {
+        if (!container) return ""; 
+        let resultString = "";
+        const rows = container.querySelectorAll('.dynamic-list-row-3col');
+        rows.forEach(row => {
+            const nameInput = row.querySelector(`.${nameClass}`);
+            const okInput = row.querySelector(`.${okClass}`);
+            const ngInput = row.querySelector(`.${ngClass}`);
+            
+            if (nameInput && okInput && ngInput) {
+                const name = nameInput.value;
+                const okVal = okInput.value || '0'; // Default 0 jika kosong
+                const ngVal = ngInput.value || '0'; // Default 0 jika kosong
+                 
+                 // Hanya simpan jika nama diisi
+                 if (name) {
+                    resultString += `${name}: ${okVal}, ${ngVal}\n`; 
+                }
+            }
+        });
+        return resultString.trim();
+    }
+
+    /**
+     * FUNGSI: Menghitung total untuk list dinamis (3 kolom)
+     */
+    function calculateDynamicListTotal3Col(container, okClass, ngClass, okTotalSpan, ngTotalSpan) {
+        if (!container || !okTotalSpan || !ngTotalSpan) return;
+        let sumOk = 0;
+        let sumNg = 0;
+        
+        const okInputs = container.querySelectorAll(`.${okClass}`);
+        okInputs.forEach(input => {
+            sumOk += parseInt(input.value) || 0;
+        });
+        
+        const ngInputs = container.querySelectorAll(`.${ngClass}`);
+        ngInputs.forEach(input => {
+            sumNg += parseInt(input.value) || 0;
+        });
+
+        okTotalSpan.textContent = sumOk;
+        ngTotalSpan.textContent = sumNg;
+    }
+
+
+    // ==========================================================
+    // === EVENT LISTENERS & KALKULASI TOTAL ===
+    // ==========================================================
+
+    // Event listener untuk tombol "Tambah Item" (2 Kolom)
+    if (addStepAssyItemBtn) addStepAssyItemBtn.addEventListener('click', () => addDynamicRow(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value'));
+    if (addBukaCapItemBtn) addBukaCapItemBtn.addEventListener('click', () => addDynamicRow(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value'));
+    if (addRemoverItemBtn) addRemoverItemBtn.addEventListener('click', () => addDynamicRow(removerListContainer, 'remover-item-name', 'remover-item-value')); 
+    if (addTouchUpAeroxItemBtn) addTouchUpAeroxItemBtn.addEventListener('click', () => addDynamicRow(touchUpAeroxListContainer, 'touchup-aerox-item-name', 'touchup-aerox-item-value')); 
+    if (addVerifikasiItemBtn) addVerifikasiItemBtn.addEventListener('click', () => addDynamicRow(verifikasiListContainer, 'verifikasi-item-name', 'verifikasi-item-value'));
+
+    // Event listener untuk tombol "Tambah Item" (3 Kolom BARU)
+    if (addAdhesiveDeliveryItemBtn) addAdhesiveDeliveryItemBtn.addEventListener('click', () => addDynamicRow3Col(adhesiveDeliveryListContainer, 'adhesive-delivery-item-name', 'adhesive-delivery-item-ok', 'adhesive-delivery-item-ng'));
+    if (addAdhesiveAssyItemBtn) addAdhesiveAssyItemBtn.addEventListener('click', () => addDynamicRow3Col(adhesiveAssyListContainer, 'adhesive-assy-item-name', 'adhesive-assy-item-ok', 'adhesive-assy-item-ng'));
+
+    // Event listener untuk tombol "Hapus" (Delegasi)
+    incomingForm.addEventListener('click', (e) => {
+        if (e.target.closest('.button-remove')) {
+            // Hapus baris 2 kolom atau 3 kolom
+            const row = e.target.closest('.dynamic-list-row') || e.target.closest('.dynamic-list-row-3col');
+            if (!row) return;
+            row.remove(); 
+            calculateAllDynamicTotals(); 
+        }
+    });
+
+    // Event listener untuk perubahan input di list dinamis
+    incomingForm.addEventListener('input', (e) => {
+        const targetClass = e.target.classList;
+        if (targetClass.contains('step-assy-item-value') ||
+            targetClass.contains('buka-cap-item-value') ||
+            targetClass.contains('remover-item-value') || 
+            targetClass.contains('touchup-aerox-item-value') ||
+            targetClass.contains('verifikasi-item-value') ||
+            // Tambahan listener 3 kolom
+            targetClass.contains('adhesive-delivery-item-ok') ||
+            targetClass.contains('adhesive-delivery-item-ng') ||
+            targetClass.contains('adhesive-assy-item-ok') ||
+            targetClass.contains('adhesive-assy-item-ng')
+            ) { 
+            calculateAllDynamicTotals(); 
+        }
+    });
+
+
     /**
      * FUNGSI HELPER BARU: Menjalankan semua kalkulasi total
      */
     function calculateAllDynamicTotals() {
+        // 2 Kolom
         calculateDynamicListTotal(stepAssyListContainer, 'step-assy-item-value', stepAssyTotalSpan);
         calculateDynamicListTotal(bukaCapListContainer, 'buka-cap-item-value', bukaCapTotalSpan);
         calculateDynamicListTotal(removerListContainer, 'remover-item-value', removerTotalSpan); 
         calculateDynamicListTotal(touchUpAeroxListContainer, 'touchup-aerox-item-value', touchUpAeroxTotalSpan); 
-        calculateDynamicListTotal(verifikasiListContainer, 'verifikasi-item-value', verifikasiTotalSpan); // TAMBAHAN
+        calculateDynamicListTotal(verifikasiListContainer, 'verifikasi-item-value', verifikasiTotalSpan);
+        
+        // 3 Kolom (BARU)
+        calculateDynamicListTotal3Col(adhesiveDeliveryListContainer, 'adhesive-delivery-item-ok', 'adhesive-delivery-item-ng', adhesiveDeliveryTotalOkSpan, adhesiveDeliveryTotalNgSpan);
+        calculateDynamicListTotal3Col(adhesiveAssyListContainer, 'adhesive-assy-item-ok', 'adhesive-assy-item-ng', adhesiveAssyTotalOkSpan, adhesiveAssyTotalNgSpan);
     }
 
     
@@ -221,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /**
          * FUNGSI HELPER PDF (KANAN): 
-         * Mengubah string notes (cth: "Item A: 10\nItem B: 20") 
+         * Mengubah string notes (cth: "Item A: 10") 
          * menjadi baris-baris autoTable (3 kolom) lengkap dengan rowSpan dan TOTAL.
          * MODIFIKASI: Melewatkan item jika quantity 0.
          */
@@ -309,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // MODIFIKASI: Cek jika tidak ada item valid
             if (validItemRows.length === 0) {
-                rows.push(['(Kosong)', '']);
+                rows.push(['   (Kosong)', '']); // Tambah spasi
                 return rows;
             }
             // AKHIR MODIFIKASI
@@ -320,6 +467,119 @@ document.addEventListener('DOMContentLoaded', () => {
             rows.push([
                 { content: 'TOTAL', styles: { fontStyle: 'bold' } },
                 { content: sum.toString(), styles: { fontStyle: 'bold', halign: 'center' } }
+            ]);
+            
+            return rows;
+        }
+        
+        /**
+         * FUNGSI HELPER PDF (KANAN - 3 Kolom): 
+         * Mengubah string notes 3 kolom (cth: "Item A: 10, 2") 
+         * menjadi baris-baris autoTable agar PAS di tabel 3 kolom KANAN.
+         * Format: [groupName, 'Item A', 'OK: 10 / NG: 2']
+         */
+        function parseNotesToRows3ColPDF(groupName, notesString) {
+            const parsedRows = []; 
+            const itemRows = [];   
+            let sumOk = 0;
+            let sumNg = 0;
+            
+            const lines = notesString ? notesString.split('\n').filter(l => l.trim() !== '') : [];
+            
+            lines.forEach(line => {
+                const parts = line.split(': ');
+                const name = parts[0] || '';
+                const values = parts.slice(1).join(': ').split(',');
+                const okVal = parseInt(values[0]) || 0;
+                const ngVal = parseInt(values[1]) || 0;
+                
+                // Hanya tambahkan jika OK > 0 atau NG > 0
+                if (okVal > 0 || ngVal > 0) {
+                    sumOk += okVal;
+                    sumNg += ngVal;
+                    itemRows.push([name, `OK: ${okVal} / NG: ${ngVal}`]);
+                } 
+            });
+
+            if (itemRows.length === 0) {
+                parsedRows.push([
+                    { content: groupName, styles: { fontStyle: 'bold', valign: 'top' } },
+                    '(Kosong)',
+                    ''
+                ]);
+                return parsedRows;
+            }
+
+            // Baris Total
+            itemRows.push([
+                { content: 'TOTAL', styles: { fontStyle: 'bold', halign: 'right' } },
+                { content: `OK: ${sumOk} / NG: ${sumNg}`, styles: { fontStyle: 'bold' } } 
+            ]);
+
+            // Gabungkan groupName
+            parsedRows.push([
+                { 
+                    content: groupName, 
+                    rowSpan: itemRows.length, 
+                    styles: { fontStyle: 'bold', valign: 'top' } 
+                },
+                ...itemRows[0] 
+            ]);
+            
+            parsedRows.push(...itemRows.slice(1));
+            
+            return parsedRows;
+        }
+
+        // ==========================================================
+        // === FUNGSI HELPER BARU (KIRI - 3 Kolom) ===
+        // ==========================================================
+        /**
+         * FUNGSI HELPER PDF (KIRI - 3 Kolom): 
+         * Mengubah string notes 3 kolom (cth: "Item A: 10, 2") 
+         * menjadi baris-baris sederhana [Item, Status] untuk tabel KIRI.
+         */
+        function parseNotesToSimpleRows3Col(title, notesString) {
+            const rows = [];
+            let sumOk = 0;
+            let sumNg = 0;
+            
+            rows.push([{ 
+                content: title, 
+                styles: { fontStyle: 'bold', fillColor: [230, 230, 230] }, 
+                colSpan: 2 
+            }]);
+            
+            const lines = notesString ? notesString.split('\n').filter(l => l.trim() !== '') : [];
+            const validItemRows = []; // Tampung item yang valid di sini
+
+            lines.forEach(line => {
+                const parts = line.split(': ');
+                const name = '   ' + (parts[0] || ''); // Indent nama
+                const values = parts.slice(1).join(': ').split(',');
+                const okVal = parseInt(values[0]) || 0;
+                const ngVal = parseInt(values[1]) || 0;
+                
+                // Hanya tambahkan jika OK > 0 atau NG > 0
+                if (okVal > 0 || ngVal > 0) {
+                    sumOk += okVal;
+                    sumNg += ngVal;
+                    // Format value string
+                    validItemRows.push([name, `OK: ${okVal} / NG: ${ngVal}`]); 
+                }
+            });
+
+            if (validItemRows.length === 0) {
+                rows.push(['   (Kosong)', '']); // Tambah spasi
+                return rows;
+            }
+
+            rows.push(...validItemRows); // Tambahkan semua item
+
+            // Baris Total
+            rows.push([
+                { content: 'TOTAL', styles: { fontStyle: 'bold' } },
+                { content: `OK: ${sumOk} / NG: ${sumNg}`, styles: { fontStyle: 'bold' } }
             ]);
             
             return rows;
@@ -431,10 +691,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const touchUpSimpleRows = parseNotesToSimpleRows('Line Touch Up Aerox', report.prod_touchup_notes);
             table2Body.push(...touchUpSimpleRows);
 
+            // ================== PINDAHAN DARI KANAN KE KIRI ==================
+            // 1. Check Thickness & Sortir (Textarea)
+            table2Body.push([{ content: 'Check', styles: { fontStyle: 'bold', fillColor: [230, 230, 230] }, colSpan: 2 }]);
+            table2Body.push(['   Check Thickness', report.check_thickness_notes || '(Kosong)']);
+            table2Body.push(['   Check Sortir', report.check_sortir_notes || '(Kosong)']);
+            
+            // 2. Check Adhesive Delivery (3-col list)
+            const adhesiveDeliverySimpleRows = parseNotesToSimpleRows3Col('Check Adhesive Delivery', report.check_adhesive_delivery_notes);
+            table2Body.push(...adhesiveDeliverySimpleRows);
+            
+            // 3. Check Adhesive Assy (3-col list)
+            const adhesiveAssySimpleRows = parseNotesToSimpleRows3Col('Check Adhesive Assy', report.check_adhesive_assy_notes);
+            table2Body.push(...adhesiveAssySimpleRows);
+            // ================== AKHIR PINDAHAN ==================
+
             // 2. Gambar Tabel Kiri
             doc.autoTable({
                 startY: table2StartY, 
-                head: [['2. PRODUKSI LINE INCOMING', 'Jumlah/Catatan']], 
+                head: [['2. PRODUKSI LINE INCOMING & CHECK', 'Jumlah/Catatan']], // Header diubah
                 body: table2Body, 
                 ...tableStyles,
                 margin: { right: table2MarginRight } 
@@ -459,34 +734,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const verifikasiRows = parseNotesToRows('Line Verifikasi', report.prod_verifikasi_notes);
             table3Body.push(...verifikasiRows);
 
-            // ================== MODIFIKASI PDF DI SINI ==================
-            // Data Check (3 baris baru)
-            table3Body.push([
-                { content: 'Check Thickness', styles: { fontStyle: 'bold', valign: 'top' } },
-                { content: report.check_thickness_notes || '(Kosong)', colSpan: 2 } 
-            ]);
-            table3Body.push([
-                { content: 'Check Adhesive Delivery', styles: { fontStyle: 'bold', valign: 'top' } },
-                { content: report.check_adhesive_delivery_notes || '(Kosong)', colSpan: 2 } 
-            ]);
-            table3Body.push([
-                { content: 'Check Adhesive Assy', styles: { fontStyle: 'bold', valign: 'top' } },
-                { content: report.check_adhesive_assy_notes || '(Kosong)', colSpan: 2 } 
-            ]);
-            // ================ AKHIR MODIFIKASI PDF ================
+            // ================== BLOK CHECK SUDAH DIHAPUS DARI SINI ==================
             
             // 2. Gambar Tabel Kanan
             doc.autoTable({
                 startY: table2StartY, 
-                head: [['PRODUKSI', 'Item', 'Jumlah']], 
+                head: [['PRODUKSI LAIN', 'Item', 'Jumlah / Status']], // Header diubah
                 body: table3Body, 
                 ...tableStyles,
                 margin: { left: table3MarginLeft }, 
                 
                 columnStyles: { 
                     0: { cellWidth: 35, fontStyle: 'bold' },     
-                    1: { cellWidth: tableWidth - 35 - 20 }, 
-                    2: { cellWidth: 20, halign: 'center' }   
+                    1: { cellWidth: tableWidth - 35 - 30 }, // Lebar Item
+                    2: { cellWidth: 30, halign: 'center' }  // Lebar Jumlah/Status
                 } 
             });
             
@@ -499,27 +760,36 @@ document.addEventListener('DOMContentLoaded', () => {
             // Footer
             let finalY = Math.max(table2FinalY, table3FinalY) + 20; 
             
-            if (finalY > 300) { 
+            // Cek jika butuh halaman baru (Legal = 355)
+            if (finalY > (355 - 40)) { 
                 doc.addPage(); 
+                // Gambar border lagi
+                doc.rect(margin, margin, pageWidth - (margin * 2), pageHeight - (margin * 2));
                 finalY = 20; 
             } 
             
             const preparerName = currentKaryawan ? currentKaryawan.nama_lengkap : (currentUser ? currentUser.email : 'N/A');
-            const preparerJabatan = (currentKaryawan && currentKaryawan.jabatan) || '( Jabatan )'; 
+            // MODIFIKASI: Default jabatan diubah jadi 'Developer' (sesuai gambar)
+            const preparerJabatan = (currentKaryawan && currentKaryawan.jabatan) || 'Developer'; 
             
-            doc.setFontSize(10);
+            doc.setFontSize(8);
+            
+            // === MODIFIKASI JARAK DI SINI ===
+            // Jarak dikurangi dari 20 -> 15 dan 25 -> 20
+            
             doc.text("Dibuat,", 20, finalY); 
-            doc.text(preparerName, 20, finalY + 20); 
-            doc.text(preparerJabatan, 20, finalY + 25); 
+            doc.text(preparerName, 20, finalY + 15); // <-- Diubah dari + 20
+            doc.text(preparerJabatan, 20, finalY + 20); // <-- Diubah dari + 25
             
             doc.text("Disetujui,", 105, finalY, { align: 'center' }); 
             const chiefName = report.chief_name || '( .......................... )'; 
-            doc.text(chiefName, 105, finalY + 20, { align: 'center' }); 
-            doc.text("Chief", 105, finalY + 25, { align: 'center' });
+            doc.text(chiefName, 105, finalY + 15, { align: 'center' }); // <-- Diubah dari + 20
+            doc.text("Chief", 105, finalY + 20, { align: 'center' }); // <-- Diubah dari + 25
             
             doc.text("Mengetahui,", 190, finalY, { align: 'right' }); 
-            doc.text("SINGGIH E W", 190, finalY + 20, { align: 'right' }); 
-            doc.text("Dept Head", 190, finalY + 25, { align: 'right' });
+            doc.text("SINGGIH E W", 190, finalY + 15, { align: 'right' }); // <-- Diubah dari + 20
+            doc.text("Dept Head", 190, finalY + 20, { align: 'right' }); // <-- Diubah dari + 25
+            // === AKHIR MODIFIKASI JARAK ===
 
             doc.save(`Laporan_Incoming_${report.tanggal}_Shift${report.shift}.pdf`);
         } catch (error) {
@@ -704,18 +974,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('quality_balik_material').value = report.quality_balik_material;
         
         // ================== MODIFIKASI LOAD DI SINI ==================
-        // Textareas
+        // Textarea
         document.getElementById('check_thickness_notes').value = report.check_thickness_notes;
-        document.getElementById('check_adhesive_delivery_notes').value = report.check_adhesive_delivery_notes; // TAMBAHAN
-        document.getElementById('check_adhesive_assy_notes').value = report.check_adhesive_assy_notes; // TAMBAHAN
+        document.getElementById('check_sortir_notes').value = report.check_sortir_notes; // <-- TAMBAHAN BARU
+        
+        // Dynamic List 3 Kolom
+        deserializeDynamicList3Col(adhesiveDeliveryListContainer, 'adhesive-delivery-item-name', 'adhesive-delivery-item-ok', 'adhesive-delivery-item-ng', report.check_adhesive_delivery_notes, defaultAdhesiveDeliveryItems);
+        deserializeDynamicList3Col(adhesiveAssyListContainer, 'adhesive-assy-item-name', 'adhesive-assy-item-ok', 'adhesive-assy-item-ng', report.check_adhesive_assy_notes, defaultAdhesiveAssyItems);
         // ================ AKHIR MODIFIKASI LOAD ================
 
-        // Isi dynamic lists
+        // Isi dynamic lists (2 kolom)
         deserializeDynamicList(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value', report.prod_step_assy_notes, defaultStepAssyItems);
         deserializeDynamicList(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value', report.prod_buka_cap_notes, defaultBukaCapItems);
         deserializeDynamicList(removerListContainer, 'remover-item-name', 'remover-item-value', report.prod_remover_notes, defaultRemoverItems); 
         deserializeDynamicList(touchUpAeroxListContainer, 'touchup-aerox-item-name', 'touchup-aerox-item-value', report.prod_touchup_notes, defaultTouchUpAeroxItems); 
-        deserializeDynamicList(verifikasiListContainer, 'verifikasi-item-name', 'verifikasi-item-value', report.prod_verifikasi_notes, defaultVerifikasiItems); // TAMBAHAN
+        deserializeDynamicList(verifikasiListContainer, 'verifikasi-item-name', 'verifikasi-item-value', report.prod_verifikasi_notes, defaultVerifikasiItems);
 
         // Hitung ulang semua total
         calculateAllDynamicTotals();
@@ -739,12 +1012,16 @@ document.addEventListener('DOMContentLoaded', () => {
         incomingForm.reset(); 
         currentlyEditingId = null; 
 
-        // Reset semua list dinamis ke default
+        // Reset semua list dinamis ke default (2 kolom)
         resetDynamicList(stepAssyListContainer, defaultStepAssyItems, 'step-assy-item-name', 'step-assy-item-value');
         resetDynamicList(bukaCapListContainer, defaultBukaCapItems, 'buka-cap-item-name', 'buka-cap-item-value');
         resetDynamicList(removerListContainer, defaultRemoverItems, 'remover-item-name', 'remover-item-value'); 
         resetDynamicList(touchUpAeroxListContainer, defaultTouchUpAeroxItems, 'touchup-aerox-item-name', 'touchup-aerox-item-value'); 
-        resetDynamicList(verifikasiListContainer, defaultVerifikasiItems, 'verifikasi-item-name', 'verifikasi-item-value'); // TAMBAHAN
+        resetDynamicList(verifikasiListContainer, defaultVerifikasiItems, 'verifikasi-item-name', 'verifikasi-item-value');
+        
+        // Reset list dinamis (3 kolom BARU)
+        resetDynamicList3Col(adhesiveDeliveryListContainer, defaultAdhesiveDeliveryItems, 'adhesive-delivery-item-name', 'adhesive-delivery-item-ok', 'adhesive-delivery-item-ng');
+        resetDynamicList3Col(adhesiveAssyListContainer, defaultAdhesiveAssyItems, 'adhesive-assy-item-name', 'adhesive-assy-item-ok', 'adhesive-assy-item-ng');
         
         // Hitung ulang semua total (jadi 0)
         calculateAllDynamicTotals();
@@ -811,18 +1088,21 @@ document.addEventListener('DOMContentLoaded', () => {
             quality_ng: document.getElementById('quality_ng').value,
             quality_balik_material: document.getElementById('quality_balik_material').value,
             
-            // Serialisasi list dinamis
+            // Serialisasi list dinamis (2 kolom)
             prod_step_assy_notes: serializeDynamicList(stepAssyListContainer, 'step-assy-item-name', 'step-assy-item-value'),
             prod_buka_cap_notes: serializeDynamicList(bukaCapListContainer, 'buka-cap-item-name', 'buka-cap-item-value'),
             prod_remover_notes: serializeDynamicList(removerListContainer, 'remover-item-name', 'remover-item-value'), 
             prod_touchup_notes: serializeDynamicList(touchUpAeroxListContainer, 'touchup-aerox-item-name', 'touchup-aerox-item-value'), 
-            prod_verifikasi_notes: serializeDynamicList(verifikasiListContainer, 'verifikasi-item-name', 'verifikasi-item-value'), // TAMBAHAN
+            prod_verifikasi_notes: serializeDynamicList(verifikasiListContainer, 'verifikasi-item-name', 'verifikasi-item-value'),
 
             // ================== MODIFIKASI SIMPAN DI SINI ==================
-            // Textareas
+            // Textarea
             check_thickness_notes: document.getElementById('check_thickness_notes').value,
-            check_adhesive_delivery_notes: document.getElementById('check_adhesive_delivery_notes').value, // TAMBAHAN
-            check_adhesive_assy_notes: document.getElementById('check_adhesive_assy_notes').value // TAMBAHAN
+            check_sortir_notes: document.getElementById('check_sortir_notes').value, // <-- TAMBAHAN BARU
+            
+            // Serialisasi list dinamis (3 kolom BARU)
+            check_adhesive_delivery_notes: serializeDynamicList3Col(adhesiveDeliveryListContainer, 'adhesive-delivery-item-name', 'adhesive-delivery-item-ok', 'adhesive-delivery-item-ng'),
+            check_adhesive_assy_notes: serializeDynamicList3Col(adhesiveAssyListContainer, 'adhesive-assy-item-name', 'adhesive-assy-item-ok', 'adhesive-assy-item-ng')
             // ================ AKHIR MODIFIKASI SIMPAN ================
         };
     }
